@@ -1,9 +1,22 @@
+import com.android.manifmerger.Actions.load
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+}
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+
+val mapsApiKey: String? = localProperties.getProperty("GOOGLE_MAPS_API_KEY")
+
+android {
+    defaultConfig {
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
+    }
 }
 
 android {
@@ -13,6 +26,9 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    defaultConfig {
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
     }
 
     defaultConfig {
@@ -77,16 +93,20 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.github.scribejava:scribejava-apis:8.3.3") // For LinkedIn OAuth
 
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.navigation:navigation-compose:2.8.6")
+    implementation("androidx.compose.material3:material3:1.3.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
     //Google Map
-    implementation("com.google.maps.android:maps-compose:2.11.4") // Maps Compose library
-    implementation("com.google.android.gms:play-services-maps:18.1.0") // Google Maps SDK
-    implementation("androidx.compose.foundation:foundation:1.5.4") // Compose foundation
-    implementation("androidx.compose.ui:ui:1.5.4' // Compose UI")
-    implementation("androidx.compose.material:material:1.5.4") // Compose Material")
+    implementation("com.google.maps.android:maps-compose:6.4.1") // Maps Compose library
+    implementation("com.google.android.gms:play-services-maps:19.0.0") // Google Maps SDK
+    implementation("androidx.compose.foundation:foundation:1.7.7") // Compose foundation
+    implementation("androidx.compose.ui:ui:1.7.7")
+    implementation("androidx.compose.material:material:1.7.7") // Compose Material")
+
+    implementation("androidx.compose.material:material:1.0.0")
+    implementation("com.google.android.libraries.places:places:3.1.0")
+    implementation("com.google.android.gms:play-services-maps:18.0.0")
 
 }}
 dependencies {
