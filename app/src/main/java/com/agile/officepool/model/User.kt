@@ -1,4 +1,4 @@
-package com.agile.officepool
+package com.agile.officepool.model
 
 // File: User.kt
 data class User(

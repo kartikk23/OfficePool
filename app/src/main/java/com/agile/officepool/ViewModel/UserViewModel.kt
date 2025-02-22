@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agile.officepool.User
+import com.agile.officepool.model.User
 import com.agile.officepool.helper.LinkedInAuthHelper
 import com.agile.officepool.helper.LinkedInUserInfo
 import com.agile.officepool.network.RetrofitClient

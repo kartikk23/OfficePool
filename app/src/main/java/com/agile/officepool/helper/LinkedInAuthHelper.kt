@@ -17,7 +17,7 @@ import java.net.URLEncoder
 class LinkedInAuthHelper {
     private val clientId = "77vp84pv0ee3qi"
     private val clientSecret = "WPL_AP1.dA9t6eXWnaFcJHH1.82TKiQ=="
-    private val redirectUri = "https://6c7d-2402-e280-3e9d-70f-904-482d-ed74-f91c.ngrok-free.app/oauth/linkedin-callback"
+    private val redirectUri = "https://f1bf-2401-4900-8fc8-bfaa-64f0-5d02-ad3-8dc1.ngrok-free.app/oauth/linkedin-callback"
     private val scopes = "openid profile email"
 
 

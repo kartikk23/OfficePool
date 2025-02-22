@@ -1,5 +1,7 @@
 package com.agile.officepool.screens
 
+
+import GooglePlacesDropdown
 import android.Manifest
 import android.content.Context
 import android.location.Geocoder
@@ -35,7 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import com.agile.officepool.BuildConfig
 
-import com.agile.officepool.components.GooglePlacesDropdown
+
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 
@@ -62,8 +64,13 @@ import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.tasks.Tasks
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.compose.MapProperties
 
 
@@ -84,6 +91,41 @@ fun HomeScreen(navController: NavController) {
     var location by remember { mutableStateOf<String?>(null) }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }
+
+    var showModal by remember { mutableStateOf(true)}
+    // Initialize the Places Client
+    fun initializePlacesClient(context: Context): PlacesClient {
+        if (!Places.isInitialized()) {
+            Places.initialize(context, BuildConfig.MAPS_API_KEY)
+        }
+        return Places.createClient(context)
+    }
+    val placesClient = remember { initializePlacesClient(context) }
+
+    var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
+
+
+    fun fetchPlaces(query: String) {
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setQuery(query)
+            .build()
+
+        placesClient.findAutocompletePredictions(request)
+            .addOnSuccessListener { response ->
+                placePredictions = response.autocompletePredictions
+            }
+            .addOnFailureListener { exception ->
+                placePredictions = emptyList()
+            }
+    }
+
+    if (showModal) {
+        BottomModalSheet(
+            showModal = showModal,
+            onDismiss = { showModal = false },
+
+            )
+    }
 
     // Request location permission
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -129,7 +171,7 @@ fun HomeScreen(navController: NavController) {
                 title = {
                     Row(
                         modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp), // Add padding for better spacing
+                            .padding(horizontal = 16.dp, vertical = 8.dp), // Add padding for better spacing
                         verticalAlignment = Alignment.CenterVertically, // Align children vertically in the center
                         horizontalArrangement = Arrangement.SpaceBetween, // Space out children horizontally
 
@@ -170,7 +212,7 @@ fun HomeScreen(navController: NavController) {
 
                                                 fontSize = 15.sp,
                                                 fontWeight = FontWeight.W400,
-                                                color = Color.Gray
+                                                color = Color.White
 
 
 
@@ -195,7 +237,7 @@ fun HomeScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("newScreen") },
+                onClick = { navController.navigate("dashboard") },
                 modifier = Modifier.padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Navigate")
@@ -207,7 +249,7 @@ fun HomeScreen(navController: NavController) {
 
 
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box( modifier = Modifier.padding(paddingValues)) {
             // Placeholder for Map (Replace with your map implementation)
             Box(
                 modifier = Modifier
@@ -227,11 +269,11 @@ fun HomeScreen(navController: NavController) {
                     ),
 
 
-            ){
+                ){
                 Column(
                     modifier = Modifier
                         .wrapContentHeight()
-                        .padding(0.dp,10.dp),
+                        .padding(16.dp,16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
@@ -239,14 +281,25 @@ fun HomeScreen(navController: NavController) {
                     val context = LocalContext.current
 
 // Google Places Dropdown for Source
-                    GooglePlacesDropdown("Source") { placeName ->
-                        selectedSource = placeName  // Store selected place name
-                    }
+                    GooglePlacesDropdown(
+                        label = "Source",
+                        placePredictions = placePredictions,
+                        onPlaceSelected = { selectedSource=it },
+                        onSearch = { fetchPlaces(it) },
+                        currentLocation = location ?: "Fetching location...",
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
 // Google Places Dropdown for Destination
-                    GooglePlacesDropdown("Destination") { placeName ->
-                        selectedDestination = placeName // Store selected place name
-                    }
+                    GooglePlacesDropdown(
+                        label = "Destination",
+                        placePredictions = placePredictions,
+                        onPlaceSelected = { selectedDestination=it },
+                        onSearch = { fetchPlaces(it) },
+                        currentLocation = location ?: "Fetching location...",
+                    )
+
 
 // Convert source place name to LatLng
                     LaunchedEffect(selectedSource) {
@@ -291,24 +344,43 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("New Screen", style = MaterialTheme.typography.headlineMedium)
+fun BottomModalSheet(showModal: Boolean, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+
+    if (showModal) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Select Location", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(16.dp))
+
+            }
+        }
     }
 }
 
 @Composable
-fun GoogleMapView(userLocation: LatLng?, source: LatLng?, destination: LatLng?, polylinePoints: List<LatLng>) {
+fun GoogleMapView(
+    userLocation: LatLng?,
+    source: LatLng?,
+    destination: LatLng?,
+    polylinePoints: List<LatLng>,
+) {
     val cameraPositionState = rememberCameraPositionState()
 
     val sourceMarkerState = rememberMarkerState()
     val destinationMarkerState = rememberMarkerState()
+
+    var selectedMarker by remember { mutableStateOf<LatLng?>(null) }
 
     // Move camera to user location initially
     LaunchedEffect(userLocation) {
@@ -346,8 +418,12 @@ fun GoogleMapView(userLocation: LatLng?, source: LatLng?, destination: LatLng?, 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = true) // ✅ Enable blue dot
+        properties = MapProperties(isMyLocationEnabled = true), // ✅ Enable blue dot
+
     ) {
+
+
+
         // Focused marker for user's location
 //        userLocation?.let {
 //            Marker(
