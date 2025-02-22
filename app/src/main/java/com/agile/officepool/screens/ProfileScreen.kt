@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.agile.officepool.SessionManager
+import com.agile.officepool.network.SessionManager
 
 
 
@@ -95,7 +95,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                     onCheckedChange = {
                         isRiderMode = it
                         if (it) {
-                            navController.navigate("rider") // Navigate to Rider screen
+                            navController.navigate("riderScreen") // Navigate to Rider screen
                         } else {
                             navController.navigate("home") // Navigate to Home screen
                         }

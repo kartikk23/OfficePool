@@ -1,4 +1,4 @@
-package com.agile.officepool
+package com.agile.officepool.network
 
 import android.content.Context
 import android.content.SharedPreferences
