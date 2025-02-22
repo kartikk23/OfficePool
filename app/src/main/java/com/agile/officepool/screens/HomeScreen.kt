@@ -133,8 +133,9 @@ fun HomeScreen(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically, // Align children vertically in the center
                         horizontalArrangement = Arrangement.SpaceBetween, // Space out children horizontally
 
+                    )
 
-                    ) {
+                    {
 
 
                         Column(
@@ -182,7 +183,7 @@ fun HomeScreen(navController: NavController) {
                                 )
                             }
                         }
-                        IconButton(onClick = {navController.navigate("login") }) {
+                        IconButton(onClick = {navController.navigate("profile") }) {
                             Icon(Icons.Default.Person, contentDescription = "Profile",Modifier.size(34.dp))
                         }
                     }
