@@ -38,7 +38,8 @@ fun ProfileScreen(navController: NavController, context: Context) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                modifier = Modifier.padding(10.dp,40.dp),
             )
         }
     ) { paddingValues ->
@@ -47,6 +48,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues),
+
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(20.dp))
@@ -95,7 +97,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                     onCheckedChange = {
                         isRiderMode = it
                         if (it) {
-                            navController.navigate("riderScreen") // Navigate to Rider screen
+                            navController.navigate("dashboard") // Navigate to Rider screen
                         } else {
                             navController.navigate("home") // Navigate to Home screen
                         }

@@ -5,11 +5,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
@@ -18,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -25,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.UserViewModel
+import com.agile.officepool.components.TransparentStatusBar
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
@@ -32,14 +39,18 @@ import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
 import com.agile.officepool.screens.RiderDashboardScreen
 import com.agile.officepool.screens.RiderScreen
+import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
 
 class MainActivity : ComponentActivity() {
-    private lateinit var navController: NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        // ✅ Ensure Full-Screen Mode and No Layout Shift
+        WindowCompat.setDecorFitsSystemWindows(window,false)
 
         // Retrieve Rider Mode state
         val sessionManager = SessionManager(this)
@@ -47,10 +58,12 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+
             OfficePoolTheme {
                 Box(modifier = Modifier
                     .fillMaxSize()
-                    .systemBarsPadding()
+                    .statusBarsPadding()
+
                 ) {
                     val navController = rememberNavController()
                     val viewModel: UserViewModel = viewModel()
@@ -73,13 +86,14 @@ fun Navigation(navController: NavHostController, viewModel: UserViewModel, inten
     LaunchedEffect(intent) {
         handleDeepLink(intent, viewModel, navController)
     }
-    val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = startDestination) {
+
+    NavHost(navController = navController, startDestination = "home") {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
         composable("dashboard") { RiderDashboardScreen(navController) }
         composable("riderScreen") { RiderScreen(navController) }
+        composable("searchScreen") { SearchScreen(navController) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
 
 

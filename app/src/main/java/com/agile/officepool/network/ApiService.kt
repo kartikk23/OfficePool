@@ -40,7 +40,7 @@ interface ApiService {
 }
 
 object RetrofitClient {
-    private const val BASE_URL = "https://e121-2401-4900-8fc8-bfaa-64f0-5d02-ad3-8dc1.ngrok-free.app"
+    private const val BASE_URL = "https://officepoolspringboot-production.up.railway.app/"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)

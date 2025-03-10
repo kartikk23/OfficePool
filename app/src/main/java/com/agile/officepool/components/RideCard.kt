@@ -27,7 +27,7 @@ fun RideCard(ride: RideInfo) {
                 "Cancelled" -> MaterialTheme.colorScheme.error
                 else -> MaterialTheme.colorScheme.onSurface
             })
-            Text("Date & Time: ${ride.dateTime}")
+//            Text("Date & Time: ${ride.dateTime}")
 //            Text("Passenger ID: ${ride.passengerId}")
         }
     }

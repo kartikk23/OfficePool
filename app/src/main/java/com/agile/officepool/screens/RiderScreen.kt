@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agile.officepool.BuildConfig
+import com.agile.officepool.components.TransparentStatusBar
 
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
@@ -38,7 +39,11 @@ fun RiderScreen(navController: NavController) {
     }
     var riderId by remember { mutableStateOf("") }
     var selectedSource by remember { mutableStateOf<String?>(null) }
+    var sourceLat by remember { mutableStateOf<Double?>(null) }
+    var sourceLng by remember { mutableStateOf<Double?>(null) }
     var selectedDestination by remember { mutableStateOf<String?>(null) }
+    var destinationLat by remember { mutableStateOf<Double?>(null) }
+    var destinationLng by remember { mutableStateOf<Double?>(null) }
     var route by remember { mutableStateOf("") }
     val statusOptions = listOf("Active", "Completed", "Cancelled", "Yet To Start") // ✅ Dropdown options
     var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
@@ -56,6 +61,10 @@ fun RiderScreen(navController: NavController) {
         return Places.createClient(context)
     }
     val placesClient = remember { initializePlacesClient(context) }
+
+    TransparentStatusBar()
+
+
     // Function to handle ride submission
     fun submitRide() {
         coroutineScope.launch {
@@ -69,10 +78,13 @@ fun RiderScreen(navController: NavController) {
                 riderId = riderId,
                 source = selectedSource!!,
                 destination = selectedDestination!!,
+                sourceLat = sourceLat!!,
+                sourceLng = sourceLng!!,
+                destinationLat = destinationLat!!,
+                destinationLng = destinationLng!!,
                 route = route,
                 status = status,
-                availableSeats = availableSeats,
-                dateTime = dateFormat.format(Date())
+                availableSeats = availableSeats
             )
 
             try {
@@ -122,9 +134,15 @@ fun RiderScreen(navController: NavController) {
         GooglePlacesDropdown(
             label = "Source",
             placePredictions = placePredictions,
-            onPlaceSelected = { selectedSource=it },
+            onPlaceSelected = { name, lat, lng ->
+                selectedSource = name
+                sourceLat = lat
+                sourceLng = lng
+            },
             onSearch = { fetchPlaces(it) },
-            currentLocation = "Your current location"
+            currentLocation = "Your current location",
+            currentLat = 0.0,
+            currentLng = 0.0
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -132,10 +150,15 @@ fun RiderScreen(navController: NavController) {
         GooglePlacesDropdown(
             label = "Destination",
             placePredictions = placePredictions,
-            onPlaceSelected = { selectedDestination=it },
+            onPlaceSelected = { name, lat, lng ->
+                selectedDestination = name
+                destinationLat = lat
+                destinationLng = lng
+            },
             onSearch = { fetchPlaces(it) },
-            currentLocation = "Your current location"
-
+            currentLocation = "Your current location",
+            currentLat = 0.0,
+            currentLng = 0.0
         )
 
         OutlinedTextField(

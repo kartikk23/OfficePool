@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import com.agile.officepool.components.RideCard
+import com.agile.officepool.components.TransparentStatusBar
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import kotlinx.coroutines.launch
@@ -31,11 +32,12 @@ fun RiderDashboardScreen(navController: NavController) {
     var rideList by remember { mutableStateOf<List<RideInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
+    TransparentStatusBar()
     // Fetch Ride History from API
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
-                val response = RetrofitClient.instance.getRideByStatus("Completed")
+                val response = RetrofitClient.instance.getAllRides()
                 if (response.isSuccessful) {
                     rideList = response.body() ?: emptyList()
                 } else {
@@ -49,7 +51,7 @@ fun RiderDashboardScreen(navController: NavController) {
         }
     }
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp,50.dp,16.dp,16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Rider Dashboard", fontSize = 22.sp, fontWeight = FontWeight.Bold)

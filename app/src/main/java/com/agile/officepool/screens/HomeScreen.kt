@@ -61,17 +61,31 @@ import java.util.Locale
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+
+
 import androidx.core.content.ContextCompat
+import com.agile.officepool.components.TransparentStatusBar
+import com.agile.officepool.network.RetrofitClient
+
 
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.maps.model.ButtCap
+import com.google.android.gms.maps.model.JointType
+import com.google.android.gms.maps.model.RoundCap
+import com.google.android.gms.maps.model.SquareCap
 import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,14 +99,23 @@ fun HomeScreen(navController: NavController) {
     var source by remember { mutableStateOf<LatLng?>(null) }
     var destination by remember { mutableStateOf<LatLng?>(null) }
     var selectedSource by remember { mutableStateOf<String?>(null) }
+    var sourceLat by remember { mutableStateOf<Double?>(null) }
+    var sourceLng by remember { mutableStateOf<Double?>(null) }
     var selectedDestination by remember { mutableStateOf<String?>(null) }
+    var destinationLat by remember { mutableStateOf<Double?>(null) }
+    var destinationLng by remember { mutableStateOf<Double?>(null) }
     var polylinePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
 
     var location by remember { mutableStateOf<String?>(null) }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasLocationPermission by remember { mutableStateOf(false) }
 
-    var showModal by remember { mutableStateOf(true)}
+    var showModal by remember { mutableStateOf(false)}
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    var showSearchbar by remember { mutableStateOf(true)}
+    var isLoading by remember { mutableStateOf(false) }
+
     // Initialize the Places Client
     fun initializePlacesClient(context: Context): PlacesClient {
         if (!Places.isInitialized()) {
@@ -104,6 +127,7 @@ fun HomeScreen(navController: NavController) {
 
     var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
 
+    TransparentStatusBar()
 
     fun fetchPlaces(query: String) {
         val request = FindAutocompletePredictionsRequest.builder()
@@ -119,13 +143,9 @@ fun HomeScreen(navController: NavController) {
             }
     }
 
-    if (showModal) {
-        BottomModalSheet(
-            showModal = showModal,
-            onDismiss = { showModal = false },
 
-            )
-    }
+
+
 
     // Request location permission
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -161,93 +181,9 @@ fun HomeScreen(navController: NavController) {
 
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background, // Set the background color
-                    titleContentColor = MaterialTheme.colorScheme.onBackground, // Set the title text color
-                    navigationIconContentColor = Color.White // Set the navigation icon color
-                ),
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp), // Add padding for better spacing
-                        verticalAlignment = Alignment.CenterVertically, // Align children vertically in the center
-                        horizontalArrangement = Arrangement.SpaceBetween, // Space out children horizontally
-
-                    )
-
-                    {
-
-
-                        Column(
-                            modifier = Modifier.weight(1f) // Take up remaining space in the Row
-                        )
-                        {
-                            BasicTextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                decorationBox = { innerTextField ->
-                                    if (name.text.isEmpty()) {
-                                        Text("Tejas Katke",
-                                            style = TextStyle(
-                                                fontSize = 17.sp,
-                                                fontWeight = FontWeight.W600
-
-                                            ), )
-                                    }
-                                    innerTextField()
-                                },
-                                enabled = false // Disable editing
-                            )
-                            location?.let {
-                                BasicTextField(
-                                    value = it,
-                                    onValueChange = { location = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    decorationBox = { innerTextField ->
-                                        if (it.isEmpty()) {
-                                            Text(location ?: "Fetching location...", style = TextStyle(
-
-                                                fontSize = 15.sp,
-                                                fontWeight = FontWeight.W400,
-                                                color = Color.White
-
-
-
-                                            ), )
-                                        }
-                                        innerTextField()
-                                    },
-                                    maxLines = 1,
-                                    enabled = false // Disable editing
-                                )
-                            }
-                        }
-                        IconButton(onClick = {navController.navigate("profile") }) {
-                            Icon(Icons.Default.Person, contentDescription = "Profile",Modifier.size(34.dp))
-                        }
-                    }
-                },
-//                navigationIcon = {
-//
-//                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("dashboard") },
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Navigate")
-            }
-        },
         modifier = Modifier
             .fillMaxSize()
-
-
-
+            .statusBarsPadding()
     ) { paddingValues ->
         Box( modifier = Modifier.padding(paddingValues)) {
             // Placeholder for Map (Replace with your map implementation)
@@ -260,113 +196,176 @@ fun HomeScreen(navController: NavController) {
 
             }
 
-            Box(
-                modifier = Modifier
-                    .wrapContentHeight()
 
-                    .background(MaterialTheme.colorScheme.onBackground,
-                        shape = RoundedCornerShape(0.dp,0.dp,12.dp,12.dp)
-                    ),
+
+            if(showSearchbar){
+
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp,50.dp,16.dp,0.dp)
 
 
                 ){
-                Column(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .padding(16.dp,16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.8f)
+                            .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp)) // ✅ Light BG & Rounded Corners
+                            .clickable {
+                                showSearchbar=!showSearchbar
+                                showModal = !showModal
+                            } // ✅ Navigate on click
+
+                    ) {
+                        Text(
+                            text = "Where to go?",
+                            color = Color.White,
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W500
+                            ),
+                            modifier = Modifier.padding(16.dp,14.dp)
+                        )
+
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.2f)
+                            .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp)) // ✅ Light BG & Rounded Corners
+                            .clickable {
+                                navController.navigate("profile")
+                            } // ✅ Navigate on click
+
+                    ) {
+                        Icon(
+                            Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier.padding(10.dp,12.dp).align(Alignment.Center))
+
+                    }
+
+
+                }
+
+            }
+
+
+            if (showModal) {
+                ModalBottomSheet(
+                    onDismissRequest ={ showModal = false
+                        showSearchbar=true},
+                    sheetState = sheetState,
+                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
+                    containerColor = MaterialTheme.colorScheme.background, // ✅ Background Color
+                    scrimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.32f), // ✅ Background dim effect
+                    contentWindowInsets = { WindowInsets.ime }
+
+
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxHeight(0.85f)
 
 
-                    val context = LocalContext.current
 
-// Google Places Dropdown for Source
-                    GooglePlacesDropdown(
-                        label = "Source",
-                        placePredictions = placePredictions,
-                        onPlaceSelected = { selectedSource=it },
-                        onSearch = { fetchPlaces(it) },
-                        currentLocation = location ?: "Fetching location...",
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-// Google Places Dropdown for Destination
-                    GooglePlacesDropdown(
-                        label = "Destination",
-                        placePredictions = placePredictions,
-                        onPlaceSelected = { selectedDestination=it },
-                        onSearch = { fetchPlaces(it) },
-                        currentLocation = location ?: "Fetching location...",
-                    )
+                        ){
+                        Column(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .padding(16.dp,0.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
 
 
-// Convert source place name to LatLng
-                    LaunchedEffect(selectedSource) {
-                        selectedSource?.let {
-                            source = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
+                            val context = LocalContext.current
+
+                            // Google Places Dropdown for Source
+                            GooglePlacesDropdown(
+                                label = "Source",
+                                placePredictions = placePredictions,
+                                onPlaceSelected = { name, lat, lng ->
+                                    selectedSource = name
+                                    sourceLat = lat
+                                    sourceLng = lng
+                                },
+                                onSearch = { fetchPlaces(it) },
+                                currentLocation = "Your current location",
+                                currentLat = 0.0,
+                                currentLng = 0.0
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            GooglePlacesDropdown(
+                                label = "Destination",
+                                placePredictions = placePredictions,
+                                onPlaceSelected = { name, lat, lng ->
+                                    selectedDestination = name
+                                    destinationLat = lat
+                                    destinationLng = lng
+                                },
+                                onSearch = { fetchPlaces(it) },
+                                currentLocation = "Your current location",
+                                currentLat = 0.0,
+                                currentLng = 0.0
+                            )
+
+                            //SearchForRider
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        isLoading = true
+                                        try {
+                                            val response = RetrofitClient.instance.getAllRides();
+                                            Toast.makeText(context, "Response: $response", Toast.LENGTH_LONG).show()
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                        } finally {
+                                            isLoading = false
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                enabled = !isLoading // Disable button when loading
+                            ) {
+                                Text(if (isLoading) "Loading..." else "Call API")
+                            }
+
+                            // Convert source place name to LatLng
+                            LaunchedEffect(selectedSource) {
+                                selectedSource?.let {
+                                    source = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
+                                }
+                            }
+
+                            // Convert destination place name to LatLng
+                            LaunchedEffect(selectedDestination) {
+                                selectedDestination?.let {
+                                    destination = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
+                                }
+                            }
+
+                            // Fetch route when both source and destination are set
+                            LaunchedEffect(source, destination) {
+                                if (source != null && destination != null) {
+                                    polylinePoints = fetchRoute(source!!, destination!!)
+                                }
+                            }
+
                         }
                     }
-
-// Convert destination place name to LatLng
-                    LaunchedEffect(selectedDestination) {
-                        selectedDestination?.let {
-                            destination = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
-                        }
-                    }
-
-// Fetch route when both source and destination are set
-                    LaunchedEffect(source, destination) {
-                        if (source != null && destination != null) {
-                            polylinePoints = fetchRoute(source!!, destination!!)
-                        }
-                    }
-
-
-                    // OutlinedTextField for Destination
-//                    OutlinedTextField(
-//                        value = destination,
-//                        onValueChange = { destination = it },
-//                        modifier = Modifier.fillMaxWidth(),
-//                        label = { Text("Enter Destination") }, // Placeholder label
-//                        placeholder = {
-//                            Text(
-//                                "Enter Destination",
-//                                color = Color.Gray
-//                            )
-//                        }, // Gray placeholder text
-//                        singleLine = true // Restrict to single line
-//                    )
                 }
             }
 
+
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BottomModalSheet(showModal: Boolean, onDismiss: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val coroutineScope = rememberCoroutineScope()
-
-    if (showModal) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text("Select Location", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(16.dp))
-
-            }
-        }
-    }
-}
 
 @Composable
 fun GoogleMapView(
@@ -418,7 +417,18 @@ fun GoogleMapView(
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = true), // ✅ Enable blue dot
+        properties = MapProperties(
+            isMyLocationEnabled = true,  // ✅ Show user's location, // ✅ Enable blue dot
+            mapType = MapType.NORMAL, // ✅ Change map type
+            isTrafficEnabled = true      // ✅ Show traffic
+        ),
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,  // ✅ Show zoom controls
+            compassEnabled = false,       // ✅ Show compass
+            myLocationButtonEnabled = false,
+            tiltGesturesEnabled = true,  // ✅ Enable tilting
+            scrollGesturesEnabled = true // ✅ Enable scrolling
+        )
 
     ) {
 
@@ -446,7 +456,10 @@ fun GoogleMapView(
 
         // Draw polyline route dynamically
         if (polylinePoints.isNotEmpty()) {
-            Polyline(points = polylinePoints, color = Color.Blue, width = 8f)
+            Polyline(points = polylinePoints, color = Color.Blue, width = 13f, startCap = RoundCap(),
+                endCap = RoundCap(),
+                jointType = JointType.ROUND)
+
         }
     }
 }
