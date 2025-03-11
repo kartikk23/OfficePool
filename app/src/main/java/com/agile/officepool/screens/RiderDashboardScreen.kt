@@ -63,6 +63,10 @@ fun RiderDashboardScreen(navController: NavController) {
 
         DashboardCard("Ongoing Ride", Icons.Default.CheckCircle, Color.Red) {}
         DashboardCard("More Options", Icons.Default.Settings, Color.Gray) {}
+        DashboardCard("Ride Requests", Icons.Default.List, Color.Green) {
+            navController.navigate("rideRequest")
+        }
+
 
         if (isLoading) {
             CircularProgressIndicator()

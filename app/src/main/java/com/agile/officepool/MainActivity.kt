@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.UserViewModel
 import com.agile.officepool.components.TransparentStatusBar
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.rider.RideRequestScreen
 import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.ProfileScreen
@@ -40,6 +41,7 @@ import com.agile.officepool.screens.RegisterScreen
 import com.agile.officepool.screens.RiderDashboardScreen
 import com.agile.officepool.screens.RiderScreen
 import com.agile.officepool.screens.SearchScreen
+import com.agile.officepool.screens.rider.CurrentRideScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
@@ -95,8 +97,8 @@ fun Navigation(navController: NavHostController, viewModel: UserViewModel, inten
         composable("riderScreen") { RiderScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
-
-
+        composable("rideRequest") {RideRequestScreen(navController)  }
+        composable("currentRide"){ CurrentRideScreen(navController) }
     }
 }
 

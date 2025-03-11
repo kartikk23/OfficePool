@@ -35,7 +35,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
-import com.agile.officepool.BuildConfig
 
 
 import com.google.android.gms.location.LocationServices
@@ -68,15 +67,14 @@ import androidx.compose.foundation.clickable
 
 
 import androidx.core.content.ContextCompat
+import com.agile.officepool.BuildConfig
 import com.agile.officepool.components.TransparentStatusBar
 import com.agile.officepool.network.RetrofitClient
 
 
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.maps.model.ButtCap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
-import com.google.android.gms.maps.model.SquareCap
 import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
