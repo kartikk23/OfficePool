@@ -26,6 +26,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.unit.sp
@@ -99,14 +100,18 @@ fun GooglePlacesDropdown(
         onExpandedChange = { expanded = it },
         Modifier.windowInsetsPadding(windowInsets)
     ) {
-        TextField(
+        OutlinedTextField(
+
             modifier = Modifier
                 .fillMaxWidth()
+                .background(
+                    color = MaterialTheme.colorScheme.surface
+                )
                 .menuAnchor()
                 .onFocusChanged { focusState ->
                     if (!focusState.isFocused) expanded = false // Close dropdown when focus is lost
                 },
-            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseOnSurface),
+            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface),
             value = selectedPlace,
             onValueChange = { newText ->
                 selectedPlace = newText.copy(selection = TextRange(newText.text.length)) // ✅ Move cursor to end
@@ -120,8 +125,11 @@ fun GooglePlacesDropdown(
 
             readOnly = false, // Allow typing
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            label = { Text(text = label, fontWeight = FontWeight.Thin) }, // ✅ Label inside the box
             colors = TextFieldDefaults.colors(
-
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedLabelColor = Color.Gray
             ),
 
             )

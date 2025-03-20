@@ -5,43 +5,25 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
-
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
-
 import androidx.compose.runtime.LaunchedEffect
-
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.UserViewModel
-import com.agile.officepool.components.TransparentStatusBar
 import com.agile.officepool.network.SessionManager
-import com.agile.officepool.rider.RideRequestScreen
+import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
-import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
-import com.agile.officepool.screens.RiderDashboardScreen
-import com.agile.officepool.screens.RiderScreen
 import com.agile.officepool.screens.SearchScreen
-import com.agile.officepool.screens.rider.CurrentRideScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
@@ -52,11 +34,11 @@ class MainActivity : ComponentActivity() {
 
 
         // ✅ Ensure Full-Screen Mode and No Layout Shift
-        WindowCompat.setDecorFitsSystemWindows(window,false)
+//        WindowCompat.setDecorFitsSystemWindows(window,false)
 
         // Retrieve Rider Mode state
         val sessionManager = SessionManager(this)
-        val startDestination = if (sessionManager.isRiderMode()) "riderScreen" else "home"
+        val startDestination = if (sessionManager.isRiderMode()) "register" else "home"
 
 
         setContent {
@@ -64,7 +46,7 @@ class MainActivity : ComponentActivity() {
             OfficePoolTheme {
                 Box(modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
+
 
                 ) {
                     val navController = rememberNavController()
@@ -93,12 +75,26 @@ fun Navigation(navController: NavHostController, viewModel: UserViewModel, inten
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
-        composable("dashboard") { RiderDashboardScreen(navController) }
-        composable("riderScreen") { RiderScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
-        composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
-        composable("rideRequest") {RideRequestScreen(navController)  }
-        composable("currentRide"){ CurrentRideScreen(navController) }
+        // ✅ Define availableRides with route parameters
+        composable(
+            "availableRides/{source}/{sourceLat}/{sourceLng}/{destination}/{destinationLat}/{destinationLng}"
+        ) { backStackEntry ->
+            val source = backStackEntry.arguments?.getString("source") ?: ""
+            val sourceLat = backStackEntry.arguments?.getString("sourceLat")?.toDoubleOrNull() ?: 0.0
+            val sourceLng = backStackEntry.arguments?.getString("sourceLng")?.toDoubleOrNull() ?: 0.0
+            val destination = backStackEntry.arguments?.getString("destination") ?: ""
+            val destinationLat = backStackEntry.arguments?.getString("destinationLat")?.toDoubleOrNull() ?: 0.0
+            val destinationLng = backStackEntry.arguments?.getString("destinationLng")?.toDoubleOrNull() ?: 0.0
+
+            AvailableRidesScreen(navController, source, sourceLat, sourceLng, destination, destinationLat, destinationLng)
+        }
+//        composable("dashboard") { RiderDashboardScreen(navController) }
+//        composable("riderScreen") { RiderScreen(navController) }
+
+//        composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
+//        composable("rideRequest") {RideRequestScreen(navController)  }
+//        composable("currentRide"){ CurrentRideScreen(navController) }
     }
 }
 

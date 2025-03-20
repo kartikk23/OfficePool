@@ -14,6 +14,6 @@ data class RideInfo(
     @SerializedName("route") val route: String,
     @SerializedName("status") val status: String,
     @SerializedName("availableSeats") val availableSeats: String,
-//    @SerializedName("dateTime") val dateTime: Timestamp
+    @SerializedName("rideStartTime") val rideStartTime: String
 
 )

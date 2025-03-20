@@ -51,7 +51,7 @@ fun RiderDashboardScreen(navController: NavController) {
         }
     }
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp,50.dp,16.dp,16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp,20.dp,16.dp,16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Rider Dashboard", fontSize = 22.sp, fontWeight = FontWeight.Bold)

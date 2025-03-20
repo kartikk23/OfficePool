@@ -39,7 +39,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                modifier = Modifier.padding(10.dp,40.dp),
+
             )
         }
     ) { paddingValues ->

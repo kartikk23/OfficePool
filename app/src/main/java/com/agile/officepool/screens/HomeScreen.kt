@@ -1,14 +1,11 @@
 package com.agile.officepool.screens
 
 
-import GooglePlacesDropdown
 import android.Manifest
 import android.content.Context
 import android.location.Geocoder
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -20,12 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
-
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,43 +28,28 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
-
-
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
-
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
-
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
 import java.util.Locale
-
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-
-
 import androidx.core.content.ContextCompat
 import com.agile.officepool.BuildConfig
-import com.agile.officepool.components.TransparentStatusBar
-import com.agile.officepool.network.RetrofitClient
-
-
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -125,7 +103,7 @@ fun HomeScreen(navController: NavController) {
 
     var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
 
-    TransparentStatusBar()
+//    TransparentStatusBar()
 
     fun fetchPlaces(query: String) {
         val request = FindAutocompletePredictionsRequest.builder()
@@ -181,7 +159,6 @@ fun HomeScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
     ) { paddingValues ->
         Box( modifier = Modifier.padding(paddingValues)) {
             // Placeholder for Map (Replace with your map implementation)
@@ -195,169 +172,169 @@ fun HomeScreen(navController: NavController) {
             }
 
 
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp,30.dp,16.dp,0.dp)
 
-            if(showSearchbar){
 
-                Row (
+            ){
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp,50.dp,16.dp,0.dp)
-
-
-                ){
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.8f)
-                            .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp)) // ✅ Light BG & Rounded Corners
-                            .clickable {
-                                showSearchbar=!showSearchbar
-                                showModal = !showModal
-                            } // ✅ Navigate on click
-
-                    ) {
-                        Text(
-                            text = "Where to go?",
-                            color = Color.White,
-                            style = TextStyle(
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.W500
-                            ),
-                            modifier = Modifier.padding(16.dp,14.dp)
-                        )
-
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(0.2f)
-                            .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp)) // ✅ Light BG & Rounded Corners
-                            .clickable {
-                                navController.navigate("profile")
-                            } // ✅ Navigate on click
-
-                    ) {
-                        Icon(
-                            Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier.padding(10.dp,12.dp).align(Alignment.Center))
-
-                    }
-
-
-                }
-
-            }
-
-
-            if (showModal) {
-                ModalBottomSheet(
-                    onDismissRequest ={ showModal = false
-                        showSearchbar=true},
-                    sheetState = sheetState,
-                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
-                    containerColor = MaterialTheme.colorScheme.background, // ✅ Background Color
-                    scrimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.32f), // ✅ Background dim effect
-                    contentWindowInsets = { WindowInsets.ime }
-
+                        .weight(0.8f)
+                        .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp)) // ✅ Light BG & Rounded Corners
+                        .clickable {
+                           navController.navigate("searchScreen")
+                        } // ✅ Navigate on click
 
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxHeight(0.85f)
+                    Text(
+                        text = "Find your Ride buddy..",
+                        color = Color.White,
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W500
+                        ),
+                        modifier = Modifier.padding(16.dp,14.dp)
+                    )
 
-
-
-                        ){
-                        Column(
-                            modifier = Modifier
-                                .wrapContentHeight()
-                                .padding(16.dp,0.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-
-
-                            val context = LocalContext.current
-
-                            // Google Places Dropdown for Source
-                            GooglePlacesDropdown(
-                                label = "Source",
-                                placePredictions = placePredictions,
-                                onPlaceSelected = { name, lat, lng ->
-                                    selectedSource = name
-                                    sourceLat = lat
-                                    sourceLng = lng
-                                },
-                                onSearch = { fetchPlaces(it) },
-                                currentLocation = "Your current location",
-                                currentLat = 0.0,
-                                currentLng = 0.0
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            GooglePlacesDropdown(
-                                label = "Destination",
-                                placePredictions = placePredictions,
-                                onPlaceSelected = { name, lat, lng ->
-                                    selectedDestination = name
-                                    destinationLat = lat
-                                    destinationLng = lng
-                                },
-                                onSearch = { fetchPlaces(it) },
-                                currentLocation = "Your current location",
-                                currentLat = 0.0,
-                                currentLng = 0.0
-                            )
-
-                            //SearchForRider
-                            Button(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        isLoading = true
-                                        try {
-                                            val response = RetrofitClient.instance.getAllRides();
-                                            Toast.makeText(context, "Response: $response", Toast.LENGTH_LONG).show()
-                                        } catch (e: Exception) {
-                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                                        } finally {
-                                            isLoading = false
-                                        }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                enabled = !isLoading // Disable button when loading
-                            ) {
-                                Text(if (isLoading) "Loading..." else "Call API")
-                            }
-
-                            // Convert source place name to LatLng
-                            LaunchedEffect(selectedSource) {
-                                selectedSource?.let {
-                                    source = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
-                                }
-                            }
-
-                            // Convert destination place name to LatLng
-                            LaunchedEffect(selectedDestination) {
-                                selectedDestination?.let {
-                                    destination = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
-                                }
-                            }
-
-                            // Fetch route when both source and destination are set
-                            LaunchedEffect(source, destination) {
-                                if (source != null && destination != null) {
-                                    polylinePoints = fetchRoute(source!!, destination!!)
-                                }
-                            }
-
-                        }
-                    }
                 }
+                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.2f)
+                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp)) // ✅ Light BG & Rounded Corners
+                        .clickable {
+                            navController.navigate("profile")
+                        } // ✅ Navigate on click
+
+                ) {
+                    Icon(
+                        Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier.padding(10.dp,12.dp).align(Alignment.Center))
+
+                }
+
+
             }
+
+//            if(showSearchbar){
+//
+//
+//
+//            }
+
+
+//            if (showModal) {
+//                ModalBottomSheet(
+//                    onDismissRequest ={ showModal = false
+//                        showSearchbar=true},
+//                    sheetState = sheetState,
+//                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
+//                    containerColor = MaterialTheme.colorScheme.background, // ✅ Background Color
+//                    scrimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.32f), // ✅ Background dim effect
+//                    contentWindowInsets = { WindowInsets.ime }
+//
+//
+//                ) {
+//                    Box(
+//                        modifier = Modifier
+//                            .wrapContentHeight()
+//                            .fillMaxHeight(0.85f)
+//
+//
+//
+//                        ){
+//                        Column(
+//                            modifier = Modifier
+//                                .wrapContentHeight()
+//                                .padding(16.dp,0.dp),
+//                            horizontalAlignment = Alignment.CenterHorizontally,
+//                        ) {
+//
+//
+//                            val context = LocalContext.current
+//
+//                            // Google Places Dropdown for Source
+//                            GooglePlacesDropdown(
+//                                label = "Source",
+//                                placePredictions = placePredictions,
+//                                onPlaceSelected = { name, lat, lng ->
+//                                    selectedSource = name
+//                                    sourceLat = lat
+//                                    sourceLng = lng
+//                                },
+//                                onSearch = { fetchPlaces(it) },
+//                                currentLocation = "Your current location",
+//                                currentLat = 0.0,
+//                                currentLng = 0.0
+//                            )
+//
+//                            Spacer(modifier = Modifier.height(10.dp))
+//
+//                            GooglePlacesDropdown(
+//                                label = "Destination",
+//                                placePredictions = placePredictions,
+//                                onPlaceSelected = { name, lat, lng ->
+//                                    selectedDestination = name
+//                                    destinationLat = lat
+//                                    destinationLng = lng
+//                                },
+//                                onSearch = { fetchPlaces(it) },
+//                                currentLocation = "Your current location",
+//                                currentLat = 0.0,
+//                                currentLng = 0.0
+//                            )
+//
+//                            //SearchForRider
+//                            Button(
+//                                onClick = {
+//                                    coroutineScope.launch {
+//                                        isLoading = true
+//                                        try {
+//                                            val response = RetrofitClient.instance.getAllRides();
+//                                            Toast.makeText(context, "Response: $response", Toast.LENGTH_LONG).show()
+//                                        } catch (e: Exception) {
+//                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+//                                        } finally {
+//                                            isLoading = false
+//                                        }
+//                                    }
+//                                },
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .padding(16.dp),
+//                                enabled = !isLoading // Disable button when loading
+//                            ) {
+//                                Text(if (isLoading) "Loading..." else "Call API")
+//                            }
+//
+//                            // Convert source place name to LatLng
+//                            LaunchedEffect(selectedSource) {
+//                                selectedSource?.let {
+//                                    source = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
+//                                }
+//                            }
+//
+//                            // Convert destination place name to LatLng
+//                            LaunchedEffect(selectedDestination) {
+//                                selectedDestination?.let {
+//                                    destination = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
+//                                }
+//                            }
+//
+//                            // Fetch route when both source and destination are set
+//                            LaunchedEffect(source, destination) {
+//                                if (source != null && destination != null) {
+//                                    polylinePoints = fetchRoute(source!!, destination!!)
+//                                }
+//                            }
+//
+//                        }
+//                    }
+//                }
+//            }
 
 
         }
@@ -573,4 +550,6 @@ fun getAddressFromLatLng(context: Context, latLng: LatLng): String? {
         null
     }
 }
+
+
 

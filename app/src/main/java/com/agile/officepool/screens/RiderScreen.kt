@@ -2,6 +2,7 @@ package com.agile.officepool.screens
 
 import GooglePlacesDropdown
 import android.content.Context
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -84,7 +86,8 @@ fun RiderScreen(navController: NavController) {
                 destinationLng = destinationLng!!,
                 route = route,
                 status = status,
-                availableSeats = availableSeats
+                availableSeats = availableSeats,
+                rideStartTime = "Default"
             )
 
             try {
