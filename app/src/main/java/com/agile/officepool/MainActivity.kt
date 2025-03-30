@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -24,6 +25,7 @@ import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.RegisterScreen
 import com.agile.officepool.screens.SearchScreen
+import com.agile.officepool.screens.getUserSession
 import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
@@ -36,9 +38,11 @@ class MainActivity : ComponentActivity() {
         // ✅ Ensure Full-Screen Mode and No Layout Shift
 //        WindowCompat.setDecorFitsSystemWindows(window,false)
 
+
+
         // Retrieve Rider Mode state
-        val sessionManager = SessionManager(this)
-        val startDestination = if (sessionManager.isRiderMode()) "register" else "home"
+//        val sessionManager = SessionManager(this)
+//        val startDestination = if (sessionManager.isRiderMode()) "register" else "login"
 
 
         setContent {
@@ -51,6 +55,11 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val viewModel: UserViewModel = viewModel()
+                    val sessionManager = remember { SessionManager(this@MainActivity) }
+                    val sessionCookie = remember { sessionManager.getSessionToken() }
+
+                    // ✅ Determine Start Destination (Home if logged in, else Login)
+                    val startDestination = if (sessionCookie.isNotEmpty()) "login" else "login"
 
                     Navigation(navController, viewModel, intent, startDestination, this@MainActivity)
                 }
@@ -67,11 +76,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Navigation(navController: NavHostController, viewModel: UserViewModel, intent: Intent?,startDestination: String, context: Context) {
     // Handle deep link when Composable is first loaded
-    LaunchedEffect(intent) {
-        handleDeepLink(intent, viewModel, navController)
-    }
+//    LaunchedEffect(intent) {
+//        handleDeepLink(intent, viewModel, navController)
+//    }
 
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
@@ -98,28 +107,28 @@ fun Navigation(navController: NavHostController, viewModel: UserViewModel, inten
     }
 }
 
-private fun handleDeepLink(intent: Intent?, viewModel: UserViewModel, navController: NavHostController) {
-    intent?.data?.let { uri ->
-        Log.d("LinkedInLogin", "Received URI: $uri")
-
-        if (uri.scheme == "myapp" && uri.host == "oauth") {
-            val authCode = uri.getQueryParameter("code")
-            Log.d("LinkedInLogin", "Authorization Code: $authCode")
-
-            if (!authCode.isNullOrEmpty()) {
-                viewModel.loginWithLinkedIn(authCode,
-                    onSuccess = {
-                        Log.d("LinkedInLogin", "Login successful!")
-                        navController.navigate("home") // Redirect to HomeScreen
-                    },
-                    onError = { error ->
-                        Log.e("LinkedInLogin", "Error: ${error.message}")
-                    }
-                )
-            }
-        }
-    }
-}
+//private fun handleDeepLink(intent: Intent?, viewModel: UserViewModel, navController: NavHostController) {
+//    intent?.data?.let { uri ->
+//        Log.d("LinkedInLogin", "Received URI: $uri")
+//
+//        if (uri.scheme == "myapp" && uri.host == "oauth") {
+//            val authCode = uri.getQueryParameter("code")
+//            Log.d("LinkedInLogin", "Authorization Code: $authCode")
+//
+//            if (!authCode.isNullOrEmpty()) {
+//                viewModel.loginWithLinkedIn(authCode,
+//                    onSuccess = {
+//                        Log.d("LinkedInLogin", "Login successful!")
+//                        navController.navigate("home") // Redirect to HomeScreen
+//                    },
+//                    onError = { error ->
+//                        Log.e("LinkedInLogin", "Error: ${error.message}")
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
 
 
 

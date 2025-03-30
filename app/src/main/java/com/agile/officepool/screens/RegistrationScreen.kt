@@ -3,6 +3,8 @@ package com.agile.officepool.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,8 +29,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,17 +51,23 @@ import androidx.navigation.NavController
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.UserViewModel
 import com.agile.officepool.components.TextWithLines
-
-
+import com.agile.officepool.model.RegisterRequest
+import com.agile.officepool.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController) {
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
-    val confirmPassword = remember { mutableStateOf("") }
-    val error = remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
     val context = LocalContext.current
 
 
@@ -83,8 +94,18 @@ fun RegisterScreen(navController: NavController) {
                 )
 
                 OutlinedTextField(
-                    value = email.value,
-                    onValueChange = { email.value = it },
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -93,8 +114,8 @@ fun RegisterScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = password.value,
-                    onValueChange = { password.value = it },
+                    value = password,
+                    onValueChange = { password = it },
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
@@ -104,17 +125,17 @@ fun RegisterScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = confirmPassword.value,
-                    onValueChange = { confirmPassword.value = it },
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
                     label = { Text("Confirm Password") },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
-                if (error.value.isNotEmpty()) {
+                if (error.isNotEmpty()) {
                     Text(
-                        text = error.value,
+                        text = error,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 8.dp)
                     )
@@ -125,33 +146,49 @@ fun RegisterScreen(navController: NavController) {
                 Button(
                     onClick = {
                         when {
-                            email.value.isEmpty() || password.value.isEmpty() || confirmPassword.value.isEmpty() -> {
-                                error.value = "Please fill all fields"
+                            fullName.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() -> {
+                                error = "Please fill all fields"
                             }
-                            password.value != confirmPassword.value -> {
-                                error.value = "Passwords don't match"
+                            password != confirmPassword -> {
+                                error = "Passwords don't match"
                             }
                             else -> {
-                                navController.navigate("home")
-                                {
-                                    popUpTo("RegisterScreen") { inclusive = true } // Remove RegisterScreen from the back stack
-                                }
+                                isLoading = true
+                                error = ""
 
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    registerUser(fullName, email, password, context, {
+                                        isLoading = false
+                                        navController.navigate("home") {
+                                            popUpTo("RegisterScreen") { inclusive = true }
+                                        }
+                                    }, {
+                                        isLoading = false
+                                        error = it
+                                    })
+                                }
                             }
                         }
                     },
                     shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    enabled = !isLoading
                 ) {
-                    Text("Register",
-                        Modifier.padding(0.dp,4.dp),
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                    } else {
+                        Text(
+                            "Register",
+                            Modifier.padding(0.dp, 4.dp),
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
-                    )
+                        )
+
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -172,42 +209,50 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(12.dp))
                 // LinkedIn OAuth Login Button
-                Button(
-                    onClick = {
-                        // Handle LinkedIn OAuth login
-                        startLinkedInOAuth(context = context)
 
-                    },
-                    shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0077B5), // LinkedIn brand color
-                        contentColor = Color.White
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground), // Add LinkedIn icon
-                            contentDescription = "LinkedIn Logo",
-                            modifier = Modifier.size(24.dp),
-                            tint = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Sign in with LinkedIn",
-                            Modifier.padding(0.dp,4.dp),
-                            style = TextStyle(
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
+            }
+        }
+    }
+}
 
-                                )
-                        )
-                    }
+
+suspend fun registerUser(
+    fullName: String,
+    email: String,
+    password: String,
+    context: Context,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    withContext(Dispatchers.IO) {  // Run API call in the background
+        try {
+            val response = RetrofitClient.instance.registerUser(RegisterRequest(fullName, email, password))
+
+            Log.d("API_RESPONSE", "Raw Response: ${response.raw()}")  // ✅ Log the response
+
+            if (response.isSuccessful && response.body() != null) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
+                    onSuccess()
                 }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("API_ERROR", "Error Body: $errorBody")  // ✅ Log error response
+
+                val errorMessage = when (response.code()) {
+                    409 -> "User already exists"
+                    500 -> "Server error. Please try again later."
+                    else -> "Registration failed: ${response.message()} \nError Body: $errorBody"
+                }
+
+                withContext(Dispatchers.Main) {
+                    onError(errorMessage)
+                }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Log.e("API_EXCEPTION", "Exception: ${e.message}")
+                onError("Network error: ${e.message}")
             }
         }
     }

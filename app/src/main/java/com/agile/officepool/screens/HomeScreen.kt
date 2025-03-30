@@ -45,11 +45,15 @@ import java.util.Locale
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+
 import androidx.core.content.ContextCompat
 import com.agile.officepool.BuildConfig
+import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -61,7 +65,8 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +97,19 @@ fun HomeScreen(navController: NavController) {
     var showSearchbar by remember { mutableStateOf(true)}
     var isLoading by remember { mutableStateOf(false) }
 
+    var errorMessage by remember { mutableStateOf("") }
+
+    val sessionManager = remember { SessionManager(context) }
+    val sessionCookie = remember { sessionManager.getSessionToken() }
+
+    LaunchedEffect(sessionCookie) {
+        if (sessionCookie.isEmpty()) {
+            navController.navigate("login") {
+                popUpTo("home") { inclusive = true }
+            }
+        }
+    }
+
     // Initialize the Places Client
     fun initializePlacesClient(context: Context): PlacesClient {
         if (!Places.isInitialized()) {
@@ -118,6 +136,7 @@ fun HomeScreen(navController: NavController) {
                 placePredictions = emptyList()
             }
     }
+
 
 
 
@@ -218,6 +237,41 @@ fun HomeScreen(navController: NavController) {
 
 
             }
+
+            Row(
+               modifier =  Modifier.align(Alignment.BottomCenter).padding(16.dp,10.dp)
+            ){
+                Button(
+                    onClick = {
+                        isLoading = true
+                        CoroutineScope(Dispatchers.IO).launch{
+                            logoutUser(context, {
+                                isLoading = false
+                                navController.navigate("login") { popUpTo("home") { inclusive = true } }  // ✅ Navigate to login screen
+                            }, {
+                                isLoading = false
+                                errorMessage = it
+                            })
+                        }
+
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    enabled = !isLoading,
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                    } else {
+                        Text("Logout", color = Color.White, fontSize = 16.sp)
+                    }
+                }
+
+                if (errorMessage.isNotEmpty()) {
+                    Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
+                }
+
+            }
+
+
 
 //            if(showSearchbar){
 //
@@ -550,6 +604,65 @@ fun getAddressFromLatLng(context: Context, latLng: LatLng): String? {
         null
     }
 }
+
+suspend fun logoutUser(
+    context: Context,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val sessionManager = SessionManager(context)
+    val sessionCookie = sessionManager.getSessionToken()  // ✅ Retrieve stored session cookie
+
+    if (sessionCookie.isEmpty()) {
+        onError("No active session found.")
+        return
+    }
+
+    withContext(Dispatchers.IO) {
+        try {
+            // ✅ Pass session cookie in headers (if needed by backend)
+            val response = RetrofitClient.instance.logout("session=$sessionCookie")
+
+            if (response.isSuccessful) {
+                sessionManager.clearSessionToken()  // ✅ Clear session after successful logout
+
+                withContext(Dispatchers.Main) { onSuccess() }
+            } else {
+                val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                Log.e("LOGOUT_ERROR", "Error Body: $errorBody")
+
+                val errorMessage = when (response.code()) {
+                    403 -> "Session expired. Please log in again."
+                    500 -> "Server error. Try again later."
+                    else -> "Logout failed: ${response.message()} \nError Body: $errorBody"
+                }
+
+                withContext(Dispatchers.Main) { onError(errorMessage) }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                onError("Network error: ${e.message}")
+            }
+        }
+    }
+}
+
+
+
+
+fun getUserSession(context: Context): String {
+    val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+    return sharedPref.getString("session_cookie", "") ?: ""
+}
+
+
+fun clearUserSession(context: Context) {
+    val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+    sharedPref.edit().remove("session_cookie").apply()
+}
+
+
+
 
 
 

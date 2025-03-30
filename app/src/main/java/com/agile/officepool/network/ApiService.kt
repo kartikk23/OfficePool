@@ -1,8 +1,13 @@
 package com.agile.officepool.network
 
+import com.agile.officepool.model.LoginRequest
+import com.agile.officepool.model.LoginResponse
+import com.agile.officepool.model.RegisterRequest
+import com.agile.officepool.model.RegisterResponse
 import com.agile.officepool.model.User
 import com.agile.officepool.model.RideInfo
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.Response // Add this import
@@ -11,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
@@ -20,6 +26,15 @@ interface ApiService {
     //for login and registration
     @POST("/api/users/verify-linkedin")
     suspend fun verifyLinkedIn(@Query("accessToken") accessToken: String): Response<User>
+
+    @POST("/api/users/register")
+    suspend fun registerUser(@Body newRegisterRequest: RegisterRequest): Response<RegisterResponse>
+
+    @POST("api/users/login")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("api/users/logout")
+    suspend fun logout(@Header("Cookie") sessionCookie: String): Response<ResponseBody>
 
 
     //for rideinfo
