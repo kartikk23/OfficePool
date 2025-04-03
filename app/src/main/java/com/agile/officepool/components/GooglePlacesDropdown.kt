@@ -125,7 +125,7 @@ fun GooglePlacesDropdown(
 
             readOnly = false, // Allow typing
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            label = { Text(text = label, fontWeight = FontWeight.Thin) }, // ✅ Label inside the box
+            label = { Text(text = label) }, // ✅ Label inside the box
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,

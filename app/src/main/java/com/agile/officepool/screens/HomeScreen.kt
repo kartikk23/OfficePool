@@ -43,15 +43,18 @@ import org.json.JSONObject
 import java.net.URL
 import java.util.Locale
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 
 import androidx.core.content.ContextCompat
 import com.agile.officepool.BuildConfig
+import com.agile.officepool.MainActivity
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -99,16 +102,6 @@ fun HomeScreen(navController: NavController) {
 
     var errorMessage by remember { mutableStateOf("") }
 
-    val sessionManager = remember { SessionManager(context) }
-    val sessionCookie = remember { sessionManager.getSessionToken() }
-
-    LaunchedEffect(sessionCookie) {
-        if (sessionCookie.isEmpty()) {
-            navController.navigate("login") {
-                popUpTo("home") { inclusive = true }
-            }
-        }
-    }
 
     // Initialize the Places Client
     fun initializePlacesClient(context: Context): PlacesClient {
@@ -245,13 +238,17 @@ fun HomeScreen(navController: NavController) {
                     onClick = {
                         isLoading = true
                         CoroutineScope(Dispatchers.IO).launch{
-                            logoutUser(context, {
-                                isLoading = false
-                                navController.navigate("login") { popUpTo("home") { inclusive = true } }  // ✅ Navigate to login screen
-                            }, {
-                                isLoading = false
-                                errorMessage = it
-                            })
+                            logoutUser(
+                                context = context,
+                                onSuccess = {
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true } // Clear back stack
+                                    }
+                                },
+                                onError = { error ->
+                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         }
 
                     },
@@ -271,124 +268,6 @@ fun HomeScreen(navController: NavController) {
 
             }
 
-
-
-//            if(showSearchbar){
-//
-//
-//
-//            }
-
-
-//            if (showModal) {
-//                ModalBottomSheet(
-//                    onDismissRequest ={ showModal = false
-//                        showSearchbar=true},
-//                    sheetState = sheetState,
-//                    shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
-//                    containerColor = MaterialTheme.colorScheme.background, // ✅ Background Color
-//                    scrimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.32f), // ✅ Background dim effect
-//                    contentWindowInsets = { WindowInsets.ime }
-//
-//
-//                ) {
-//                    Box(
-//                        modifier = Modifier
-//                            .wrapContentHeight()
-//                            .fillMaxHeight(0.85f)
-//
-//
-//
-//                        ){
-//                        Column(
-//                            modifier = Modifier
-//                                .wrapContentHeight()
-//                                .padding(16.dp,0.dp),
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                        ) {
-//
-//
-//                            val context = LocalContext.current
-//
-//                            // Google Places Dropdown for Source
-//                            GooglePlacesDropdown(
-//                                label = "Source",
-//                                placePredictions = placePredictions,
-//                                onPlaceSelected = { name, lat, lng ->
-//                                    selectedSource = name
-//                                    sourceLat = lat
-//                                    sourceLng = lng
-//                                },
-//                                onSearch = { fetchPlaces(it) },
-//                                currentLocation = "Your current location",
-//                                currentLat = 0.0,
-//                                currentLng = 0.0
-//                            )
-//
-//                            Spacer(modifier = Modifier.height(10.dp))
-//
-//                            GooglePlacesDropdown(
-//                                label = "Destination",
-//                                placePredictions = placePredictions,
-//                                onPlaceSelected = { name, lat, lng ->
-//                                    selectedDestination = name
-//                                    destinationLat = lat
-//                                    destinationLng = lng
-//                                },
-//                                onSearch = { fetchPlaces(it) },
-//                                currentLocation = "Your current location",
-//                                currentLat = 0.0,
-//                                currentLng = 0.0
-//                            )
-//
-//                            //SearchForRider
-//                            Button(
-//                                onClick = {
-//                                    coroutineScope.launch {
-//                                        isLoading = true
-//                                        try {
-//                                            val response = RetrofitClient.instance.getAllRides();
-//                                            Toast.makeText(context, "Response: $response", Toast.LENGTH_LONG).show()
-//                                        } catch (e: Exception) {
-//                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-//                                        } finally {
-//                                            isLoading = false
-//                                        }
-//                                    }
-//                                },
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(16.dp),
-//                                enabled = !isLoading // Disable button when loading
-//                            ) {
-//                                Text(if (isLoading) "Loading..." else "Call API")
-//                            }
-//
-//                            // Convert source place name to LatLng
-//                            LaunchedEffect(selectedSource) {
-//                                selectedSource?.let {
-//                                    source = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
-//                                }
-//                            }
-//
-//                            // Convert destination place name to LatLng
-//                            LaunchedEffect(selectedDestination) {
-//                                selectedDestination?.let {
-//                                    destination = fetchLatLngFromPlaceName(context, it) // Convert to LatLng
-//                                }
-//                            }
-//
-//                            // Fetch route when both source and destination are set
-//                            LaunchedEffect(source, destination) {
-//                                if (source != null && destination != null) {
-//                                    polylinePoints = fetchRoute(source!!, destination!!)
-//                                }
-//                            }
-//
-//                        }
-//                    }
-//                }
-//            }
 
 
         }
@@ -462,15 +341,6 @@ fun GoogleMapView(
     ) {
 
 
-
-        // Focused marker for user's location
-//        userLocation?.let {
-//            Marker(
-//                state = rememberMarkerState(position = it),
-//                title = "You are here",
-//
-//            )
-//        }
 
         // Source Marker
         if (source != null) {
@@ -605,39 +475,33 @@ fun getAddressFromLatLng(context: Context, latLng: LatLng): String? {
     }
 }
 
+
 suspend fun logoutUser(
     context: Context,
     onSuccess: () -> Unit,
     onError: (String) -> Unit
 ) {
-    val sessionManager = SessionManager(context)
-    val sessionCookie = sessionManager.getSessionToken()  // ✅ Retrieve stored session cookie
-
-    if (sessionCookie.isEmpty()) {
-        onError("No active session found.")
-        return
-    }
-
     withContext(Dispatchers.IO) {
         try {
-            // ✅ Pass session cookie in headers (if needed by backend)
-            val response = RetrofitClient.instance.logout("session=$sessionCookie")
+            val response = RetrofitClient.instance.logout()
+
+            Log.d("LOGOUT_RESPONSE", "Response Code: ${response.code()} | Body: ${response.body()}")
 
             if (response.isSuccessful) {
-                sessionManager.clearSessionToken()  // ✅ Clear session after successful logout
+                val jsonResponse = response.body()?.toString()  // Read response as string
+                val message = JSONObject(jsonResponse.toString()).optString("message", "Logout successful")
 
-                withContext(Dispatchers.Main) { onSuccess() }
+                withContext(Dispatchers.Main) {
+                    val sessionManager = SessionManager(context)
+                    sessionManager.clearSessionToken() // ✅ Clear session token
+                    restartApp(context) // ✅ Restart the app
+                    onSuccess()
+                }
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                Log.e("LOGOUT_ERROR", "Error Body: $errorBody")
-
-                val errorMessage = when (response.code()) {
-                    403 -> "Session expired. Please log in again."
-                    500 -> "Server error. Try again later."
-                    else -> "Logout failed: ${response.message()} \nError Body: $errorBody"
+                withContext(Dispatchers.Main) {
+                    onError("Logout failed: $errorBody")
                 }
-
-                withContext(Dispatchers.Main) { onError(errorMessage) }
             }
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
@@ -647,19 +511,14 @@ suspend fun logoutUser(
     }
 }
 
-
-
-
-fun getUserSession(context: Context): String {
-    val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-    return sharedPref.getString("session_cookie", "") ?: ""
+fun restartApp(context: Context) {
+    val intent = Intent(context, MainActivity::class.java)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    context.startActivity(intent)
 }
 
 
-fun clearUserSession(context: Context) {
-    val sharedPref = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-    sharedPref.edit().remove("session_cookie").apply()
-}
+
 
 
 

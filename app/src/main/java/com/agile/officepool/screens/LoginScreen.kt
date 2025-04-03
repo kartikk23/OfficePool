@@ -45,13 +45,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
 import com.agile.officepool.components.CustomInputField
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -59,6 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
@@ -135,7 +140,10 @@ fun LoginScreen(navController: NavController) {
                             CoroutineScope(Dispatchers.IO).launch {
                                 loginUser(email.value, password.value, context, {
                                     isLoading = false
-                                    navController.navigate("home")
+
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true } // Clear login screen from back stack
+                                    }
                                 }, {
                                     isLoading = false
                                     error.value = it
@@ -180,7 +188,7 @@ fun LoginScreen(navController: NavController) {
                     },
                     onClick = { navController.navigate("register")
                     {
-                        popUpTo("LoginScreen") { inclusive = true } // Remove LoginScreen from the back stack
+                        popUpTo("login") { inclusive = true } // Remove LoginScreen from the back stack
                     }}
                 )
 
@@ -192,56 +200,64 @@ fun LoginScreen(navController: NavController) {
 
 }
 
+
+
 suspend fun loginUser(
     email: String,
     password: String,
     context: Context,
-    onSuccess: (String) -> Unit,  // ✅ Return session cookie
+    onSuccess: () -> Unit,
     onError: (String) -> Unit
 ) {
+    val sessionManager = SessionManager(context)
     withContext(Dispatchers.IO) {
         try {
             val response = RetrofitClient.instance.login(LoginRequest(email, password))
 
-            Log.d("API_RESPONSE", "Raw Response: ${response.raw()}")  // ✅ Log the response
+            if (response.isSuccessful && response.body() != null ) {
 
-            if (response.isSuccessful && response.body() != null && response.headers()["Set-Cookie"] != null) {
-                val user = response.body()!!.user
-                val sessionCookie = response.headers()["Set-Cookie"]!!  // ✅ Extract session cookie
-
-                saveUserSession(context, sessionCookie)  // ✅ Save cookie in SharedPreferences
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    onSuccess(sessionCookie)
+                val sessionToken = response.headers()["Set-Cookie"] ?: ""
+                if (sessionToken.isNotEmpty()) {
+                    sessionManager.saveSessionToken(sessionToken) // ✅ Save session
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) { onError("Session token missing.") }
                 }
-            } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e("API_ERROR", "Error Body: $errorBody")  // ✅ Log error response
 
+            } else {
                 val errorMessage = when (response.code()) {
                     401 -> "Invalid email or password"
-                    500 -> "Server error. Please try again later."
-                    else -> "Login failed: ${response.message()} \nError Body: $errorBody"
+                    else -> "Login failed: ${response.message()}"
                 }
-
                 withContext(Dispatchers.Main) {
                     onError(errorMessage)
                 }
             }
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                Log.e("API_EXCEPTION", "Exception: ${e.message}")
                 onError("Network error: ${e.message}")
             }
         }
     }
 }
 
-
-
-private fun saveUserSession(context: Context, email: String) {
-    val sharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-    sharedPreferences.edit().putString("user_email", email).apply()
+@Composable
+fun LoginScreenPreviewWrapper() {
+    val navController = rememberNavController()
+    OfficePoolTheme {
+        LoginScreen(navController = navController)
+    }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLoginScreen() {
+    LoginScreenPreviewWrapper() // Use the wrapper function
+}
+
+
+
 

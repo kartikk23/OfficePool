@@ -4,28 +4,23 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SessionManager(context: Context) {
-    private val prefs = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+
+    private val prefs: SharedPreferences = context.getSharedPreferences("session_prefs", Context.MODE_PRIVATE)
 
     fun saveSessionToken(token: String) {
-        prefs.edit().putString("SESSION_COOKIE", token).apply()
+        prefs.edit().putString("SESSION_TOKEN", token).apply()
     }
 
     fun getSessionToken(): String {
-        return prefs.getString("SESSION_COOKIE", "") ?: ""
+        return prefs.getString("SESSION_TOKEN", "") ?: ""
     }
 
     fun clearSessionToken() {
-        prefs.edit().remove("SESSION_COOKIE").apply()
-    }
-    companion object {
-        private const val KEY_RIDER_MODE = "rider_mode"
+        prefs.edit().remove("SESSION_TOKEN").apply()
     }
 
-    fun setRiderMode(isRider: Boolean) {
-        prefs.edit().putBoolean(KEY_RIDER_MODE, isRider).apply()
+    fun isUserLoggedIn(): Boolean {
+        return getSessionToken().isNotEmpty()
     }
 
-    fun isRiderMode(): Boolean {
-        return prefs.getBoolean(KEY_RIDER_MODE, false) // Default is OFF
-    }
 }

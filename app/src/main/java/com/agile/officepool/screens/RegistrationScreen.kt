@@ -160,7 +160,7 @@ fun RegisterScreen(navController: NavController) {
                                     registerUser(fullName, email, password, context, {
                                         isLoading = false
                                         navController.navigate("home") {
-                                            popUpTo("RegisterScreen") { inclusive = true }
+                                            popUpTo("register") { inclusive = true }
                                         }
                                     }, {
                                         isLoading = false
@@ -201,13 +201,15 @@ fun RegisterScreen(navController: NavController) {
                             append("Login here")
                         }
                     },
-                    onClick = { navController.navigate("login") }
+                    onClick = { navController.navigate("login"){
+                        popUpTo("register") { inclusive = true }
+                    } }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                TextWithLines("Or")
+//                TextWithLines("Or")
 
-                Spacer(modifier = Modifier.height(12.dp))
+//                Spacer(modifier = Modifier.height(12.dp))
                 // LinkedIn OAuth Login Button
 
             }

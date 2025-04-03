@@ -28,7 +28,7 @@ import com.agile.officepool.network.SessionManager
 @Composable
 fun ProfileScreen(navController: NavController, context: Context) {
     val sessionManager = remember { SessionManager(context) }
-    var isRiderMode by remember { mutableStateOf(sessionManager.isRiderMode()) }
+//    var isRiderMode by remember { mutableStateOf(sessionManager.isRiderMode()) }
 
     Scaffold(
         topBar = {
@@ -87,22 +87,22 @@ fun ProfileScreen(navController: NavController, context: Context) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = if (isRiderMode) "Rider Mode" else "Passenger Mode",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Switch(
-                    checked = isRiderMode,
-                    onCheckedChange = {
-                        isRiderMode = it
-                        if (it) {
-                            navController.navigate("dashboard") // Navigate to Rider screen
-                        } else {
-                            navController.navigate("home") // Navigate to Home screen
-                        }
-                    }
-                )
+//                Text(
+//                    text = if (isRiderMode) "Rider Mode" else "Passenger Mode",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Medium
+//                )
+//                Switch(
+//                    checked = isRiderMode,
+//                    onCheckedChange = {
+//                        isRiderMode = it
+//                        if (it) {
+//                            navController.navigate("dashboard") // Navigate to Rider screen
+//                        } else {
+//                            navController.navigate("home") // Navigate to Home screen
+//                        }
+//                    }
+//                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
