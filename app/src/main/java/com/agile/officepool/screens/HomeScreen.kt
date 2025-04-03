@@ -51,12 +51,14 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.core.content.ContextCompat
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.MainActivity
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -517,6 +519,12 @@ fun restartApp(context: Context) {
     context.startActivity(intent)
 }
 
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+//    HomeScreen()
+
+}
 
 
 
