@@ -2,7 +2,6 @@ package com.agile.officepool
 
 // MainActivity.kt
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -10,35 +9,34 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.agile.officepool.ViewModel.UserViewModel
+import com.agile.officepool.model.FCMTokenRequest
+import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
+import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
 import com.agile.officepool.screens.SearchScreen
-
+import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        FirebaseApp.initializeApp(this)
 
 
         val sessionManager = SessionManager(this)
@@ -59,11 +57,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
-
-
-
 }
 
 @Composable
@@ -79,6 +72,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
+        composable("updateProfile") { UpdateProfileScreen(navController) }
         // ✅ Define availableRides with route parameters
         composable(
             "availableRides/{source}/{sourceLat}/{sourceLng}/{destination}/{destinationLat}/{destinationLng}"
@@ -95,11 +89,20 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
 //        composable("dashboard") { RiderDashboardScreen(navController) }
 //        composable("riderScreen") { RiderScreen(navController) }
 
-//        composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
+        composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
 //        composable("rideRequest") {RideRequestScreen(navController)  }
 //        composable("currentRide"){ CurrentRideScreen(navController) }
     }
+
+
+    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            val token = task.result
+            sendFcmTokenToServer("d@gmail.com", token) // Replace with actual user email
+        }
+    }
 }
+
 
 //private fun handleDeepLink(intent: Intent?, viewModel: UserViewModel, navController: NavHostController) {
 //    intent?.data?.let { uri ->
@@ -123,7 +126,22 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
 //        }
 //    }
 //}
+fun sendFcmTokenToServer(userId: String, token: String) {
+    val request = FCMTokenRequest(userId, token)
+    RetrofitClient.instance.updateFcmToken(request).enqueue(object : Callback<Void> {
+        override fun onResponse(call: Call<Void>, response: Response<Void>) {
+            if (response.isSuccessful) {
+                Log.d("FCM", "Token updated successfully")
+            } else {
+                Log.e("FCM", "Token update failed: ${response.code()}")
+            }
+        }
 
+        override fun onFailure(call: Call<Void>, t: Throwable) {
+            Log.e("FCM", "Token update error", t)
+        }
+    })
+}
 
 
 

@@ -1,6 +1,5 @@
 package com.agile.officepool.screens
 
-
 import android.Manifest
 import android.content.Context
 import android.location.Geocoder
@@ -52,13 +51,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.tooling.preview.Preview
-
 import androidx.core.content.ContextCompat
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.MainActivity
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
-
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -167,6 +164,16 @@ fun HomeScreen(navController: NavController) {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             )
         }
+
+        // Check for incomplete profile and navigate
+//        val sessionManager = SessionManager(context)
+//        val userName = sessionManager.getUserName() // Or any field you store
+//        val mobile = sessionManager.getMobile()
+//            val apiService = RetrofitClient.instance;
+//            val resp = apiService.
+//        if (userName.isNullOrEmpty() || mobile.isNullOrEmpty()) {
+//            navController.navigate("updateProfile") // 👈 Navigate to update profile screen
+//        }
     }
 
 
@@ -184,12 +191,29 @@ fun HomeScreen(navController: NavController) {
                 GoogleMapView(userLocation, source, destination, polylinePoints)
 
             }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .align(Alignment.TopCenter)
+            )
+            {
+                // 🧑‍💼 Update Profile Button
+                Button(
+                    onClick = { navController.navigate("updateProfile") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF))
+                ) {
+                    Text("Update Profile", color = Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
 
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp,30.dp,16.dp,0.dp)
+                    .padding(16.dp, 30.dp, 16.dp, 0.dp)
 
 
             ){
@@ -199,7 +223,7 @@ fun HomeScreen(navController: NavController) {
                         .weight(0.8f)
                         .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp)) // ✅ Light BG & Rounded Corners
                         .clickable {
-                           navController.navigate("searchScreen")
+                            navController.navigate("searchScreen")
                         } // ✅ Navigate on click
 
                 ) {
@@ -226,7 +250,9 @@ fun HomeScreen(navController: NavController) {
 
                 ) {
                     Icon(
-                        Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier.padding(10.dp,12.dp).align(Alignment.Center))
+                        Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier
+                            .padding(10.dp, 12.dp)
+                            .align(Alignment.Center))
 
                 }
 
@@ -234,7 +260,9 @@ fun HomeScreen(navController: NavController) {
             }
 
             Row(
-               modifier =  Modifier.align(Alignment.BottomCenter).padding(16.dp,10.dp)
+               modifier =  Modifier
+                   .align(Alignment.BottomCenter)
+                   .padding(16.dp, 10.dp)
             ){
                 Button(
                     onClick = {
@@ -523,7 +551,6 @@ fun restartApp(context: Context) {
 @Composable
 fun HomeScreenPreview() {
 //    HomeScreen()
-
 }
 
 

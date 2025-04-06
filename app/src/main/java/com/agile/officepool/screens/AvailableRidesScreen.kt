@@ -17,7 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agile.officepool.model.ProfileRequest
 import com.agile.officepool.model.RideInfo
+import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -150,9 +152,29 @@ fun RideCard(ride: RideInfo) {
 
             Spacer(modifier = Modifier.height(15.dp))
 
+            val coroutineScope = rememberCoroutineScope();
             // Request Ride Button
             Button(
-                onClick = {},
+                onClick = {
+                    coroutineScope.launch {
+                        val passengerId = "passenger001"
+                        val passengerName = "John Doe"
+                        sendRideRequest(
+                            passengerId = passengerId,
+                            passengerName = passengerName,
+                            ride.riderId)
+                        { success ->
+                            if (success) {
+                                println("✅ Ride request sent successfully")
+                                // You can show a Toast or Snackbar here
+                            } else {
+                                println("❌ Failed to send ride request")
+                            }
+                        }
+                    }
+
+
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
@@ -227,3 +249,35 @@ fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): D
     return R * c // Distance in km
 }
 
+
+fun sendRideRequest(
+    passengerId: String,
+    passengerName: String,
+    riderId: String,
+    onResult: (Boolean) -> Unit
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val request = RideRequest(passengerId, passengerName, riderId)
+            val response = RetrofitClient.instance.sendRideRequest(request)
+
+            if (response.isSuccessful) {
+                // 🔔 Trigger FCM Notification to Rider
+                val notifyResponse = RetrofitClient.instance.sendRideRequestNotification(request)
+
+                withContext(Dispatchers.Main) {
+                    onResult(notifyResponse.isSuccessful)
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    onResult(false)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                onResult(false)
+            }
+        }
+    }
+}

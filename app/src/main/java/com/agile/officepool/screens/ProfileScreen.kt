@@ -16,12 +16,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.network.SessionManager
-
+import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,4 +146,17 @@ fun ProfileOption(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
             Text(subtitle, fontSize = 14.sp, color = Color.Gray)
         }
     }
+}
+@Composable
+fun ProfileScreenPreviewWrapper() {
+    val navController = rememberNavController()
+    OfficePoolTheme {
+        ProfileScreen(navController = navController, context = LocalContext.current)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewProfileScreen() {
+    ProfileScreenPreviewWrapper() // Use the wrapper function
 }
