@@ -1,17 +1,23 @@
 package com.agile.officepool.network
 
+import com.agile.officepool.model.FCMTokenRequest
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.model.LoginResponse
+import com.agile.officepool.model.ProfileRequest
+import com.agile.officepool.model.ProfileResponse
 import com.agile.officepool.model.RegisterRequest
 import com.agile.officepool.model.RegisterResponse
 import com.agile.officepool.model.User
 import com.agile.officepool.model.RideInfo
+import com.agile.officepool.model.RideRequest
+import com.agile.officepool.model.RideResponse
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import org.json.JSONObject
+import retrofit2.Call
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.Response // Add this import
@@ -44,6 +50,7 @@ interface ApiService {
     @POST("ride/addRide")
     suspend fun addRide(@Body rideInfo: RideInfo): Response<RideInfo>
 
+
     @GET("ride/getAllRides")
     suspend fun getAllRides(): Response<List<RideInfo>>
 
@@ -55,6 +62,22 @@ interface ApiService {
 
     @DELETE("ride/deleteRide/{rideId}")
     suspend fun deleteRide(@Path("rideId") rideId: Int): Response<String>
+
+//    update profile details of user
+    @POST("api/users/updateProfile")
+    suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
+    
+//    send ride request
+    @POST("api/ride/requestRide")
+    suspend fun sendRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
+
+    @POST("api/ride/notify")
+    suspend fun sendRideRequestNotification(@Body request: RideRequest): Response<Void>
+
+    @POST("/api/notifications/update-fcm")
+    fun updateFcmToken(@Body request: FCMTokenRequest): Call<Void>
+
+
 }
 
 object RetrofitClient {

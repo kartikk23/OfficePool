@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 val localProperties = Properties().apply {
@@ -109,6 +110,9 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.1.0")
     implementation("com.google.android.gms:play-services-maps:18.0.0")
 
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+    implementation("com.google.firebase:firebase-analytics")
+
 }}
 dependencies {
     implementation(libs.androidx.appcompat)
@@ -117,4 +121,5 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.places)
     implementation(libs.protolite.well.known.types)
+    implementation(libs.firebase.messaging.ktx)
 }
