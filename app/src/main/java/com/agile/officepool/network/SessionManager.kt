@@ -4,23 +4,38 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SessionManager(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("session_prefs", Context.MODE_PRIVATE)
-
-    fun saveSessionToken(token: String) {
-        prefs.edit().putString("SESSION_TOKEN", token).apply()
+    companion object {
+        private const val KEY_RIDER_MODE = "rider_mode"
+        private const val KEY_USER_EMAIL = "user_email"
+        private const val KEY_IS_LOGGED_IN = "is_logged_in"
     }
 
-    fun getSessionToken(): String {
-        return prefs.getString("SESSION_TOKEN", "") ?: ""
+    fun setRiderMode(isRider: Boolean) {
+        prefs.edit().putBoolean(KEY_RIDER_MODE, isRider).apply()
     }
 
-    fun clearSessionToken() {
-        prefs.edit().remove("SESSION_TOKEN").apply()
+    fun isRiderMode(): Boolean {
+        return prefs.getBoolean(KEY_RIDER_MODE, false)
+    }
+
+    fun saveUserSession(email: String) {
+        prefs.edit()
+            .putString(KEY_USER_EMAIL, email)
+            .putBoolean(KEY_IS_LOGGED_IN, true)
+            .apply()
+    }
+
+    fun getUserEmail(): String? {
+        return prefs.getString(KEY_USER_EMAIL, null)
     }
 
     fun isUserLoggedIn(): Boolean {
-        return getSessionToken().isNotEmpty()
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
     }
 
+    fun clearSession() {
+        prefs.edit().clear().apply()
+    }
 }

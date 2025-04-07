@@ -1,6 +1,6 @@
 package com.agile.officepool.network
 
-import com.agile.officepool.model.FCMTokenRequest
+
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.model.LoginResponse
 import com.agile.officepool.model.ProfileRequest
@@ -74,8 +74,7 @@ interface ApiService {
     @POST("api/ride/notify")
     suspend fun sendRideRequestNotification(@Body request: RideRequest): Response<Void>
 
-    @POST("/api/notifications/update-fcm")
-    fun updateFcmToken(@Body request: FCMTokenRequest): Call<Void>
+
 
 
 }

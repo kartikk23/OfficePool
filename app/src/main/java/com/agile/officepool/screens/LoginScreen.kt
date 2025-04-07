@@ -218,7 +218,7 @@ suspend fun loginUser(
 
                 val sessionToken = response.headers()["Set-Cookie"] ?: ""
                 if (sessionToken.isNotEmpty()) {
-                    sessionManager.saveSessionToken(sessionToken) // ✅ Save session
+                    sessionManager.saveUserSession(email) // ✅ Save session
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
                         onSuccess()

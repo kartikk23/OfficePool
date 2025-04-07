@@ -8,6 +8,8 @@ class SessionManager(context: Context) {
 
     companion object {
         private const val KEY_RIDER_MODE = "rider_mode"
+        private const val KEY_USER_EMAIL = "user_email"
+        private const val KEY_IS_LOGGED_IN = "is_logged_in"
     }
 
     fun setRiderMode(isRider: Boolean) {
@@ -15,6 +17,25 @@ class SessionManager(context: Context) {
     }
 
     fun isRiderMode(): Boolean {
-        return prefs.getBoolean(KEY_RIDER_MODE, false) // Default is OFF
+        return prefs.getBoolean(KEY_RIDER_MODE, false)
+    }
+
+    fun saveUserSession(email: String) {
+        prefs.edit()
+            .putString(KEY_USER_EMAIL, email)
+            .putBoolean(KEY_IS_LOGGED_IN, true)
+            .apply()
+    }
+
+    fun getUserEmail(): String? {
+        return prefs.getString(KEY_USER_EMAIL, null)
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+    }
+
+    fun clearSession() {
+        prefs.edit().clear().apply()
     }
 }
