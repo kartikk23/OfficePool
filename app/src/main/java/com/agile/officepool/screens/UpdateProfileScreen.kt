@@ -19,12 +19,16 @@ import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import com.agile.officepool.network.SessionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateProfileScreen(navController: NavController) {
     val context = LocalContext.current
-    var email by remember { mutableStateOf(TextFieldValue()) }
+//    var email by remember { mutableStateOf(TextFieldValue()) }
+    val sessionManager = remember { SessionManager(context) }
+    var email by remember { mutableStateOf(TextFieldValue(sessionManager.getUserEmail() ?: "")) }
+
     var phone by remember { mutableStateOf(TextFieldValue()) }
     var companyName by remember { mutableStateOf(TextFieldValue()) }
     var linkedInId by remember { mutableStateOf(TextFieldValue()) }
@@ -59,9 +63,10 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Name") },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(

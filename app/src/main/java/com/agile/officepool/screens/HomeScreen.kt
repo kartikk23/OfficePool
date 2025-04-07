@@ -52,10 +52,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.MainActivity
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -100,6 +102,12 @@ fun HomeScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf("") }
+
+    val sessionManager = remember { SessionManager(context) }
+
+    val userEmail = sessionManager.getUserEmail()
+    val isUserLoggedIn = sessionManager.isUserLoggedIn()
+
 
 
     // Initialize the Places Client
@@ -165,6 +173,10 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
+        if (!userEmail.isNullOrEmpty()) {
+            Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
+        }
+
         // Check for incomplete profile and navigate
 //        val sessionManager = SessionManager(context)
 //        val userName = sessionManager.getUserName() // Or any field you store
@@ -191,32 +203,80 @@ fun HomeScreen(navController: NavController) {
                 GoogleMapView(userLocation, source, destination, polylinePoints)
 
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .align(Alignment.TopCenter)
-            )
-            {
-                // 🧑‍💼 Update Profile Button
-                Button(
-                    onClick = { navController.navigate("updateProfile") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF))
-                ) {
-                    Text("Update Profile", color = Color.White)
-                }
-            }
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(16.dp)
+//                    .align(Alignment.TopCenter)
+//            )
+//            {
+//                // 🧑‍💼 Update Profile Button
+//                Button(
+//                    onClick = { navController.navigate("updateProfile") },
+//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF))
+//                ) {
+//                    Text("Update Profile", color = Color.White)
+//                }
+//            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
 
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp, 30.dp, 16.dp, 0.dp)
+            ) {
+                // 🔍 Ride Buddy Button
+                Box(
+                    modifier = Modifier
+                        .weight(0.6f)
+                        .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp))
+                        .clickable { navController.navigate("searchScreen") }
+                ) {
+                    Text(
+                        text = "Find your Ride buddy..",
+                        color = Color.White,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500),
+                        modifier = Modifier.padding(16.dp, 14.dp)
+                    )
+                }
 
+                Spacer(modifier = Modifier.width(8.dp))
 
-            ){
+                // 👤 Profile Button
+                Box(
+                    modifier = Modifier
+                        .weight(0.2f)
+                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
+                        .clickable { navController.navigate("profile") }
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .padding(10.dp, 12.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // 🧑‍💼 Update Profile Button
+                Button(
+                    onClick = { navController.navigate("updateProfile") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
+                    modifier = Modifier
+                        .weight(0.4f)
+                        .height(48.dp)
+                ) {
+                    Text("Update", color = Color.White, fontSize = 12.sp)
+                }
+            }
+
+            /*
+            {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -258,7 +318,7 @@ fun HomeScreen(navController: NavController) {
 
 
             }
-
+*/
             Row(
                modifier =  Modifier
                    .align(Alignment.BottomCenter)
@@ -523,7 +583,7 @@ suspend fun logoutUser(
 
                 withContext(Dispatchers.Main) {
                     val sessionManager = SessionManager(context)
-                    sessionManager.clearSessionToken() // ✅ Clear session token
+                    sessionManager.clearSession() // ✅ Clear session token
                     restartApp(context) // ✅ Restart the app
                     onSuccess()
                 }
@@ -547,13 +607,19 @@ fun restartApp(context: Context) {
     context.startActivity(intent)
 }
 
-@Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
-//    HomeScreen()
+fun HomeScreenPreviewWrapper() {
+    val navController = rememberNavController()
+    OfficePoolTheme {
+        HomeScreen(navController = navController)
+    }
 }
 
-
+@Preview(showBackground = true)
+@Composable
+fun PreviewHomeScreen() {
+    HomeScreenPreviewWrapper()  // Use the wrapper function
+}
 
 
 

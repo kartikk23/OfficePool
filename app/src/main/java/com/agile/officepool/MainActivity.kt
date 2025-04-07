@@ -15,7 +15,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.agile.officepool.model.FCMTokenRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
@@ -26,17 +25,13 @@ import com.agile.officepool.screens.RegisterScreen
 import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
-import com.google.firebase.FirebaseApp
-import com.google.firebase.messaging.FirebaseMessaging
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
+
 
 
         val sessionManager = SessionManager(this)
@@ -95,12 +90,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
     }
 
 
-    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            val token = task.result
-            sendFcmTokenToServer("d@gmail.com", token) // Replace with actual user email
-        }
-    }
+
 }
 
 
@@ -125,23 +115,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
 //            }
 //        }
 //    }
-//}
-fun sendFcmTokenToServer(userId: String, token: String) {
-    val request = FCMTokenRequest(userId, token)
-    RetrofitClient.instance.updateFcmToken(request).enqueue(object : Callback<Void> {
-        override fun onResponse(call: Call<Void>, response: Response<Void>) {
-            if (response.isSuccessful) {
-                Log.d("FCM", "Token updated successfully")
-            } else {
-                Log.e("FCM", "Token update failed: ${response.code()}")
-            }
-        }
 
-        override fun onFailure(call: Call<Void>, t: Throwable) {
-            Log.e("FCM", "Token update error", t)
-        }
-    })
-}
 
 
 
