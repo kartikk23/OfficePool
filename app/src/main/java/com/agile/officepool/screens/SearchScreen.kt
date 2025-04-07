@@ -186,14 +186,15 @@ fun SearchScreen(navController: NavController) {
         if (isRider) {
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(
-                    fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
-                ),
+
                 value = route,
                 onValueChange = { route = it },
                 label = { Text("Route") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     focusedContainerColor = MaterialTheme.colorScheme.surface,

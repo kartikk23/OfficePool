@@ -3,6 +3,7 @@ package com.agile.officepool.screens
 import android.util.Log
 import com.agile.officepool.network.RetrofitClient
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -12,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
@@ -28,7 +31,7 @@ fun UpdateProfileScreen(navController: NavController) {
 //    var email by remember { mutableStateOf(TextFieldValue()) }
     val sessionManager = remember { SessionManager(context) }
     var email by remember { mutableStateOf(TextFieldValue(sessionManager.getUserEmail() ?: "")) }
-
+    var name by remember { mutableStateOf(TextFieldValue()) }
     var phone by remember { mutableStateOf(TextFieldValue()) }
     var companyName by remember { mutableStateOf(TextFieldValue()) }
     var linkedInId by remember { mutableStateOf(TextFieldValue()) }
@@ -54,17 +57,29 @@ fun UpdateProfileScreen(navController: NavController) {
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxHeight()
+                .background(
+                    color = MaterialTheme.colorScheme.surface
+                )
                 .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -73,7 +88,16 @@ fun UpdateProfileScreen(navController: NavController) {
                 value = phone,
                 onValueChange = { phone = it },
                 label = { Text("Phone") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -81,7 +105,16 @@ fun UpdateProfileScreen(navController: NavController) {
                 value = companyName,
                 onValueChange = { companyName = it },
                 label = { Text("Company Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -89,7 +122,16 @@ fun UpdateProfileScreen(navController: NavController) {
                 value = linkedInId,
                 onValueChange = { linkedInId = it },
                 label = { Text("Linkedin id") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
             )
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -101,6 +143,7 @@ fun UpdateProfileScreen(navController: NavController) {
                             val response = apiService.updateProfile(
                                 ProfileRequest(
                                     email.text,
+                                    name.text,
                                     phone.text,
                                     companyName.text,
                                     linkedInId.text

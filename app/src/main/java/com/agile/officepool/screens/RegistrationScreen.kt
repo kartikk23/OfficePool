@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.UserViewModel
 import com.agile.officepool.components.TextWithLines
@@ -294,5 +295,6 @@ fun startLinkedInOAuth(context: Context) {
 @Preview(showBackground = true)
 @Composable
 fun RegistrationScreenPreview() {
-//    RegisterScreen()
+    val navController = rememberNavController()
+    RegisterScreen(navController)
 }

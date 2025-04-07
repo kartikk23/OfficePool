@@ -50,6 +50,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -173,9 +174,9 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
-        if (!userEmail.isNullOrEmpty()) {
-            Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
-        }
+//        if (!userEmail.isNullOrEmpty()) {
+//            Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
+//        }
 
         // Check for incomplete profile and navigate
 //        val sessionManager = SessionManager(context)
@@ -230,7 +231,7 @@ fun HomeScreen(navController: NavController) {
                 // 🔍 Ride Buddy Button
                 Box(
                     modifier = Modifier
-                        .weight(0.6f)
+                        .weight(0.65f)
                         .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp))
                         .clickable { navController.navigate("searchScreen") }
                 ) {
@@ -247,7 +248,7 @@ fun HomeScreen(navController: NavController) {
                 // 👤 Profile Button
                 Box(
                     modifier = Modifier
-                        .weight(0.2f)
+                        .weight(0.15f)
                         .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
                         .clickable { navController.navigate("profile") }
                 ) {
@@ -263,16 +264,7 @@ fun HomeScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // 🧑‍💼 Update Profile Button
-                Button(
-                    onClick = { navController.navigate("updateProfile") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
-                    modifier = Modifier
-                        .weight(0.4f)
-                        .height(48.dp)
-                ) {
-                    Text("Update", color = Color.White, fontSize = 12.sp)
-                }
+
             }
 
             /*
@@ -318,45 +310,62 @@ fun HomeScreen(navController: NavController) {
 
 
             }
+
+
 */
-            Row(
-               modifier =  Modifier
-                   .align(Alignment.BottomCenter)
-                   .padding(16.dp, 10.dp)
+
+            Column (
+                modifier =  Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp, 10.dp)
             ){
+                // 🧑‍💼 Update Profile Button
                 Button(
-                    onClick = {
-                        isLoading = true
-                        CoroutineScope(Dispatchers.IO).launch{
-                            logoutUser(
-                                context = context,
-                                onSuccess = {
-                                    navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true } // Clear back stack
-                                    }
-                                },
-                                onError = { error ->
-                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    enabled = !isLoading,
+                    onClick = { navController.navigate("updateProfile") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                    } else {
-                        Text("Logout", color = Color.White, fontSize = 16.sp)
+                    Text("Update Profile", color = Color.White, fontSize = 16.sp)
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Row(
+                ){
+                    Button(
+                        onClick = {
+                            isLoading = true
+                            CoroutineScope(Dispatchers.IO).launch{
+                                logoutUser(
+                                    context = context,
+                                    onSuccess = {
+                                        navController.navigate("login") {
+                                            popUpTo("home") { inclusive = true } // Clear back stack
+                                        }
+                                    },
+                                    onError = { error ->
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        enabled = !isLoading,
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                        } else {
+                            Text("Logout", color = Color.White, fontSize = 16.sp)
+                        }
                     }
-                }
 
-                if (errorMessage.isNotEmpty()) {
-                    Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
-                }
+                    if (errorMessage.isNotEmpty()) {
+                        Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
+                    }
 
+                }
             }
+
 
 
 
