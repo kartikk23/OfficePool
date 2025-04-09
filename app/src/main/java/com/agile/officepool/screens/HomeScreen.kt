@@ -174,9 +174,9 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
-//        if (!userEmail.isNullOrEmpty()) {
-//            Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
-//        }
+        if (!userEmail.isNullOrEmpty()) {
+            Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
+        }
 
         // Check for incomplete profile and navigate
 //        val sessionManager = SessionManager(context)
@@ -187,6 +187,17 @@ fun HomeScreen(navController: NavController) {
 //        if (userName.isNullOrEmpty() || mobile.isNullOrEmpty()) {
 //            navController.navigate("updateProfile") // 👈 Navigate to update profile screen
 //        }
+
+
+//        check for incomplter profile
+        val phone = sessionManager.getUserPhone()
+        val email = sessionManager.getUserEmail()
+
+        if (phone.isNullOrEmpty() || email.isNullOrEmpty()) {
+            navController.navigate("updateProfile") {
+                popUpTo("home") { inclusive = true }
+            }
+        }
     }
 
 
@@ -328,7 +339,7 @@ fun HomeScreen(navController: NavController) {
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
-
+/*
                 Row(
                 ){
                     Button(
@@ -364,6 +375,7 @@ fun HomeScreen(navController: NavController) {
                     }
 
                 }
+                */
             }
 
 
@@ -575,40 +587,6 @@ fun getAddressFromLatLng(context: Context, latLng: LatLng): String? {
 }
 
 
-suspend fun logoutUser(
-    context: Context,
-    onSuccess: () -> Unit,
-    onError: (String) -> Unit
-) {
-    withContext(Dispatchers.IO) {
-        try {
-            val response = RetrofitClient.instance.logout()
-
-            Log.d("LOGOUT_RESPONSE", "Response Code: ${response.code()} | Body: ${response.body()}")
-
-            if (response.isSuccessful) {
-                val jsonResponse = response.body()?.toString()  // Read response as string
-                val message = JSONObject(jsonResponse.toString()).optString("message", "Logout successful")
-
-                withContext(Dispatchers.Main) {
-                    val sessionManager = SessionManager(context)
-                    sessionManager.clearSession() // ✅ Clear session token
-                    restartApp(context) // ✅ Restart the app
-                    onSuccess()
-                }
-            } else {
-                val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                withContext(Dispatchers.Main) {
-                    onError("Logout failed: $errorBody")
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                onError("Network error: ${e.message}")
-            }
-        }
-    }
-}
 
 fun restartApp(context: Context) {
     val intent = Intent(context, MainActivity::class.java)

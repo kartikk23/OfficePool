@@ -15,14 +15,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,9 +70,9 @@ fun UpdateProfileScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
@@ -150,6 +153,11 @@ fun UpdateProfileScreen(navController: NavController) {
                                 )
                             )
                             if (response.isSuccessful && response.body() != null) {
+                                sessionManager.saveUserEmail(email.text)
+                                sessionManager.saveUserName(name.text)
+                                sessionManager.saveUserPhone(phone.text)
+                                sessionManager.saveCompanyName(companyName.text)
+                                sessionManager.saveLinkedInId(linkedInId.text)
                                 Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
                             } else {
@@ -175,4 +183,17 @@ fun UpdateProfileScreen(navController: NavController) {
             }
         }
     }
+}
+@Composable
+fun UpdateProfileScreenPreviewWrapper() {
+    val navController = rememberNavController()
+    OfficePoolTheme {
+        UpdateProfileScreen(navController = navController)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewUpdateProfileScreen() {
+    UpdateProfileScreenPreviewWrapper()  // Use the wrapper function
 }
