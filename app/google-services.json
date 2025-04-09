@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "696375490945",
+    "project_id": "officepool-a4871",
+    "storage_bucket": "officepool-a4871.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696375490945:android:5602c89eea279f58c81080",
+        "android_client_info": {
+          "package_name": "com.agile.officepool"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCp8YFAG-MO0Pl6TzRrBG-VFumf-NZRmE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

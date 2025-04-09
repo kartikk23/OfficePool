@@ -221,7 +221,7 @@ fun RegisterScreen(navController: NavController) {
 
 
 suspend fun registerUser(
-    fullName: String,
+    name: String,
     email: String,
     password: String,
     context: Context,
@@ -230,14 +230,15 @@ suspend fun registerUser(
 ) {
     withContext(Dispatchers.IO) {  // Run API call in the background
         try {
-            val response = RetrofitClient.instance.registerUser(RegisterRequest(fullName, email, password))
+            val response = RetrofitClient.instance.register(RegisterRequest(name, email, password))
 
-            Log.d("API_RESPONSE", "Raw Response: ${response.raw()}")  // ✅ Log the response
+            Log.d("API_RESPONSE", "Raw Response: ${response.body()}")  // ✅ Log the response
 
             if (response.isSuccessful && response.body() != null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
                     onSuccess()
+                    updateFcmTokenAfterLogin(context)
                 }
             } else {
                 val errorBody = response.errorBody()?.string()

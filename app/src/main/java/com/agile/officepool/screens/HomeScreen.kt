@@ -189,7 +189,7 @@ fun HomeScreen(navController: NavController) {
 //        }
 
 
-//        check for incomplter profile
+//        check for incomplete profile
         val phone = sessionManager.getUserPhone()
         val email = sessionManager.getUserEmail()
 

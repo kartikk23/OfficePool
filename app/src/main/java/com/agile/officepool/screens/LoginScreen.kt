@@ -53,9 +53,11 @@ import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
 import com.agile.officepool.components.CustomInputField
 import com.agile.officepool.model.LoginRequest
+import com.agile.officepool.network.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -212,19 +214,20 @@ suspend fun loginUser(
     val sessionManager = SessionManager(context)
     withContext(Dispatchers.IO) {
         try {
-            val response = RetrofitClient.instance.login(LoginRequest(email, password))
+            val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
+            Log.d("API_RESPONSE", "Raw Response: ${response.body()}")
 
             if (response.isSuccessful && response.body() != null ) {
 
-                val sessionToken = response.headers()["Set-Cookie"] ?: ""
-                if (sessionToken.isNotEmpty()) {
-                    sessionManager.saveUserSession(email) // ✅ Save session
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                        onSuccess()
-                    }
-                } else {
-                    withContext(Dispatchers.Main) { onError("Session token missing.") }
+                val userId = response.body()!!.user.id.toLong()
+                sessionManager.setUserId(userId)
+                sessionManager.setUsername(response.body()!!.user.name)
+                sessionManager.saveUserSession(email) // ✅ Save session
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                    onSuccess()
+                    updateFcmTokenAfterLogin(context)
                 }
 
             } else {
@@ -244,6 +247,23 @@ suspend fun loginUser(
     }
 }
 
+fun updateFcmTokenAfterLogin(context: Context) {
+    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+        CoroutineScope(Dispatchers.IO).launch {
+            val sessionManager = SessionManager(context)
+            val userId = sessionManager.getUserId()
+            if (userId != null && token != null) {
+                val response = RetrofitClient.instance.updateFcmToken(
+                    FcmTokenRequest(userId = userId, token = token)
+                )
+                if (response.isSuccessful) {
+                    Log.d("FCM", "FCM token updated post-login/registration")
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun LoginScreenPreviewWrapper() {
     val navController = rememberNavController()
@@ -257,6 +277,9 @@ fun LoginScreenPreviewWrapper() {
 fun PreviewLoginScreen() {
     LoginScreenPreviewWrapper() // Use the wrapper function
 }
+
+
+
 
 
 

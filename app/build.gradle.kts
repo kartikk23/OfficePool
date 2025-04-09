@@ -5,7 +5,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-//    id("com.google.gms.google-services")
+    alias(libs.plugins.google.gms)
+
 }
 
 val localProperties = Properties().apply {
@@ -121,5 +122,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.places)
     implementation(libs.protolite.well.known.types)
-    implementation(libs.firebase.messaging.ktx)
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.navigation:navigation-compose:2.7.0")
 }

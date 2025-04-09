@@ -34,10 +34,10 @@ fun UpdateProfileScreen(navController: NavController) {
 //    var email by remember { mutableStateOf(TextFieldValue()) }
     val sessionManager = remember { SessionManager(context) }
     var email by remember { mutableStateOf(TextFieldValue(sessionManager.getUserEmail() ?: "")) }
-    var name by remember { mutableStateOf(TextFieldValue()) }
-    var phone by remember { mutableStateOf(TextFieldValue()) }
-    var companyName by remember { mutableStateOf(TextFieldValue()) }
-    var linkedInId by remember { mutableStateOf(TextFieldValue()) }
+    var name by remember { mutableStateOf(TextFieldValue(sessionManager.getUsername() ?: "")) }
+    var phone by remember { mutableStateOf(TextFieldValue(sessionManager.getUserPhone() ?: "")) }
+    var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getCompanyName() ?: "")) }
+    var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getLinkedInId() ?: "")) }
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
@@ -73,6 +73,24 @@ fun UpdateProfileScreen(navController: NavController) {
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
@@ -153,11 +171,11 @@ fun UpdateProfileScreen(navController: NavController) {
                                 )
                             )
                             if (response.isSuccessful && response.body() != null) {
-                                sessionManager.saveUserEmail(email.text)
-                                sessionManager.saveUserName(name.text)
-                                sessionManager.saveUserPhone(phone.text)
-                                sessionManager.saveCompanyName(companyName.text)
-                                sessionManager.saveLinkedInId(linkedInId.text)
+                                sessionManager.setUserEmail(email.text)
+                                sessionManager.setUsername(name.text)
+                                sessionManager.setUserPhone(phone.text)
+                                sessionManager.setCompanyName(companyName.text)
+                                sessionManager.setLinkedInId(linkedInId.text)
                                 Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
                             } else {

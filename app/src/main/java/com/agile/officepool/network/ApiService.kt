@@ -37,11 +37,11 @@ interface ApiService {
     @POST("/api/users/verify-linkedin")
     suspend fun verifyLinkedIn(@Query("accessToken") accessToken: String): Response<User>
 
-    @POST("/api/users/register")
-    suspend fun registerUser(@Body newRegisterRequest: RegisterRequest): Response<RegisterResponse>
+    @POST("api/users/register")
+    suspend fun register(@Body newRegisterRequest: RegisterRequest): Response<RegisterResponse>
 
     @POST("api/users/login")
-    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+    suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
 
     @POST("api/users/logout")
     suspend fun logout(): Response<JSONObject>
@@ -68,13 +68,16 @@ interface ApiService {
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
     
 //    send ride request
-    @POST("api/ride/requestRide")
+    @POST("api/rides/request")
     suspend fun sendRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
 
-    @POST("api/ride/notify")
-    suspend fun sendRideRequestNotification(@Body request: RideRequest): Response<Void>
+    @POST("api/rides/fcm-token")
+    suspend fun getFCMToken(@Body request: RideRequest): Response<String>
 
-
+    @POST("api/users/update-fcm-token")
+    suspend fun updateFcmToken(
+        @Body request: FcmTokenRequest
+    ): Response<Unit>
 
 
 }
@@ -83,16 +86,25 @@ object RetrofitClient {
     private const val BASE_URL = "https://officepoolspringboot.onrender.com/"
 
     private val cookieJar = object : CookieJar {
-        private val cookieStore = mutableMapOf<String, List<Cookie>>()
+        private val cookieStore = mutableListOf<Cookie>()
 
         override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            cookieStore[url.host()] = cookies
+            // Replace cookies with the same name and path
+            cookieStore.removeAll { old ->
+                cookies.any { new ->
+                    old.name() == new.name() && old.domain() == new.domain() && old.path() == new.path()
+                }
+            }
+            cookieStore.addAll(cookies)
         }
 
         override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            return cookieStore[url.host()] ?: emptyList()
+            val validCookies = cookieStore.filter { it.matches(url) && it.expiresAt() > System.currentTimeMillis() }
+            return validCookies
         }
     }
+
+
 
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
@@ -112,4 +124,9 @@ object RetrofitClient {
             .create(ApiService::class.java)
     }
 }
+
+data class FcmTokenRequest(
+    val userId: String,
+    val token: String
+)
 

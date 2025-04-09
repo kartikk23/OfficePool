@@ -53,7 +53,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
 
     // Load profile data once when screen is composed
     LaunchedEffect(Unit) {
-        name = sessionManager.getUserName() ?: ""
+        name = sessionManager.getUsername() ?: ""
         email = sessionManager.getUserEmail() ?: ""
         phone = sessionManager.getUserPhone() ?: ""
         companyName = sessionManager.getCompanyName() ?: ""

@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +22,7 @@ import com.agile.officepool.model.ProfileRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -153,16 +155,18 @@ fun RideCard(ride: RideInfo) {
             Spacer(modifier = Modifier.height(15.dp))
 
             val coroutineScope = rememberCoroutineScope();
+            val sessionManager = SessionManager(context = LocalContext.current)
             // Request Ride Button
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        val passengerId = "passenger001"
-                        val passengerName = "John Doe"
+
+                        val passengerId = sessionManager.getUserId() ?: ""
+                        val passengerName = sessionManager.getUsername() ?: ""
                         sendRideRequest(
                             passengerId = passengerId,
                             passengerName = passengerName,
-                            ride.riderId)
+                            riderId = ride.riderId)
                         { success ->
                             if (success) {
                                 println("✅ Ride request sent successfully")
@@ -263,7 +267,7 @@ fun sendRideRequest(
 
             if (response.isSuccessful) {
                 // 🔔 Trigger FCM Notification to Rider
-                val notifyResponse = RetrofitClient.instance.sendRideRequestNotification(request)
+                val notifyResponse = RetrofitClient.instance.getFCMToken(request)
 
                 withContext(Dispatchers.Main) {
                     onResult(notifyResponse.isSuccessful)

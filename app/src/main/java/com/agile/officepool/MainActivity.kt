@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -17,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.rider.RideRequestScreen
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.HomeScreen
 import com.agile.officepool.screens.LoginScreen
@@ -36,17 +38,24 @@ class MainActivity : ComponentActivity() {
 
         val sessionManager = SessionManager(this)
         val startDestination = if (sessionManager.isUserLoggedIn()) "home" else "login"
+        val rideId = intent?.getStringExtra("rideId")
 
         setContent {
 
+
             OfficePoolTheme {
+                val navController = rememberNavController()
+                if (rideId != null) {
+                    LaunchedEffect(Unit) {
+                        navController.navigate("rideRequest/$rideId")
+                    }
+                }
                 Box(modifier = Modifier
                     .fillMaxSize()
 
 
                 ) {
 
-                    val navController = rememberNavController()
                     Navigation(navController, this@MainActivity, startDestination)
                 }
             }
@@ -68,6 +77,10 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("home") { HomeScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
+        composable("rideRequest/{rideId}") { backStackEntry ->
+            val rideIdParam = backStackEntry.arguments?.getString("rideId")
+            RideRequestScreen(rideIdParam)
+        }
         // ✅ Define availableRides with route parameters
         composable(
             "availableRides/{source}/{sourceLat}/{sourceLng}/{destination}/{destinationLat}/{destinationLng}"

@@ -42,6 +42,7 @@ import com.agile.officepool.BuildConfig
 import com.agile.officepool.components.TimePicker
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -54,7 +55,7 @@ import kotlinx.coroutines.launch
 fun SearchScreen(navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var userId by remember { mutableStateOf("111") }
+
     var source by remember { mutableStateOf<LatLng?>(null) }
     var destination by remember { mutableStateOf<LatLng?>(null) }
     var selectedSource by remember { mutableStateOf<String?>(null) }
@@ -70,6 +71,8 @@ fun SearchScreen(navController: NavController) {
     var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
     var expanded by remember { mutableStateOf(false) } // Dropdown state
     var availableSeats by remember { mutableStateOf("") }
+    val sessionManager = SessionManager(LocalContext.current)
+    val userId = sessionManager.getUserId() ?: ""
 
     // Initialize the Places Client
     fun initializePlacesClient(context: Context): PlacesClient {
