@@ -55,6 +55,7 @@ import com.agile.officepool.ViewModel.UserViewModel
 import com.agile.officepool.components.TextWithLines
 import com.agile.officepool.model.RegisterRequest
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -189,7 +190,6 @@ fun RegisterScreen(navController: NavController) {
                                 color = Color.White
                             )
                         )
-
                     }
                 }
 
@@ -230,11 +230,22 @@ suspend fun registerUser(
 ) {
     withContext(Dispatchers.IO) {  // Run API call in the background
         try {
+            val sessionManager = SessionManager(context)
             val response = RetrofitClient.instance.register(RegisterRequest(name, email, password))
 
             Log.d("API_RESPONSE", "Raw Response: ${response.body()}")  // ✅ Log the response
 
             if (response.isSuccessful && response.body() != null) {
+
+                val userId = response.body()!!.user.id.toLong()
+                sessionManager.setUserId(userId)
+                sessionManager.setUsername(response.body()!!.user.name)
+                sessionManager.saveUserSession(email) // ✅ Save session
+//                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
+
+
+
+
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
                     onSuccess()

@@ -68,9 +68,15 @@ fun ProfileScreen(navController: NavController, context: Context) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("updateProfile") }) {
+                        Icon(Icons.Default.Create, contentDescription = "Edit Profile")
+                    }
                 }
             )
         }
+
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -227,6 +233,3 @@ fun ProfileScreenPreviewWrapper() {
 fun PreviewProfileScreen() {
     ProfileScreenPreviewWrapper() // Use the wrapper function
 }
-
-
-

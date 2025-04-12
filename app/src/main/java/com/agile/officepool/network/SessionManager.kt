@@ -82,8 +82,8 @@ class SessionManager(context: Context) {
         prefs.edit().putString(KEY_USER_EMAIL,useremail).apply()
     }
 
-    fun setUserPhone(phone: String) {
-        prefs.edit().putString(KEY_USER_PHONE,phone).apply()
+    fun setUserPhone(phone: String?) {
+        prefs.edit().putString(KEY_USER_PHONE, phone).apply()
     }
 
     fun setCompanyName(companyName: String) {
