@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.agile.officepool.model.ProfileRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.RetrofitClient
@@ -212,10 +211,6 @@ fun RideDetailItem(label: String, value: String) {
         Spacer(modifier = Modifier.height(9.dp))
     }
 }
-
-
-
-
 
 
 fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {

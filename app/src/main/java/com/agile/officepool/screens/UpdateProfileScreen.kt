@@ -40,6 +40,8 @@ fun UpdateProfileScreen(navController: NavController) {
     var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getLinkedInId() ?: "")) }
     val coroutineScope = rememberCoroutineScope()
 
+    var isLoading by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -159,6 +161,7 @@ fun UpdateProfileScreen(navController: NavController) {
             Button(
                 onClick = {
                     coroutineScope.launch {
+                        isLoading = true
                         try {
                             val apiService = RetrofitClient.instance
                             val response = apiService.updateProfile(
@@ -176,32 +179,47 @@ fun UpdateProfileScreen(navController: NavController) {
                                 sessionManager.setUserPhone(phone.text)
                                 sessionManager.setCompanyName(companyName.text)
                                 sessionManager.setLinkedInId(linkedInId.text)
-                                Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
+                                Toast.makeText(
+                                    context,
+                                    "Profile updated successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navController.navigate("home")
                             } else {
-                                val errorResponse = response.errorBody()?.string();
-                                if (errorResponse != null) {
-                                    Log.e("error",errorResponse)
-                                };
+                                val errorResponse = response.errorBody()?.string()
+                                errorResponse?.let { Log.e("error", it) }
                                 Toast.makeText(context, "Update failed", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: IOException) {
                             Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show()
                         } catch (e: HttpException) {
                             Toast.makeText(context, "Server error", Toast.LENGTH_SHORT).show()
+                        } finally {
+                            isLoading = false
                         }
                     }
                 },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF161e33))
             ) {
-                Text("Update Profile", color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text("Update Profile", color = Color.White)
+                }
             }
         }
     }
 }
+
+
 @Composable
 fun UpdateProfileScreenPreviewWrapper() {
     val navController = rememberNavController()

@@ -7,7 +7,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,15 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -51,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
-import com.agile.officepool.components.CustomInputField
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.network.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
@@ -60,7 +55,6 @@ import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -96,8 +90,8 @@ fun LoginScreen(navController: NavController) {
                     painter = painterResource(R.drawable.ic_launcher_foreground),
                     contentDescription = "App Logo",
                     modifier = Modifier.size(120.dp),
-//
                 )
+
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -223,6 +217,8 @@ suspend fun loginUser(
                 sessionManager.setUserId(userId)
                 sessionManager.setUsername(response.body()!!.user.name)
                 sessionManager.saveUserSession(email) // ✅ Save session
+                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
+
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
@@ -277,10 +273,3 @@ fun LoginScreenPreviewWrapper() {
 fun PreviewLoginScreen() {
     LoginScreenPreviewWrapper() // Use the wrapper function
 }
-
-
-
-
-
-
-

@@ -1,9 +1,9 @@
 package com.agile.officepool
 
 // MainActivity.kt
+
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -16,7 +16,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.rider.RideRequestScreen
 import com.agile.officepool.screens.AvailableRidesScreen
@@ -39,6 +38,12 @@ class MainActivity : ComponentActivity() {
         val sessionManager = SessionManager(this)
         val startDestination = if (sessionManager.isUserLoggedIn()) "home" else "login"
         val rideId = intent?.getStringExtra("rideId")
+
+
+
+
+
+
 
         setContent {
 
