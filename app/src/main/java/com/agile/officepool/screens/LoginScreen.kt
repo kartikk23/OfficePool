@@ -216,8 +216,11 @@ suspend fun loginUser(
                 val userId = response.body()!!.user.id.toLong()
                 sessionManager.setUserId(userId)
                 sessionManager.setUsername(response.body()!!.user.name)
+                sessionManager.setUserPhone(response.body()!!.user.phone)
                 sessionManager.saveUserSession(email) // ✅ Save session
-                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
+                sessionManager.setCompanyName(response.body()!!.user.companyName)
+                sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
+
 
 
                 withContext(Dispatchers.Main) {

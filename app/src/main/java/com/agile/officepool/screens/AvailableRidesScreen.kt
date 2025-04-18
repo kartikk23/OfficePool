@@ -1,5 +1,8 @@
 package com.agile.officepool.screens
 
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -154,7 +157,9 @@ fun RideCard(ride: RideInfo) {
             Spacer(modifier = Modifier.height(15.dp))
 
             val coroutineScope = rememberCoroutineScope();
-            val sessionManager = SessionManager(context = LocalContext.current)
+            val context = LocalContext.current
+            val sessionManager = SessionManager(context)
+
             // Request Ride Button
             Button(
                 onClick = {
@@ -165,13 +170,14 @@ fun RideCard(ride: RideInfo) {
                         sendRideRequest(
                             passengerId = passengerId,
                             passengerName = passengerName,
-                            riderId = ride.riderId)
+                            rideId = ride.rideId!! ,
+                            riderId = ride.riderId,
+                            context)
                         { success ->
                             if (success) {
-                                println("✅ Ride request sent successfully")
-                                // You can show a Toast or Snackbar here
+                                println("✅ Ride request flow complete")
                             } else {
-                                println("❌ Failed to send ride request")
+                                println("❌ Ride request or notification failed")
                             }
                         }
                     }
@@ -195,6 +201,72 @@ fun RideCard(ride: RideInfo) {
     }
 }
 
+
+
+fun sendRideRequest(
+    passengerId: String,
+    passengerName: String,
+    rideId:Int,
+    riderId: String,
+    context: Context,
+    onResult: (Boolean) -> Unit
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val request = RideRequest(
+                rideId=rideId.toString(),
+                passengerId = passengerId,
+                passengerName = passengerName,
+                riderId = riderId,
+                requestStatus = "REQUESTED")
+            Log.d("RIDE_REQUEST", "📤 Sending ride request to backend... $request")
+            val response = RetrofitClient.instance.sendRideRequest(request)
+
+
+            if (response.isSuccessful && response.body()?.success == true) {
+
+                Log.d("RIDE_REQUEST", "✅ Ride request saved: ${response.body()}")
+
+                // Show immediate feedback to user
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Ride request saved. Sending notification...", Toast.LENGTH_SHORT).show()
+                }
+
+                // 🔔 Trigger FCM Notification to Rider
+                val notifyResponse = RetrofitClient.instance.getFCMToken(request)
+                val message = notifyResponse.body()
+                Log.d("RIDE_REQUEST", "📨 Notification response body: $message")
+                Log.d("RIDE_REQUEST", "📨 Notification response status: ${notifyResponse.code()}")
+
+
+                withContext(Dispatchers.Main) {
+                    if (notifyResponse.isSuccessful && message?.get("status") == "success") {
+                        Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
+                        onResult(true)
+                    } else {
+                        Toast.makeText(context, "⚠\uFE0F FCM failed: ${message?.get("message")}", Toast.LENGTH_LONG).show()
+                        onResult(false)
+                    }
+                }
+            } else {
+                Log.e("RIDE_REQUEST", "❌ Ride request failed: ${response.errorBody()?.string()}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "❌ Ride request failed!", Toast.LENGTH_LONG).show()
+                    onResult(false)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("RIDE_REQUEST", "💥 Exception: ${e.localizedMessage}")
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "⚠️ Error sending ride request", Toast.LENGTH_LONG).show()
+                onResult(false)
+            }
+        }
+    }
+}
+
+
 @Composable
 fun RideDetailItem(label: String, value: String) {
     Column {
@@ -211,7 +283,6 @@ fun RideDetailItem(label: String, value: String) {
         Spacer(modifier = Modifier.height(9.dp))
     }
 }
-
 
 fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
@@ -249,34 +320,3 @@ fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): D
 }
 
 
-fun sendRideRequest(
-    passengerId: String,
-    passengerName: String,
-    riderId: String,
-    onResult: (Boolean) -> Unit
-) {
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val request = RideRequest(passengerId, passengerName, riderId)
-            val response = RetrofitClient.instance.sendRideRequest(request)
-
-            if (response.isSuccessful) {
-                // 🔔 Trigger FCM Notification to Rider
-                val notifyResponse = RetrofitClient.instance.getFCMToken(request)
-
-                withContext(Dispatchers.Main) {
-                    onResult(notifyResponse.isSuccessful)
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    onResult(false)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            withContext(Dispatchers.Main) {
-                onResult(false)
-            }
-        }
-    }
-}

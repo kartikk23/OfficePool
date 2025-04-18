@@ -2,6 +2,7 @@ package com.agile.officepool
 
 // MainActivity.kt
 
+import RideRequestsScreen
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -81,6 +82,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
+        composable("rideRequests") { RideRequestsScreen(navController) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
         composable("rideRequest/{rideId}") { backStackEntry ->
             val rideIdParam = backStackEntry.arguments?.getString("rideId")

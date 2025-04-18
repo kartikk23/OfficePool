@@ -10,6 +10,7 @@ import com.agile.officepool.model.RegisterResponse
 import com.agile.officepool.model.User
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.model.RideResponse
 import okhttp3.Cookie
 import okhttp3.CookieJar
@@ -54,6 +55,8 @@ interface ApiService {
     @GET("ride/getAllRides")
     suspend fun getAllRides(): Response<List<RideInfo>>
 
+
+
     @GET("ride/getRideByStatus")
     suspend fun getRideByStatus(@Query("status") status: String): Response<List<RideInfo>>
 
@@ -68,11 +71,17 @@ interface ApiService {
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
     
 //    send ride request
-    @POST("api/rides/request")
+    @POST("rides/request")
     suspend fun sendRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
 
-    @POST("api/rides/fcm-token")
-    suspend fun getFCMToken(@Body request: RideRequest): Response<String>
+    @GET("rides/getAllReqByRiderId")
+    suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
+
+    @PUT("rides/updateRequestStatus")
+    suspend fun updateRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
+
+    @POST("rides/fcm-token")
+    suspend fun getFCMToken(@Body request: RideRequest): Response<Map<String, String>>
 
     @POST("api/users/update-fcm-token")
     suspend fun updateFcmToken(

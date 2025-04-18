@@ -50,6 +50,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
@@ -242,7 +244,7 @@ fun HomeScreen(navController: NavController) {
                 // 🔍 Ride Buddy Button
                 Box(
                     modifier = Modifier
-                        .weight(0.65f)
+                        .weight(0.70f)
                         .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp))
                         .clickable { navController.navigate("searchScreen") }
                 ) {
@@ -259,12 +261,31 @@ fun HomeScreen(navController: NavController) {
                 // 👤 Profile Button
                 Box(
                     modifier = Modifier
-                        .weight(0.15f)
+                        .weight(0.16f)
                         .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
                         .clickable { navController.navigate("profile") }
                 ) {
                     Icon(
                         Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .padding(10.dp, 12.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // 👤 Ride requests Button
+                Box(
+                    modifier = Modifier
+                        .weight(0.16f)
+                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
+                        .clickable { navController.navigate("rideRequests") }
+                ) {
+                    Icon(
+                        Icons.Default.Notifications,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier
@@ -325,58 +346,58 @@ fun HomeScreen(navController: NavController) {
 
 */
 
-            Column (
-                modifier =  Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp, 10.dp)
-            ){
-                // 🧑‍💼 Update Profile Button
-                Button(
-                    onClick = { navController.navigate("updateProfile") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
-                ) {
-                    Text("Update Profile", color = Color.White, fontSize = 16.sp)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-/*
-                Row(
-                ){
-                    Button(
-                        onClick = {
-                            isLoading = true
-                            CoroutineScope(Dispatchers.IO).launch{
-                                logoutUser(
-                                    context = context,
-                                    onSuccess = {
-                                        navController.navigate("login") {
-                                            popUpTo("home") { inclusive = true } // Clear back stack
-                                        }
-                                    },
-                                    onError = { error ->
-                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            }
-
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        enabled = !isLoading,
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                        } else {
-                            Text("Logout", color = Color.White, fontSize = 16.sp)
-                        }
-                    }
-
-                    if (errorMessage.isNotEmpty()) {
-                        Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
-                    }
-
-                }
-                */
-            }
+//            Column (
+//                modifier =  Modifier
+//                    .align(Alignment.BottomCenter)
+//                    .padding(16.dp, 10.dp)
+//            ){
+//                // 🧑‍💼 Update Profile Button
+//                Button(
+//                    onClick = { navController.navigate("updateProfile") },
+//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
+//                ) {
+//                    Text("Update Profile", color = Color.White, fontSize = 16.sp)
+//                }
+//
+//                Spacer(modifier = Modifier.width(8.dp))
+///*
+//                Row(
+//                ){
+//                    Button(
+//                        onClick = {
+//                            isLoading = true
+//                            CoroutineScope(Dispatchers.IO).launch{
+//                                logoutUser(
+//                                    context = context,
+//                                    onSuccess = {
+//                                        navController.navigate("login") {
+//                                            popUpTo("home") { inclusive = true } // Clear back stack
+//                                        }
+//                                    },
+//                                    onError = { error ->
+//                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+//                                    }
+//                                )
+//                            }
+//
+//                        },
+//                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+//                        enabled = !isLoading,
+//                    ) {
+//                        if (isLoading) {
+//                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+//                        } else {
+//                            Text("Logout", color = Color.White, fontSize = 16.sp)
+//                        }
+//                    }
+//
+//                    if (errorMessage.isNotEmpty()) {
+//                        Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
+//                    }
+//
+//                }
+//                */
+//            }
 
 
 

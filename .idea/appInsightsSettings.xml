@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.agile.officepool" />
+                  <option name="mobileSdkAppId" value="1:341345350079:android:f3d733d8c8206d5579b10a" />
+                  <option name="projectId" value="officepool-7ec91" />
+                  <option name="projectNumber" value="341345350079" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

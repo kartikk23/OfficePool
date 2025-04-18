@@ -1,9 +1,9 @@
 package com.agile.officepool.model
 
 import com.google.gson.annotations.SerializedName
-import java.sql.Timestamp
 
 data class RideInfo(
+    @SerializedName("rideId") val rideId: Int? = null,
     @SerializedName("riderId") val riderId: String,
     @SerializedName("source") val source: String,
     @SerializedName("destination") val destination: String,
@@ -15,5 +15,6 @@ data class RideInfo(
     @SerializedName("status") val status: String,
     @SerializedName("availableSeats") val availableSeats: String,
     @SerializedName("rideStartTime") val rideStartTime: String
+
 
 )
