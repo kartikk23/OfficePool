@@ -1,5 +1,6 @@
 package com.agile.officepool.screens
 
+import GooglePlacesDropdown
 import android.Manifest
 import android.content.Context
 import android.location.Geocoder
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,7 +35,6 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -45,22 +44,29 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
+import com.agile.officepool.components.TimePicker
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.MainActivity
+import com.agile.officepool.R
+import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
-import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.RoundCap
@@ -72,6 +78,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -86,10 +93,11 @@ fun HomeScreen(navController: NavController) {
 
     var source by remember { mutableStateOf<LatLng?>(null) }
     var destination by remember { mutableStateOf<LatLng?>(null) }
-    var selectedSource by remember { mutableStateOf<String?>(null) }
+    var selectedSource by remember { mutableStateOf("") }
+    var selectedDestination by remember { mutableStateOf("") }
     var sourceLat by remember { mutableStateOf<Double?>(null) }
     var sourceLng by remember { mutableStateOf<Double?>(null) }
-    var selectedDestination by remember { mutableStateOf<String?>(null) }
+
     var destinationLat by remember { mutableStateOf<Double?>(null) }
     var destinationLng by remember { mutableStateOf<Double?>(null) }
     var polylinePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
@@ -110,6 +118,14 @@ fun HomeScreen(navController: NavController) {
 
     val userEmail = sessionManager.getUserEmail()
     val isUserLoggedIn = sessionManager.isUserLoggedIn()
+    var isRider by remember { mutableStateOf(false) }
+    var route by remember { mutableStateOf("") }
+    var rideStartTime by remember { mutableStateOf("") }
+    val statusOptions = listOf("Yet To Start", "Active", "Completed","Cancelled", ) // ✅ Dropdown options
+    var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
+    var expanded by remember { mutableStateOf(false) } // Dropdown state
+    var availableSeats by remember { mutableStateOf("") }
+    val userId = sessionManager.getUserId() ?: ""
 
 
 
@@ -139,6 +155,43 @@ fun HomeScreen(navController: NavController) {
                 placePredictions = emptyList()
             }
     }
+
+    fun submitRide() {
+        coroutineScope.launch {
+            if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank() ||
+                rideStartTime.isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()) {
+                Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+
+            val rideInfo = RideInfo(
+                riderId = userId,
+                source = selectedSource!!,
+                destination = selectedDestination!!,
+                sourceLat = sourceLat!!,
+                sourceLng = sourceLng!!,
+                destinationLat = destinationLat!!,
+                destinationLng = destinationLng!!,
+                route = route,
+                status = status,
+                availableSeats = availableSeats,
+                rideStartTime = rideStartTime
+            )
+
+            try {
+                val response = RetrofitClient.instance.addRide(rideInfo)
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Ride added successfully!", Toast.LENGTH_LONG).show()
+                    navController.navigate("home") // Navigate after success
+                } else {
+                    Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        }
+
 
 
 
@@ -180,15 +233,7 @@ fun HomeScreen(navController: NavController) {
             Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
         }
 
-        // Check for incomplete profile and navigate
-//        val sessionManager = SessionManager(context)
-//        val userName = sessionManager.getUserName() // Or any field you store
-//        val mobile = sessionManager.getMobile()
-//            val apiService = RetrofitClient.instance;
-//            val resp = apiService.
-//        if (userName.isNullOrEmpty() || mobile.isNullOrEmpty()) {
-//            navController.navigate("updateProfile") // 👈 Navigate to update profile screen
-//        }
+
 
 
 //        check for incomplete profile
@@ -203,208 +248,235 @@ fun HomeScreen(navController: NavController) {
     }
 
 
-    Scaffold(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-    ) { paddingValues ->
-        Box( modifier = Modifier.padding(paddingValues)) {
-            // Placeholder for Map (Replace with your map implementation)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
-            ){
-                GoogleMapView(userLocation, source, destination, polylinePoints)
-
-            }
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp)
-//                    .align(Alignment.TopCenter)
-//            )
-//            {
-//                // 🧑‍💼 Update Profile Button
-//                Button(
-//                    onClick = { navController.navigate("updateProfile") },
-//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF))
-//                ) {
-//                    Text("Update Profile", color = Color.White)
-//                }
-//            }
-
+            .background(Color(0xFFF8F8F8))
+            .padding(0.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp)
+                .background(
+                    Color(0xFFF8F8F8)
+                )
+        ) {
+            GoogleMapView(userLocation, source, destination, polylinePoints)
             Spacer(modifier = Modifier.height(10.dp))
 
 
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp, 30.dp, 16.dp, 0.dp)
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(Color(0xFFE0E0E0)) // or use a Material color
+                    .padding(vertical = 12.dp)
             ) {
-                // 🔍 Ride Buddy Button
-                Box(
-                    modifier = Modifier
-                        .weight(0.70f)
-                        .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp))
-                        .clickable { navController.navigate("searchScreen") }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Find your Ride buddy..",
-                        color = Color.White,
-                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500),
-                        modifier = Modifier.padding(16.dp, 14.dp)
+                    VehicleIcon(iconRes = R.drawable.bike1, label = "Bike")
+                    VehicleIcon(iconRes = R.drawable.bike1, label = "Car")
+                    VehicleIcon(iconRes = R.drawable.bike1, label = "SUV")
+                    VehicleIcon(iconRes = R.drawable.bike1, label = "Taxi")
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+
+            GooglePlacesDropdown(
+                label = "Source",
+                placePredictions = placePredictions,
+                onPlaceSelected = { name, lat, lng ->
+                    selectedSource = name
+                    sourceLat = lat
+                    sourceLng = lng
+                    source = LatLng(lat, lng)
+                    if (destination != null) {
+                        fetchPolyline(LatLng(lat, lng), destination!!) { points ->
+                            polylinePoints = points
+                        }
+                    }
+                },
+                onSearch = { fetchPlaces(it) },
+                currentLocation = "Your current location",
+                currentLat = 0.0,
+                currentLng = 0.0
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            GooglePlacesDropdown(
+                label = "Destination",
+                placePredictions = placePredictions,
+                onPlaceSelected = { name, lat, lng ->
+                    selectedDestination = name
+                    destinationLat = lat
+                    destinationLng = lng
+                    destination = LatLng(lat, lng)
+                    if (source != null) {
+                        fetchPolyline(source!!, LatLng(lat, lng)) { points ->
+                            polylinePoints = points
+                        }
+                    }
+                },
+                onSearch = { fetchPlaces(it) },
+                currentLocation = "Your current location",
+                currentLat = 0.0,
+                currentLng = 0.0
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (isRider) {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = route,
+                    onValueChange = { route = it },
+                    label = { Text("Route") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedLabelColor = Color.Gray
                     )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = availableSeats,
+                    onValueChange = { availableSeats = it },
+                    label = { Text("Available Seats") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedLabelColor = Color.Gray
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TimePicker(label = "Ride begins at") {
+                    rideStartTime = it
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // 👤 Profile Button
-                Box(
-                    modifier = Modifier
-                        .weight(0.16f)
-                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
-                        .clickable { navController.navigate("profile") }
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .padding(10.dp, 12.dp)
-                            .align(Alignment.Center)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // 👤 Ride requests Button
-                Box(
-                    modifier = Modifier
-                        .weight(0.16f)
-                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp))
-                        .clickable { navController.navigate("rideRequests") }
-                ) {
-                    Icon(
-                        Icons.Default.Notifications,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .padding(10.dp, 12.dp)
-                            .align(Alignment.Center)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
-            /*
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.8f)
-                        .background(Color(0xFF161e33), shape = RoundedCornerShape(25.dp)) // ✅ Light BG & Rounded Corners
-                        .clickable {
-                            navController.navigate("searchScreen")
-                        } // ✅ Navigate on click
-
-                ) {
-                    Text(
-                        text = "Find your Ride buddy..",
-                        color = Color.White,
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W500
-                        ),
-                        modifier = Modifier.padding(16.dp,14.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Pillion", color = MaterialTheme.colorScheme.inverseSurface)
+                Switch(
+                    modifier = Modifier.padding(horizontal = 8.dp).height(36.dp),
+                    checked = isRider,
+                    onCheckedChange = { isRider = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.6f)
                     )
-
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.2f)
-                        .background(Color(0xFF161e33), shape = RoundedCornerShape(50.dp)) // ✅ Light BG & Rounded Corners
-                        .clickable {
-                            navController.navigate("profile")
-                        } // ✅ Navigate on click
-
-                ) {
-                    Icon(
-                        Icons.Default.Person, contentDescription = null, tint = Color.White,modifier = Modifier
-                            .padding(10.dp, 12.dp)
-                            .align(Alignment.Center))
-
-                }
-
-
+                )
+                Text("Rider", color = MaterialTheme.colorScheme.inverseSurface)
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+        }
 
-*/
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                val role = if (isRider) "Rider" else "Pillion"
+                if (isRider) {
+                    submitRide()
+                } else {
+                    if (selectedSource.isBlank() || selectedDestination.isBlank()) {
+                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
+                    } else {
+                        navController.navigate("availableRides/$selectedSource/$sourceLat/$sourceLng/$selectedDestination/$destinationLat/$destinationLng")
+                    }
+                }
+            }
+        ) {
+            Text(
+                text = if (isRider) "Add your ride" else "Search for your ride buddy",
+                color = MaterialTheme.colorScheme.inverseSurface
+            )
+        }
+    }
 
-//            Column (
-//                modifier =  Modifier
-//                    .align(Alignment.BottomCenter)
-//                    .padding(16.dp, 10.dp)
-//            ){
-//                // 🧑‍💼 Update Profile Button
-//                Button(
-//                    onClick = { navController.navigate("updateProfile") },
-//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
-//                ) {
-//                    Text("Update Profile", color = Color.White, fontSize = 16.sp)
-//                }
-//
-//                Spacer(modifier = Modifier.width(8.dp))
-///*
-//                Row(
-//                ){
-//                    Button(
-//                        onClick = {
-//                            isLoading = true
-//                            CoroutineScope(Dispatchers.IO).launch{
-//                                logoutUser(
-//                                    context = context,
-//                                    onSuccess = {
-//                                        navController.navigate("login") {
-//                                            popUpTo("home") { inclusive = true } // Clear back stack
-//                                        }
-//                                    },
-//                                    onError = { error ->
-//                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-//                                    }
-//                                )
-//                            }
-//
-//                        },
-//                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-//                        enabled = !isLoading,
-//                    ) {
-//                        if (isLoading) {
-//                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-//                        } else {
-//                            Text("Logout", color = Color.White, fontSize = 16.sp)
-//                        }
-//                    }
-//
-//                    if (errorMessage.isNotEmpty()) {
-//                        Text(errorMessage, color = Color.Black, modifier = Modifier.padding(10.dp))
-//                    }
-//
-//                }
-//                */
-//            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 30.dp, 16.dp, 0.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(0.7f)
+                .clip(RoundedCornerShape(25.dp))
+                .background(Color(0xFF161e33))
+                .clickable { navController.navigate("searchScreen") }
+                .padding(14.dp)
+        ) {
+            Text(
+                text = "Find your Ride buddy..",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.W500
+            )
+        }
 
+        Spacer(modifier = Modifier.width(8.dp))
 
+        Box(
+            modifier = Modifier
+                .weight(0.15f)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF161e33))
+                .clickable { navController.navigate("profile") }
+                .padding(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
 
+        Spacer(modifier = Modifier.width(8.dp))
 
+        Box(
+            modifier = Modifier
+                .weight(0.15f)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFF161e33))
+                .clickable { navController.navigate("rideRequests") }
+                .padding(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }
+
+
+
 
 
 @Composable
@@ -416,84 +488,76 @@ fun GoogleMapView(
 ) {
     val cameraPositionState = rememberCameraPositionState()
 
-    val sourceMarkerState = rememberMarkerState()
-    val destinationMarkerState = rememberMarkerState()
-
-    var selectedMarker by remember { mutableStateOf<LatLng?>(null) }
-
-    // Move camera to user location initially
-    LaunchedEffect(userLocation) {
-        userLocation?.let {
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 17f))
+    // Move camera to source or destination if set
+    LaunchedEffect(source, destination) {
+        when {
+            destination != null -> {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(destination, 15f))
+            }
+            source != null -> {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(source, 15f))
+            }
+            userLocation != null -> {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(userLocation, 17f))
+            }
         }
     }
 
-    // Update source marker dynamically
-    LaunchedEffect(source) {
-        source?.let {
-            sourceMarkerState.position = it
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 17f))
-        }
-    }
-
-    // Update destination marker dynamically
-    LaunchedEffect(destination) {
-        destination?.let {
-            destinationMarkerState.position = it
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 17f))
-        }
-    }
-
-    // Auto-zoom to fit polyline when route updates
+    // Auto-zoom to fit polyline
     LaunchedEffect(polylinePoints) {
         if (polylinePoints.isNotEmpty()) {
-            val bounds = LatLngBounds.builder().apply {
-                polylinePoints.forEach { include(it) }
-            }.build()
+            val boundsBuilder = LatLngBounds.builder()
+            polylinePoints.forEach { boundsBuilder.include(it) }
+            val bounds = boundsBuilder.build()
             cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 100))
         }
     }
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.height(350.dp),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
-            isMyLocationEnabled = true,  // ✅ Show user's location, // ✅ Enable blue dot
-            mapType = MapType.NORMAL, // ✅ Change map type
-            isTrafficEnabled = true      // ✅ Show traffic
+            isMyLocationEnabled = true,
+            mapType = MapType.NORMAL,
+            isTrafficEnabled = true
         ),
         uiSettings = MapUiSettings(
-            zoomControlsEnabled = false,  // ✅ Show zoom controls
-            compassEnabled = false,       // ✅ Show compass
+            zoomControlsEnabled = false,
+            compassEnabled = false,
             myLocationButtonEnabled = false,
-            tiltGesturesEnabled = true,  // ✅ Enable tilting
-            scrollGesturesEnabled = true // ✅ Enable scrolling
+            tiltGesturesEnabled = true,
+            scrollGesturesEnabled = true
         )
-
     ) {
-
-
-
-        // Source Marker
-        if (source != null) {
-            Marker(state = sourceMarkerState, title = "Source")
+        source?.let {
+            Marker(
+                state = MarkerState(position = it),
+                title = "Source"
+            )
 
         }
 
-        // Destination Marker
-        if (destination != null) {
-            Marker(state = destinationMarkerState, title = "Destination")
+        destination?.let {
+            Marker(
+                state = MarkerState(position = it),
+                title = "Destination"
+            )
+
         }
 
-        // Draw polyline route dynamically
         if (polylinePoints.isNotEmpty()) {
-            Polyline(points = polylinePoints, color = Color.Blue, width = 13f, startCap = RoundCap(),
+            Polyline(
+                points = polylinePoints,
+                color = Color.Blue,
+                width = 13f,
+                startCap = RoundCap(),
                 endCap = RoundCap(),
-                jointType = JointType.ROUND)
-
+                jointType = JointType.ROUND
+            )
         }
     }
 }
+
 
 
 
@@ -608,6 +672,48 @@ fun getAddressFromLatLng(context: Context, latLng: LatLng): String? {
 }
 
 
+fun fetchPolyline(
+    origin: LatLng,
+    destination: LatLng,
+    onResult: (List<LatLng>) -> Unit
+) {
+    val apiKey = "YOUR_GOOGLE_MAPS_API_KEY"
+    val url = "https://maps.googleapis.com/maps/api/directions/json?" +
+            "origin=${origin.latitude},${origin.longitude}" +
+            "&destination=${destination.latitude},${destination.longitude}" +
+            "&key=$apiKey"
+
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = URL(url).readText()
+            val json = JSONObject(response)
+            val routes = json.getJSONArray("routes")
+
+            if (routes.length() > 0) {
+                val points = mutableListOf<LatLng>()
+                val steps = routes.getJSONObject(0)
+                    .getJSONArray("legs")
+                    .getJSONObject(0)
+                    .getJSONArray("steps")
+
+                for (i in 0 until steps.length()) {
+                    val step = steps.getJSONObject(i)
+                    val polyline = step.getJSONObject("polyline").getString("points")
+                    points += decodePolyline(polyline)
+                }
+
+                withContext(Dispatchers.Main) {
+                    onResult(points)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}
+
+
+
 
 fun restartApp(context: Context) {
     val intent = Intent(context, MainActivity::class.java)
@@ -615,22 +721,33 @@ fun restartApp(context: Context) {
     context.startActivity(intent)
 }
 
-@Composable
-fun HomeScreenPreviewWrapper() {
-    val navController = rememberNavController()
-    OfficePoolTheme {
-        HomeScreen(navController = navController)
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewHomeScreen() {
-    HomeScreenPreviewWrapper()  // Use the wrapper function
+fun HomeScreenPreview() {
+    val navController = rememberNavController()
+    HomeScreen(navController)
 }
 
 
-
-
-
-
+@Composable
+fun VehicleIcon(@DrawableRes iconRes: Int, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = label,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(6.dp)
+        )
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
