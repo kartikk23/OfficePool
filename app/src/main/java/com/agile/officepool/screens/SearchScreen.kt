@@ -222,48 +222,6 @@ fun SearchScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-//            ExposedDropdownMenuBox(
-//                expanded = expanded,
-//                onExpandedChange = { expanded = it }
-//            ) {
-//                OutlinedTextField(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .menuAnchor(), // Required for correct positioning
-//                    textStyle = TextStyle(
-//                        fontSize = 15.sp,
-//                        color = MaterialTheme.colorScheme.inverseSurface
-//                    ),
-//                    value = status,
-//                    onValueChange = {},
-//                    label = { Text("Status") },
-//                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-//                    readOnly = true, // Prevent manual input
-//                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) } ,// Drop-down arrow
-//                    colors = TextFieldDefaults.colors(
-//                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-//                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-//                        unfocusedLabelColor = Color.Gray
-//                    ),
-//
-//                )
-//                // Dropdown menu
-//                ExposedDropdownMenu(
-//                    expanded = expanded,
-//                    onDismissRequest = { expanded = false }
-//                ) {
-//                    statusOptions.forEach { option ->
-//                        DropdownMenuItem(
-//                            text = { Text(option) },
-//                            onClick = {
-//                                status = option // Set selected value
-//                                expanded = false // Close dropdown
-//                            }
-//                        )
-//                    }
-//                }
-//            }
-//            Spacer(modifier = Modifier.height(10.dp))
 
             TimePicker(label = "Ride begins at") { selectedTime ->
                 rideStartTime = selectedTime

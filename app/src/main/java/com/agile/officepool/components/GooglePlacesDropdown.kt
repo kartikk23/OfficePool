@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigationDefaults.windowInsets
+
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -98,46 +101,64 @@ fun GooglePlacesDropdown(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        Modifier.windowInsetsPadding(windowInsets)
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(windowInsets)
     ) {
         OutlinedTextField(
-
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = MaterialTheme.colorScheme.surface
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(16.dp)
                 )
+                .clip(RoundedCornerShape(16.dp))
+                .padding(horizontal = 4.dp)
                 .menuAnchor()
                 .onFocusChanged { focusState ->
-                    if (!focusState.isFocused) expanded = false // Close dropdown when focus is lost
+                    if (!focusState.isFocused) expanded = false
                 },
-            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface),
+            textStyle = TextStyle(
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
             value = selectedPlace,
             onValueChange = { newText ->
-                selectedPlace = newText.copy(selection = TextRange(newText.text.length)) // ✅ Move cursor to end
-                expanded = newText.text.isNotEmpty() && placePredictions.isNotEmpty() // Expand only if text is typed
+                selectedPlace = newText.copy(selection = TextRange(newText.text.length))
+                expanded = newText.text.isNotEmpty() && placePredictions.isNotEmpty()
                 coroutineScope.launch {
                     if (newText.text.isNotEmpty()) {
-                        onSearch(newText.text) // Fetch places dynamically
+                        onSearch(newText.text)
                     }
                 }
             },
-
-            readOnly = false, // Allow typing
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            label = { Text(text = label) }, // ✅ Label inside the box
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            readOnly = false,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            label = {
+                Text(
+                    text = label,
+                    style = TextStyle(fontSize = 14.sp)
+                )
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+//                unfocusedBorderColor = Color.LightGray,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = Color.Gray,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedLabelColor = Color.Gray
-            ),
-
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
+        )
 
 
 
 
-        // Dropdown menu for showing places
+
+
+    // Dropdown menu for showing places
         if (placePredictions.isNotEmpty()) { // ✅ Show dropdown only if results exist
             ExposedDropdownMenu(
                 expanded = expanded,

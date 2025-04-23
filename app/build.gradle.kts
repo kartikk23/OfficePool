@@ -83,22 +83,23 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.compose.ui:ui:1.6.0")
-    implementation("androidx.compose.material:material:1.6.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.activity:activity-compose:1.8.0")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
-    implementation("androidx.navigation:navigation-compose:2.7.4")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.ui)
+    implementation(libs.androidx.material)
+    implementation(libs.ui.tooling.preview)
+    implementation(libs.androidx.lifecycle.runtime.ktx.v262)
+    implementation(libs.androidx.activity.compose.v180)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.gson)
     implementation("com.github.scribejava:scribejava-apis:8.3.3") // For LinkedIn OAuth
 
-    implementation("androidx.navigation:navigation-compose:2.8.6")
+
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
+    implementation ("androidx.compose.material3:material3:1.3.2")
 
     //Google Map
     implementation("com.google.maps.android:maps-compose:6.4.1") // Maps Compose library
@@ -107,12 +108,12 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.7.7")
     implementation("androidx.compose.material:material:1.7.7") // Compose Material")
 
-    implementation("androidx.compose.material:material:1.0.0")
-    implementation("com.google.android.libraries.places:places:3.1.0")
-    implementation("com.google.android.gms:play-services-maps:18.0.0")
+    implementation(libs.androidx.material.v100)
+    implementation(libs.places.v310)
+    implementation(libs.gms.play.services.maps)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
-    implementation("com.google.firebase:firebase-analytics")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
 }}
 dependencies {
@@ -122,7 +123,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.places)
     implementation(libs.protolite.well.known.types)
-    implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.navigation:navigation-compose:2.7.0")
+    implementation(libs.firebase.messaging.ktx)
+    implementation(libs.androidx.core.ktx.v1120)
+
 }
