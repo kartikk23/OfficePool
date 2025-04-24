@@ -3,6 +3,7 @@ package com.agile.officepool.screens
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -45,6 +46,10 @@ fun AvailableRidesScreen(navController: NavController,
     var availableRides by remember { mutableStateOf<List<RideInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
+    var rideRequests by remember { mutableStateOf<List<RideRequest>>(emptyList()) }
+    val passengerId = SessionManager(LocalContext.current).getUserId() ?: ""
+
+
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -53,6 +58,9 @@ fun AvailableRidesScreen(navController: NavController,
             fetchAvailableRides { rides ->
                 availableRides = filterNearbyRides(rides, sourceLat, sourceLng)
                 isLoading = false
+            }
+            fetchRideRequestsForPassenger(passengerId) { requests ->
+                rideRequests = requests
             }
         }
     }
@@ -76,7 +84,8 @@ fun AvailableRidesScreen(navController: NavController,
                     contentPadding = PaddingValues(16.dp)
                 ) {
                     items(availableRides) { ride ->
-                        RideCard(ride)
+                        val matchingRequest = rideRequests.find { it.rideId == ride.rideId.toString() }
+                        RideCard(ride = ride, rideRequest = matchingRequest)
                     }
                 }
             }
@@ -85,7 +94,7 @@ fun AvailableRidesScreen(navController: NavController,
 }
 
 @Composable
-fun RideCard(ride: RideInfo) {
+fun RideCard(ride: RideInfo, rideRequest: RideRequest?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,44 +168,85 @@ fun RideCard(ride: RideInfo) {
             val coroutineScope = rememberCoroutineScope();
             val context = LocalContext.current
             val sessionManager = SessionManager(context)
+            val passengerId = sessionManager.getUserId() ?: ""
+            val passengerName = sessionManager.getUsername() ?: ""
+            val initialStatus = rideRequest?.requestStatus ?: ""
+            var status by remember { mutableStateOf(initialStatus) }
+            val currentStatus = rememberUpdatedState(status)
+
+
+            // ✅ Log Ride Info and Ride Request details
+            Log.d("RIDE_CARD", "🚘 rideId=${ride.rideId}, riderId=${ride.riderId}, status=$status")
+            Log.d("RIDE_CARD", "📄 rideRequest: $rideRequest")
 
             // Request Ride Button
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-
-                        val passengerId = sessionManager.getUserId() ?: ""
-                        val passengerName = sessionManager.getUsername() ?: ""
-                        sendRideRequest(
-                            passengerId = passengerId,
-                            passengerName = passengerName,
-                            rideId = ride.rideId!! ,
-                            riderId = ride.riderId,
-                            context)
-                        { success ->
-                            if (success) {
-                                println("✅ Ride request flow complete")
-                            } else {
-                                println("❌ Ride request or notification failed")
+            if (currentStatus.value == "") {
+                // Show real button when no request has been made
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            sendRideRequest(
+                                passengerId = passengerId,
+                                passengerName = passengerName,
+                                rideId = ride.rideId!!,
+                                riderId = ride.riderId,
+                                context
+                            ) { success ->
+                                if (success) {
+                                    println("✅ Ride request flow complete")
+                                    status = "REQUESTED"
+                                } else {
+                                    println("❌ Ride request or notification failed")
+                                }
                             }
                         }
-                    }
-
-
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)), // Clean blue
-                shape = RoundedCornerShape(8.dp) // Softer but defined button
-            ) {
-                Text(
-                    "Request Ride",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Request Ride",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+            } else {
+                // Show a text-style fake button (disabled style)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(
+                            color = when (status) {
+                                "REQUESTED" -> Color.LightGray
+                                "ACCEPTED" -> Color(0xFF43A047) // Green
+                                "REJECTED" -> Color(0xFFE53935) // Red
+                                else -> Color.Gray
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = when (status) {
+                            "REQUESTED" -> "Requested"
+                            "ACCEPTED" -> "Accepted"
+                            "REJECTED" -> "Rejected"
+                            "COMPLETED" -> "Completed"
+                            else -> "Ride Status"
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
             }
+
         }
     }
 }
@@ -287,7 +337,7 @@ fun RideDetailItem(label: String, value: String) {
 fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val response = RetrofitClient.instance.getRideByStatus("Yet To Start")
+            val response = RetrofitClient.instance.getAllRides()
             val rides = response.body() ?: emptyList()
             withContext(Dispatchers.Main) {
                 onRidesFetched(rides)
@@ -307,6 +357,27 @@ fun filterNearbyRides(rides: List<RideInfo>, sourceLat: Double, sourceLng: Doubl
         distance <= 2.0 // Show only rides within 1 km
     }
 }
+
+fun fetchRideRequestsForPassenger(
+    passengerId: String,
+    onRequestsFetched: (List<RideRequest>) -> Unit
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = RetrofitClient.instance.getAllReqByPassengerId(passengerId.toLong())
+            val requests = response.body() ?: emptyList()
+            withContext(Dispatchers.Main) {
+                onRequestsFetched(requests)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                onRequestsFetched(emptyList())
+            }
+        }
+    }
+}
+
 
 fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     val R = 6371.0 // Radius of Earth in km

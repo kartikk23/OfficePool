@@ -60,6 +60,9 @@ interface ApiService {
     @GET("ride/getRideByStatus")
     suspend fun getRideByStatus(@Query("status") status: String): Response<List<RideInfo>>
 
+    @GET("ride/getRideByRideId")
+    suspend fun getRideByRideId(@Query("rideId") rideId: String): Response<RideInfo>
+
     @PUT("ride/updateRide")
     suspend fun updateRide(@Body rideInfo: RideInfo): Response<RideInfo>
 
@@ -77,6 +80,9 @@ interface ApiService {
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
 
+    @GET("rides/getAllReqByPassengerId")
+    suspend fun getAllReqByPassengerId(@Query("passengerId") passengerId: Long): Response<List<RideRequest>>
+
     @PUT("rides/updateRequestStatus")
     suspend fun updateRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
 
@@ -84,9 +90,7 @@ interface ApiService {
     suspend fun getFCMToken(@Body request: RideRequest): Response<Map<String, String>>
 
     @POST("api/users/update-fcm-token")
-    suspend fun updateFcmToken(
-        @Body request: FcmTokenRequest
-    ): Response<Unit>
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
 
 
 }

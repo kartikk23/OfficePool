@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,8 @@ import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -164,7 +167,9 @@ fun RideRequestsScreen(navController: NavController) {
                                             ).show()
                                         }
                                     }
-                                }
+                                },
+                                navController = navController,
+                                coroutineScope = coroutineScope
 
                             )
                         }
@@ -180,7 +185,9 @@ fun RideRequestCard(
     request: RideRequest,
     isLoading: Boolean = false,
     onAccept: (RideRequest) -> Unit = {},
-    onReject: (RideRequest) -> Unit = {}
+    onReject: (RideRequest) -> Unit = {},
+    navController: NavController,
+    coroutineScope: CoroutineScope
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -279,6 +286,56 @@ fun RideRequestCard(
                                 fontWeight = FontWeight.Bold
                             )
                         }
+
+
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    try {
+                                        val response = RetrofitClient.instance.getRideByRideId(request.rideId)
+                                        if (response.isSuccessful) {
+                                            coroutineScope.launch {
+                                                try {
+                                                    // Construct RideInfo with updated status
+                                                    val updatedRide = response.body()!!.copy(status = "Active") // assuming `response` is RideInfo
+
+                                                    val response2 = RetrofitClient.instance.updateRide(updatedRide)
+                                                    if (response2.isSuccessful) {
+                                                        Log.d("StartRide", "Ride status updated to Active")
+                                                        navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
+                                                    } else {
+                                                        Log.e("StartRide", "Failed to update ride: ${response2.code()}")
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Log.e("StartRide", "Exception while updating ride", e)
+                                                }
+                                            }
+
+                                        } else {
+                                            Log.e("RideRequestScreen", "Failed to fetch ride details: ${response.code()}")
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("RideRequestScreen", "Error fetching ride details", e)
+                                    }
+                                }
+                              },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Start Ride")
+                        }
                     }
 
                 }
@@ -301,6 +358,32 @@ fun RideRequestCard(
                             Text(
                                 text = "Rejected",
                                 color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+
+                    }
+                }
+
+                "COMPLETED" -> {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.LightGray.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, Color.Gray),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(top = 8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "COMPLETED",
+                                color = Color.Gray,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                             )

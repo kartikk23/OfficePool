@@ -247,16 +247,24 @@ suspend fun loginUser(
 }
 
 fun updateFcmTokenAfterLogin(context: Context) {
-    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-        CoroutineScope(Dispatchers.IO).launch {
-            val sessionManager = SessionManager(context)
-            val userId = sessionManager.getUserId()
-            if (userId != null && token != null) {
-                val response = RetrofitClient.instance.updateFcmToken(
-                    FcmTokenRequest(userId = userId, token = token)
-                )
-                if (response.isSuccessful) {
-                    Log.d("FCM", "FCM token updated post-login/registration")
+
+    FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener {
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            Log.d("FCM_TOKEN_DEBUG", "Fetched FCM Token: $token")
+            // use newToken here
+            CoroutineScope(Dispatchers.IO).launch {
+                val sessionManager = SessionManager(context)
+                val userId = sessionManager.getUserId()
+                Log.d("FCM_TOKEN_DEBUG", "SessionManager userId: $userId, FCM token: $token")
+                if (userId != null && token != null) {
+                    val response = RetrofitClient.instance.updateFcmToken(
+                        FcmTokenRequest(userId = userId, token = token)
+                    )
+                    if (response.isSuccessful) {
+                        Log.d("FCM_TOKEN_DEBUG", "FCM token updated post-login/registration: $token")
+                    } else {
+                        Log.e("FCM_TOKEN_DEBUG", "Failed to update token: ${response.errorBody()?.string()}")
+                    }
                 }
             }
         }
