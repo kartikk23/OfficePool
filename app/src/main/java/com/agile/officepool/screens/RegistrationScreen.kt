@@ -162,7 +162,7 @@ fun RegisterScreen(navController: NavController) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     registerUser(fullName, email, password, context, {
                                         isLoading = false
-                                        navController.navigate("home") {
+                                        navController.navigate("startUp") {
                                             popUpTo("register") { inclusive = true }
                                         }
                                     }, {

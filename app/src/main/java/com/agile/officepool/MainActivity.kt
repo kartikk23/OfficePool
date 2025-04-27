@@ -35,6 +35,7 @@ import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
 
 import com.agile.officepool.screens.SearchScreen
+import com.agile.officepool.screens.StartupScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.google.firebase.messaging.FirebaseMessaging
@@ -98,6 +99,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("home") { HomeScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("rideRequests") { RideRequestsScreen(navController) }
+        composable("startUp"){ StartupScreen(navController) }
 
         composable(
             route = "liveTrackingMap/{rideId}/{requestId}",
