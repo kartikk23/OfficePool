@@ -108,20 +108,11 @@ fun GooglePlacesDropdown(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .clip(RoundedCornerShape(16.dp))
-                .padding(horizontal = 4.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .menuAnchor()
                 .onFocusChanged { focusState ->
                     if (!focusState.isFocused) expanded = false
                 },
-            textStyle = TextStyle(
-                fontSize = 15.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
             value = selectedPlace,
             onValueChange = { newText ->
                 selectedPlace = newText.copy(selection = TextRange(newText.text.length))
@@ -133,42 +124,43 @@ fun GooglePlacesDropdown(
                 }
             },
             readOnly = false,
+            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface),
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
-            label = {
-                Text(
-                    text = label,
-                    style = TextStyle(fontSize = 14.sp)
-                )
-            },
-            shape = RoundedCornerShape(16.dp),
+            label = { Text(text = label, fontSize = 14.sp) },
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-//                unfocusedBorderColor = Color.LightGray,
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = Color.Gray,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                unfocusedLabelColor = Color.Gray
             )
         )
 
 
-
-
-
-
-    // Dropdown menu for showing places
-        if (placePredictions.isNotEmpty()) { // ✅ Show dropdown only if results exist
+        // Dropdown menu for showing places
+        if (placePredictions.isNotEmpty()) {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                // First option: "Use Current Location" (Always Present)
+                // ✅ First Option: Use Current Location
                 DropdownMenuItem(
                     text = {
-                        Row(modifier = Modifier.fillMaxWidth().padding(8.dp,5.dp)) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.padding(end = 8.dp), tint = MaterialTheme.colorScheme.primary)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 5.dp, horizontal = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                             Text("Your Current Location", style = TextStyle(fontSize = 14.sp))
                         }
                     },
@@ -176,35 +168,53 @@ fun GooglePlacesDropdown(
                         val selectedText = currentLocation
                         selectedPlace = TextFieldValue(
                             text = selectedText,
-                            selection = TextRange(selectedText.length) // ✅ Move cursor to the end
+                            selection = TextRange(selectedText.length)
                         )
-                        expanded = false // ✅ Close dropdown after selection
+                        expanded = false
                         if (currentLat != null && currentLng != null) {
-                            onPlaceSelected(selectedText, currentLat, currentLng) // Return current location with lat/lng
+                            onPlaceSelected(selectedText, currentLat, currentLng)
                         }
-//                        onCurrentLocationSelected() // Handle current location selection
                     }
                 )
 
+                // ✅ Predicted Places
                 placePredictions.drop(1).forEach { prediction ->
                     DropdownMenuItem(
                         text = {
-                            Row(modifier = Modifier.fillMaxWidth().padding(8.dp,5.dp)  ) {
-                                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.padding(end = 8.dp), tint = MaterialTheme.colorScheme.primary)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 5.dp, horizontal = 8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                                 Column {
-                                    Text(prediction.getPrimaryText(null).toString(), style = TextStyle(fontSize = 14.sp))
-                                    Text(prediction.getSecondaryText(null).toString(), style = TextStyle(fontSize = 12.sp, color = Color.Gray))
+                                    Text(
+                                        prediction.getPrimaryText(null).toString(),
+                                        style = TextStyle(fontSize = 14.sp)
+                                    )
+                                    Text(
+                                        prediction.getSecondaryText(null).toString(),
+                                        style = TextStyle(fontSize = 12.sp, color = Color.Gray)
+                                    )
                                 }
                             }
                         },
                         onClick = {
                             val selectedText = prediction.getPrimaryText(null).toString()
-                            val placeId = prediction.placeId // Get Place ID
+                            val placeId = prediction.placeId
 
                             fetchPlaceDetails(placeId) { lat, lng ->
-                                selectedPlace = TextFieldValue(text = selectedText, selection = TextRange(selectedText.length))
+                                selectedPlace = TextFieldValue(
+                                    text = selectedText,
+                                    selection = TextRange(selectedText.length)
+                                )
                                 expanded = false
-                                onPlaceSelected(selectedText, lat, lng) // ✅ Pass actual lat/lng
+                                onPlaceSelected(selectedText, lat, lng)
                             }
                         }
                     )

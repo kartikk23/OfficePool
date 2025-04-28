@@ -137,7 +137,7 @@ fun LoginScreen(navController: NavController) {
                                 loginUser(email.value, password.value, context, {
                                     isLoading = false
 
-                                    navController.navigate("home") {
+                                    navController.navigate("startUp") {
                                         popUpTo("login") { inclusive = true } // Clear login screen from back stack
                                     }
                                 }, {

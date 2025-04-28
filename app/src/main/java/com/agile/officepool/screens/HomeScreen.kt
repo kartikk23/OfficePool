@@ -48,6 +48,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.shape.CircleShape
@@ -251,7 +253,8 @@ fun HomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(Color.Black)
+//            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)) // Only top corners curved
             .padding(0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
@@ -259,13 +262,15 @@ fun HomeScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+//                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)) // Only top corners curved
                 .padding(0.dp)
                 .background(
-                    Color(0xFFF8F8F8)
+                    Color.Black
                 )
         ) {
-            GoogleMapView(userLocation, source, destination, polylinePoints)
-            Spacer(modifier = Modifier.height(10.dp))
+            GoogleMapView(userLocation, source, destination, polylinePoints,isRider=isRider )
+            Spacer(modifier = Modifier.height(10.dp)
+                .clip(RoundedCornerShape(25.dp)))
 
 
             Box(
@@ -310,7 +315,7 @@ fun HomeScreen(navController: NavController) {
                 currentLng = 0.0
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+//            Spacer(modifier = Modifier.height(10.dp))
 
             GooglePlacesDropdown(
                 label = "Destination",
@@ -394,7 +399,7 @@ fun HomeScreen(navController: NavController) {
         }
 
         Button(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.wrapContentSize(),
             onClick = {
                 val role = if (isRider) "Rider" else "Pillion"
                 if (isRider) {
@@ -479,84 +484,89 @@ fun HomeScreen(navController: NavController) {
 
 
 
-@Composable
-fun GoogleMapView(
-    userLocation: LatLng?,
-    source: LatLng?,
-    destination: LatLng?,
-    polylinePoints: List<LatLng>,
-) {
-    val cameraPositionState = rememberCameraPositionState()
-
-    // Move camera to source or destination if set
-    LaunchedEffect(source, destination) {
-        when {
-            destination != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(destination, 15f))
-            }
-            source != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(source, 15f))
-            }
-            userLocation != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(userLocation, 17f))
-            }
-        }
-    }
-
-    // Auto-zoom to fit polyline
-    LaunchedEffect(polylinePoints) {
-        if (polylinePoints.isNotEmpty()) {
-            val boundsBuilder = LatLngBounds.builder()
-            polylinePoints.forEach { boundsBuilder.include(it) }
-            val bounds = boundsBuilder.build()
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 100))
-        }
-    }
-
-    GoogleMap(
-        modifier = Modifier.height(350.dp),
-        cameraPositionState = cameraPositionState,
-        properties = MapProperties(
-            isMyLocationEnabled = true,
-            mapType = MapType.NORMAL,
-            isTrafficEnabled = true
-        ),
-        uiSettings = MapUiSettings(
-            zoomControlsEnabled = false,
-            compassEnabled = false,
-            myLocationButtonEnabled = false,
-            tiltGesturesEnabled = true,
-            scrollGesturesEnabled = true
-        )
-    ) {
-        source?.let {
-            Marker(
-                state = MarkerState(position = it),
-                title = "Source"
-            )
-
-        }
-
-        destination?.let {
-            Marker(
-                state = MarkerState(position = it),
-                title = "Destination"
-            )
-
-        }
-
-        if (polylinePoints.isNotEmpty()) {
-            Polyline(
-                points = polylinePoints,
-                color = Color.Blue,
-                width = 13f,
-                startCap = RoundCap(),
-                endCap = RoundCap(),
-                jointType = JointType.ROUND
-            )
-        }
-    }
-}
+//@Composable
+//fun GoogleMapView(
+//    userLocation: LatLng?,
+//    source: LatLng?,
+//    destination: LatLng?,
+//    polylinePoints: List<LatLng>,
+//    isRider: Boolean // ⬅️ Add this parameter
+//) {
+//    val cameraPositionState = rememberCameraPositionState()
+//
+//    // Move camera to source or destination if set
+//    LaunchedEffect(source, destination) {
+//        when {
+//            destination != null -> {
+//                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(destination, 15f))
+//            }
+//            source != null -> {
+//                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(source, 15f))
+//            }
+//            userLocation != null -> {
+//                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(userLocation, 17f))
+//            }
+//        }
+//    }
+//
+//    // Auto-zoom to fit polyline
+//    LaunchedEffect(polylinePoints) {
+//        if (polylinePoints.isNotEmpty()) {
+//            val boundsBuilder = LatLngBounds.builder()
+//            polylinePoints.forEach { boundsBuilder.include(it) }
+//            val bounds = boundsBuilder.build()
+//            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 100))
+//        }
+//    }
+//    val mapHeight by animateDpAsState(
+//        targetValue = if (isRider) 320.dp else 500.dp,
+//        animationSpec = tween(durationMillis = 200) // optional: customize animation
+//    )
+//
+//    GoogleMap(
+//        modifier = Modifier.height(mapHeight),
+//        cameraPositionState = cameraPositionState,
+//        properties = MapProperties(
+//            isMyLocationEnabled = true,
+//            mapType = MapType.NORMAL,
+//            isTrafficEnabled = true
+//        ),
+//        uiSettings = MapUiSettings(
+//            zoomControlsEnabled = false,
+//            compassEnabled = false,
+//            myLocationButtonEnabled = false,
+//            tiltGesturesEnabled = true,
+//            scrollGesturesEnabled = true
+//        )
+//    ) {
+//        source?.let {
+//            Marker(
+//                state = MarkerState(position = it),
+//                title = "Source"
+//            )
+//
+//        }
+//
+//        destination?.let {
+//            Marker(
+//                state = MarkerState(position = it),
+//                title = "Destination"
+//            )
+//
+//        }
+//
+//        if (polylinePoints.isNotEmpty()) {
+//            Polyline(
+//                points = polylinePoints,
+//                color = Color.Blue,
+//                width = 13f,
+//                startCap = RoundCap(),
+//                endCap = RoundCap(),
+//                jointType = JointType.ROUND
+//            )
+//        }
+//    }
+//}
 
 
 
