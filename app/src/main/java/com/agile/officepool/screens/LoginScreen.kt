@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
+import com.agile.officepool.isLocationPermissionGranted
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.network.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
@@ -137,8 +138,15 @@ fun LoginScreen(navController: NavController) {
                                 loginUser(email.value, password.value, context, {
                                     isLoading = false
 
-                                    navController.navigate("startUp") {
-                                        popUpTo("login") { inclusive = true } // Clear login screen from back stack
+                                    if(!isLocationPermissionGranted(context)){
+                                        navController.navigate("locationPermission") {
+                                            popUpTo("login") { inclusive = true } // Clear login screen from back stack
+                                        }
+                                        return@loginUser
+                                    }else{
+                                        navController.navigate("startUp") {
+                                            popUpTo("login") { inclusive = true } // Clear login screen from back stack
+                                        }
                                     }
                                 }, {
                                     isLoading = false
@@ -220,8 +228,6 @@ suspend fun loginUser(
                 sessionManager.saveUserSession(email) // ✅ Save session
                 sessionManager.setCompanyName(response.body()!!.user.companyName)
                 sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
-
-
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()

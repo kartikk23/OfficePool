@@ -5,6 +5,7 @@ package com.agile.officepool
 import LiveTrackingMapScreen
 import RideRequestsScreen
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -15,10 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-
+import android.Manifest
+import android.location.LocationManager
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -30,6 +33,7 @@ import com.agile.officepool.network.SessionManager
 import com.agile.officepool.rider.RideRequestScreen
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.HomeScreen
+import com.agile.officepool.screens.LocationRequestScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
@@ -47,18 +51,33 @@ import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var navController: NavHostController
+    private lateinit var sessionManager: SessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        sessionManager = SessionManager(this)
+        val isLoggedIn = sessionManager.isUserLoggedIn()
+        val hasLocationPermission = isLocationPermissionGranted(this)
 
-        val sessionManager = SessionManager(this)
-        val startDestination = if (sessionManager.isUserLoggedIn()) "startUp" else "login"
+        val startDestination = when {
+            !isLoggedIn -> "login"
+            isLoggedIn && hasLocationPermission -> "startUp"
+            else -> "locationPermission"
+        }
+
+        Log.d("StartDestination", "hasLocationPermission: $hasLocationPermission")
+        Log.d("StartDestination", "Start Destination: $startDestination")
+
         val rideId = intent?.getStringExtra("rideId")
 
 
 
         // Fetch and send FCM token at app startup
-        uploadFcmTokenIfNeeded(this)
+        if(!isLoggedIn){
+            uploadFcmTokenIfNeeded(this)
+        }
 
 
 
@@ -66,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
 
             OfficePoolTheme {
-                val navController = rememberNavController()
+                navController = rememberNavController()
                 if (rideId != null) {
                     LaunchedEffect(Unit) {
                         navController.navigate("rideRequest/$rideId")
@@ -83,7 +102,35 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        checkLocationOnStart()
+    }
+
+    private fun checkLocationOnStart() {
+        if (!isLocationPermissionGranted(this)) {
+
+            Log.d("LocationCheck", "Location/GPS not available. Navigating to permission screen.")
+            try {
+                navController.navigate("locationPermission") {
+                    popUpTo("startUp") { inclusive = true } // Clear backstack if needed
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else {
+            Log.d("LocationCheck", "Location permission and GPS are available.")
+            // ✅ Everything okay, stay where you are
+        }
+    }
+
+
 }
+
+
+
+
 
 @Composable
 fun Navigation(navController: NavHostController, context: Context, startDestination: String) {
@@ -97,6 +144,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("home") { HomeScreen(navController) }
+        composable("locationPermission") { LocationRequestScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("rideRequests") { RideRequestsScreen(navController) }
         composable("startUp"){ StartupScreen(navController) }
@@ -144,6 +192,8 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
 
 }
 
+
+
 fun uploadFcmTokenIfNeeded(context: Context) {
     val sessionManager = SessionManager(context)
     val userId = sessionManager.getUserId()
@@ -176,6 +226,24 @@ fun uploadFcmTokenIfNeeded(context: Context) {
     } else {
         Log.e("FCM", "🚫 User ID not found — skipping FCM token upload")
     }
+}
+
+fun isLocationPermissionGranted(context: Context): Boolean {
+    val fineLocation = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+    val coarseLocation = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+    return (fineLocation == PackageManager.PERMISSION_GRANTED ||
+            coarseLocation == PackageManager.PERMISSION_GRANTED) &&
+            (isGpsEnabled || isNetworkEnabled)
 }
 
 

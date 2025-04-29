@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -61,9 +62,7 @@ fun StartupScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
-            .verticalScroll(rememberScrollState())
-            .padding(5.dp),
+            .background(color = MaterialTheme.colorScheme.surface),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
@@ -71,124 +70,165 @@ fun StartupScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 5.dp),
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
             Text(
+                modifier = Modifier.weight(8f),
                 text = "OfficePool",
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             )
 
-
             Box(
                 modifier = Modifier
-                    .width(60.dp)
                     .clip(RoundedCornerShape(50))
-
                     .clickable { navController.navigate("profile") }
-                    .padding(10.dp)
+                    .background(color = MaterialTheme.colorScheme.onSurface)
+                    .weight(1f)
+
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.align(Alignment.Center)
+                    tint = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.align(Alignment.Center).padding(4.dp)
                 )
             }
-
-
-        }
-
-        // Search Bar
-        var searchText by remember { mutableStateOf("") }
-
-        WhereToGoTextField(navController)
-
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Recent Destinations
-        Column(
-            modifier = Modifier.fillMaxWidth()
-            ,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            RecentChip("Workplace HQ")
-            RecentChip("Tech Park 4")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Feature Cards
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FeatureCard("Travel Together", Color(0xFF2196F3), R.drawable.tt1,modifier = Modifier.width(100.dp))
-            FeatureCard("Connect", Color(0xFF4CAF50), R.drawable.handshake,modifier = Modifier.weight(1f))
-            FeatureCard("Grow", Color(0xFFFFC107), R.drawable.grow,modifier = Modifier.weight(1f))
-        }
-
-
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Motivational Full-width Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFB3E5FC))
-        ) {
             Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .clickable { navController.navigate("rideRequests") }
+                    .background(color = MaterialTheme.colorScheme.onSurface)
+                    .weight(1f)
+
             ) {
-                Text(
-                    text = "Save fuel • Reduce traffic • Save nature 🌍",
-                    color = Color(0xFF004D40),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.align(Alignment.Center).padding(4.dp)
                 )
             }
+
+
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 5.dp)
+                .clip(RoundedCornerShape(25.dp))
+                .background(Color(0xFF161e33))
+                .clickable { navController.navigate("searchScreen") }
+        ){
+            // Search Bar
+            WhereToGoTextField()
+        }
 
-        // Corporate Booking Card
-        CorporateRideCard(R.drawable.card_img)
-        Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Nearest Business Zones",
-            fontSize = 20.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        // Horizontal Scrollable Cards
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(businessZones) { zone ->
-                BusinessZoneCard(zone.toString())
+        Box(modifier = Modifier.padding(start = 14.dp,end = 14.dp, bottom = 25.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+
+                ) {
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                // Recent Destinations
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    RecentChip("Workplace HQ")
+                    RecentChip("Tech Park 4")
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                // Feature Cards
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(modifier = Modifier.weight(1f)){
+                        FeatureCard(
+                        "Travel Together",
+                            Color(0xFF2196F3),
+                            R.drawable.tt1,
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)){
+                        FeatureCard(
+                            "Connect",
+                            Color(0xFF4CAF50),
+                            R.drawable.handshake,
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)){
+                        FeatureCard(
+                            "Grow",
+                            Color(0xFFFFC107),
+                            R.drawable.grow
+                        )
+                    }
+
+
+
+
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                // Motivational Full-width Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFB3E5FC))
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize().padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Save fuel • Reduce traffic • Save nature 🌍",
+                            color = Color(0xFF004D40),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Corporate Booking Card
+                CorporateRideCard(R.drawable.card_img)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Nearest Business Zones",
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 5.dp)
+                )
+                // Horizontal Scrollable Cards
+                LazyRow(
+                    contentPadding = PaddingValues(end = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(businessZones) { zone ->
+                        BusinessZoneCard(zone.toString())
+                    }
+                }
+
             }
-        }
-
         }
     }
+}
 
 @Composable
 fun BusinessZoneCard(zoneName: String) {
@@ -207,7 +247,8 @@ fun BusinessZoneCard(zoneName: String) {
                 text = zoneName,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF311B92)
+                color = Color(0xFF311B92),
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -233,9 +274,7 @@ fun FeatureCard(
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = modifier
-            .height(150.dp)
-            .width(300.dp),
-
+            .height(150.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
         Box(
@@ -253,13 +292,14 @@ fun FeatureCard(
                     .background(Color.Black.copy(alpha = 0.4f)) // optional overlay for better text contrast
             )
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
+                modifier = Modifier.fillMaxSize().padding(start = 10.dp, end = 5.dp, bottom = 5.dp),
+                contentAlignment = Alignment.BottomStart
             ) {
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.LightGray,
+                    textAlign = TextAlign.Start,
                 )
             }
         }
@@ -274,16 +314,15 @@ fun RecentChip(text: String) {
     Surface(
         shape = RoundedCornerShape(10),
         color = Color(0xFFE0F7FA),
-        modifier = Modifier.padding(end = 4.dp)
-            .fillMaxWidth()
-            .height(50.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = text,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            color = Color(0xFF006064),
-            fontWeight = FontWeight.Medium
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp
         )
     }
 }
@@ -333,34 +372,55 @@ fun CorporateRideCard(imageResId: Int) {
         }
     }
 }
-    @Composable
-    fun WhereToGoTextField(navController: NavController) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp)
-                .clickable {
-                    navController.navigate("searchScreen")  // 👈 navigate to your search screen
-                }
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(50))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search Icon",
-                    tint = Color.Gray
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Where to go?",
-                    color = Color.Gray,
-                    fontSize = 16.sp
-                )
-            }
-        }
+@Composable
+fun WhereToGoTextField() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search Icon",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(9.dp))
+        Text(
+            text = "Find your Ride buddy..",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W500
+        )
     }
+
+}
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable {
+//                    navController.navigate("searchScreen")  // 👈 navigate to your search screen
+//                }
+//                .background(MaterialTheme.colorScheme.onSurface, RoundedCornerShape(50))
+//                .padding(horizontal = 16.dp, vertical = 10.dp),
+//            contentAlignment = Alignment.CenterStart
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Icon(
+//                    imageVector = Icons.Default.Search,
+//                    contentDescription = "Search Icon",
+//                    tint = MaterialTheme.colorScheme.surfaceDim
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text(
+//                    text = "Where to go?",
+//                    color = MaterialTheme.colorScheme.surfaceDim,
+//                    fontSize = 16.sp
+//                )
+//            }
+//        }
+
 
 
 
