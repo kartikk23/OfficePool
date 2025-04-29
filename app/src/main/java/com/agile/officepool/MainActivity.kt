@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
 
 
         val sessionManager = SessionManager(this)
-        val startDestination = if (sessionManager.isUserLoggedIn()) "home" else "login"
+        val startDestination = if (sessionManager.isUserLoggedIn()) "startUp" else "login"
         val rideId = intent?.getStringExtra("rideId")
 
 

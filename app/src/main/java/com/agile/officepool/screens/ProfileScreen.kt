@@ -63,7 +63,9 @@ fun ProfileScreen(navController: NavController, context: Context) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profile", fontWeight = FontWeight.Bold) },
+
+                title = { Text("Profile",
+                    fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -81,7 +83,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color.Black)
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
