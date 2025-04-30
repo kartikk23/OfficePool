@@ -94,7 +94,7 @@ fun RiderScreen(navController: NavController) {
                 val response = RetrofitClient.instance.addRide(rideInfo)
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Ride added successfully!", Toast.LENGTH_LONG).show()
-                    navController.navigate("home") // Navigate after success
+                    navController.navigate("startUp") // Navigate after success
                 } else {
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
                 }
@@ -221,7 +221,7 @@ fun RiderScreen(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(10.dp))
 
-        Button(onClick = { navController.navigate("home") }) {
+        Button(onClick = { navController.navigate("startUp") }) {
             Text("Home screen")
         }
     }

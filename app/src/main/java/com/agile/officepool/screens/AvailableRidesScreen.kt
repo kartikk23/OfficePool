@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -13,13 +15,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.agile.officepool.model.RideInfo
@@ -81,15 +86,207 @@ fun AvailableRidesScreen(navController: NavController,
                 availableRides.isEmpty() -> Text("No nearby rides available")
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     items(availableRides) { ride ->
                         val matchingRequest = rideRequests.find { it.rideId == ride.rideId.toString() }
-                        RideCard(ride = ride, rideRequest = matchingRequest)
+                        RideCard2(ride = ride, rideRequest = matchingRequest)
                     }
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun RideCard2(ride:RideInfo, rideRequest: RideRequest?){
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSurface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp) // Gentle shadow
+    ){
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalAlignment = Alignment.Top
+                ){
+                    Text(
+                        modifier = Modifier.weight(6f),
+                        text = "${ride.source} to ${ride.destination} Trip",
+                        color = MaterialTheme.colorScheme.surface,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                        Box(
+                            modifier = Modifier.weight(4f)
+                                .background(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ){
+                            Text(
+                                modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
+                                text = "${ride.availableSeats} seat available",
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                    Text(
+                        text = "From : ${rideRequest?.riderId ?: "Unknown"}",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+
+                }
+//                Box(
+//                    modifier = Modifier.wrapContentWidth()
+//                        .background(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+//                        .padding(horizontal = 10.dp)
+//                ){
+//                    Text(
+//                        text = "${ride.availableSeats} seat",
+//                        color = Color.Gray,
+//                        fontSize = 14.sp
+//                    )
+//                }
+                Text(
+                    text = "Starting Time: ${ride.rideStartTime}",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            }
+//            Row(
+//                verticalAlignment = Alignment.Top,
+//                horizontalArrangement = Arrangement.spacedBy(10.dp)
+//            ) {
+//                Column(
+//                    modifier = Modifier.weight(1.5f),
+//                    verticalArrangement = Arrangement.Top
+//                ) {
+//                    // Profile Image
+//                    Box(
+//                        modifier = Modifier
+//                            .clip(RoundedCornerShape(50))
+//                            .background(color = MaterialTheme.colorScheme.surface)
+//
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Person,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.onSurface,
+//                            modifier = Modifier
+//                                .size(45.dp)
+//                                .align(Alignment.Center).padding(3.dp)
+//                        )
+//                    }
+//                }
+//
+//
+//            }
+            val coroutineScope = rememberCoroutineScope();
+            val context = LocalContext.current
+            val sessionManager = SessionManager(context)
+            val passengerId = sessionManager.getUserId() ?: ""
+            val passengerName = sessionManager.getUsername() ?: ""
+            val initialStatus = rideRequest?.requestStatus ?: ""
+            var status by remember { mutableStateOf(initialStatus) }
+            val currentStatus = rememberUpdatedState(status)
+
+
+            // ✅ Log Ride Info and Ride Request details
+            Log.d("RIDE_CARD", "🚘 rideId=${ride.rideId}, riderId=${ride.riderId}, status=$status")
+            Log.d("RIDE_CARD", "📄 rideRequest: $rideRequest")
+
+            // Request Ride Button
+            if (currentStatus.value == "") {
+                // Show real button when no request has been made
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            sendRideRequest(
+                                passengerId = passengerId,
+                                passengerName = passengerName,
+                                rideId = ride.rideId!!,
+                                riderId = ride.riderId,
+                                context
+                            ) { success ->
+                                if (success) {
+                                    println("✅ Ride request flow complete")
+                                    status = "REQUESTED"
+                                } else {
+                                    println("❌ Ride request or notification failed")
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Request Ride",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+            } else {
+                // Show a text-style fake button (disabled style)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = when (status) {
+                                "REQUESTED" -> Color.LightGray
+                                "ACCEPTED" -> Color(0xFF43A047) // Green
+                                "REJECTED" -> Color(0xFFE53935) // Red
+                                else -> Color.Gray
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(vertical = 9.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = when (status) {
+                            "REQUESTED" -> "Requested"
+                            "ACCEPTED" -> "Accepted"
+                            "REJECTED" -> "Rejected"
+                            "COMPLETED" -> "Completed"
+                            else -> "Ride Status"
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+
     }
 }
 

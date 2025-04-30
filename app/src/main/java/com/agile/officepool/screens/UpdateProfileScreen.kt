@@ -184,7 +184,7 @@ fun UpdateProfileScreen(navController: NavController) {
                                     "Profile updated successfully",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                navController.navigate("home")
+                                navController.navigate("startUp")
                             } else {
                                 val errorResponse = response.errorBody()?.string()
                                 errorResponse?.let { Log.e("error", it) }

@@ -135,7 +135,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                                 context = context,
                                 onSuccess = {
                                     navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true }
+                                        popUpTo("startUp") { inclusive = true }
                                     }
                                 },
                                 onError = { error ->

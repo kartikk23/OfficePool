@@ -41,7 +41,7 @@ fun LocationRequestScreen(navController: NavHostController) {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             // 🎯 Location (GPS) was turned ON
-            navController.navigate("home") {
+            navController.navigate("startUp") {
                 popUpTo("locationPermission") { inclusive = true }
             }
         } else {
@@ -128,7 +128,7 @@ private fun checkLocationEnabled(
 
     task.addOnSuccessListener {
         // 🎯 GPS is already ON
-        navController.navigate("home") {
+        navController.navigate("startUp") {
             popUpTo("locationPermission") { inclusive = true }
         }
     }

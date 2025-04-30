@@ -2,12 +2,15 @@ package com.agile.officepool.screens
 
 import GooglePlacesDropdown
 import android.Manifest
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +21,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwitchDefaults
@@ -41,11 +53,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +92,8 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import getRoutePolylineWithInfo
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +111,7 @@ fun SearchScreen(navController: NavController) {
     var destinationLng by remember { mutableStateOf<Double?>(null) }
     var isRider by remember { mutableStateOf(false) }
     var route by remember { mutableStateOf("") }
-    var rideStartTime by remember { mutableStateOf("") }
+    var rideStartTime by remember { mutableStateOf<LocalTime?>(null) }
     val statusOptions =
         listOf("Yet To Start", "Active", "Completed", "Cancelled",) // ✅ Dropdown options
     var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
@@ -137,7 +154,7 @@ fun SearchScreen(navController: NavController) {
     fun submitRide() {
         coroutineScope.launch {
             if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank() ||
-                rideStartTime.isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()
+                rideStartTime.toString().isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()
             ) {
                 Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
                 return@launch
@@ -154,14 +171,14 @@ fun SearchScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = rideStartTime
+                rideStartTime = rideStartTime.toString()
             )
 
             try {
                 val response = RetrofitClient.instance.addRide(rideInfo)
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Ride added successfully!", Toast.LENGTH_LONG).show()
-                    navController.navigate("home") // Navigate after success
+                    navController.navigate("startUp") // Navigate after success
                 } else {
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
                 }
@@ -224,54 +241,106 @@ fun SearchScreen(navController: NavController) {
             text = "Find your Ride Buddy",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.inverseSurface,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(10.dp),
             fontSize = 25.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Start
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState()), // ✅ Make screen scrollable,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Column for icons and dotted line
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .padding(top = 10.dp, bottom = 8.dp)
+                    .height(100.dp) // Adjust as needed
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "From",
+                    tint = Color.Gray
+                )
 
-            GooglePlacesDropdown(
-                label = "Source",
-                placePredictions = placePredictions,
-                onPlaceSelected = { name, lat, lng ->
-                    selectedSource = name
-                    sourceLat = lat
-                    sourceLng = lng
-                },
-                onSearch = { fetchPlaces(it) },
-                currentLocation = "Your current location",
-                currentLat = userLocation?.latitude,
-                currentLng = userLocation?.longitude
-            )
+                Canvas(modifier = Modifier.weight(1f)) {
+                    val canvasHeight = size.height
+                    val dashHeight = 10f
+                    val gap = 10f
+                    var y = 0f
+                    while (y < canvasHeight) {
+                        drawLine(
+                            color = Color.Gray,
+                            start = Offset(x = size.width / 2, y = y),
+                            end = Offset(x = size.width / 2, y = y + dashHeight),
+                            strokeWidth = 2f
+                        )
+                        y += dashHeight + gap
+                    }
+                }
+
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = "To",
+                    tint = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+
+                GooglePlacesDropdown(
+                    label = "Source",
+                    placePredictions = placePredictions,
+                    onPlaceSelected = { name, lat, lng ->
+                        selectedSource = name
+                        sourceLat = lat
+                        sourceLng = lng
+                    },
+                    onSearch = { fetchPlaces(it) },
+                    currentLocation = "Your current location",
+                    currentLat = userLocation?.latitude,
+                    currentLng = userLocation?.longitude
+                )
 
 //        Spacer(modifier = Modifier.height(10.dp))
 
-            GooglePlacesDropdown(
-                label = "Destination",
-                placePredictions = placePredictions,
-                onPlaceSelected = { name, lat, lng ->
-                    selectedDestination = name
-                    destinationLat = lat
-                    destinationLng = lng
-                },
-                onSearch = { fetchPlaces(it) },
-                currentLocation = "Your current location",
-                currentLat = userLocation?.latitude,
-                currentLng = userLocation?.longitude
-            )
+                GooglePlacesDropdown(
+                    label = "Destination",
+                    placePredictions = placePredictions,
+                    onPlaceSelected = { name, lat, lng ->
+                        selectedDestination = name
+                        destinationLat = lat
+                        destinationLng = lng
+                    },
+                    onSearch = { fetchPlaces(it) },
+                    currentLocation = "Your current location",
+                    currentLat = userLocation?.latitude,
+                    currentLng = userLocation?.longitude
+                )
+            }
+        }
 
             // Rider / Pillion Toggle
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Pillion", color = MaterialTheme.colorScheme.inverseSurface)
+                Text(text = "Pillion", fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface)
                 Switch(
                     checked = isRider,
                     onCheckedChange = { isRider = it },
@@ -281,13 +350,13 @@ fun SearchScreen(navController: NavController) {
                         uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
                         uncheckedTrackColor = Color.Gray.copy(alpha = 0.6f)
                     ),
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 5.dp).scale(0.8f)
                 )
-                Text(text = "Rider", color = MaterialTheme.colorScheme.inverseSurface)
+                Text(text = "Rider", fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface)
             }
 
             if (isRider) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -324,10 +393,12 @@ fun SearchScreen(navController: NavController) {
                         ),
                     )
 
-                    TimePicker(label = "Ride begins at") { selectedTime ->
-                        rideStartTime = selectedTime
-                        println("Selected Time: $selectedTime")
+
+                    CustomTimePicker(label = "Ride begins at", selectedTime = rideStartTime) {
+                        rideStartTime = it
+                        println("Selected Time: $it")
                     }
+
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -370,18 +441,88 @@ fun SearchScreen(navController: NavController) {
                         }
                     }
                 ) {
-                    Text(
-                        text = if (isRider) "Add your ride" else "Search for your ride buddy",
-                        color = MaterialTheme.colorScheme.inverseSurface
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isRider) Icons.Default.AddCircle else Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.inverseSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isRider) "Post ride" else "Find your ride",
+                            color = MaterialTheme.colorScheme.inverseSurface
+                        )
+                    }
+
                 }
             }
         }
+        }
 
+}
 
+@Composable
+fun CustomTimePicker(
+    label: String,
+    selectedTime: LocalTime?,
+    onTimeSelected: (LocalTime) -> Unit
+) {
+    val context = LocalContext.current
+    val timePickerDialog = remember {
+        TimePickerDialog(
+            context,
+            { _, hour: Int, minute: Int ->
+                val selected = LocalTime.of(hour, minute)
+                onTimeSelected(selected)
+            },
+            selectedTime?.hour ?: 12,
+            selectedTime?.minute ?: 0,
+            false
+        )
+    }
 
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { timePickerDialog.show() }
+    ) {
+        Text(
+            text = label,
+            fontSize = 15.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(vertical = 12.dp, horizontal = 16.dp)
+                .fillMaxWidth()
+        ) {
+
+            Text(
+                modifier = Modifier.weight(9f),
+                text = selectedTime?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: "Select time",
+                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Icon(
+                modifier = Modifier.weight(1f),
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
+
 
 @Composable
 fun GoogleMapView(
