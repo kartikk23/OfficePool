@@ -184,7 +184,7 @@ fun HomeScreen(navController: NavController) {
                 val response = RetrofitClient.instance.addRide(rideInfo)
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Ride added successfully!", Toast.LENGTH_LONG).show()
-                    navController.navigate("home") // Navigate after success
+                    navController.navigate("startUp") // Navigate after success
                 } else {
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
                 }
@@ -193,11 +193,6 @@ fun HomeScreen(navController: NavController) {
             }
         }
         }
-
-
-
-
-
 
 
     // Request location permission
@@ -235,16 +230,13 @@ fun HomeScreen(navController: NavController) {
             Toast.makeText(context, "Logged in as: $userEmail", Toast.LENGTH_LONG).show()
         }
 
-
-
-
 //        check for incomplete profile
         val phone = sessionManager.getUserPhone()
         val email = sessionManager.getUserEmail()
 
         if (phone.isNullOrEmpty() || email.isNullOrEmpty()) {
             navController.navigate("updateProfile") {
-                popUpTo("home") { inclusive = true }
+                popUpTo("startUp") { inclusive = true }
             }
         }
     }

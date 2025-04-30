@@ -1,7 +1,9 @@
 package com.agile.officepool.screens
 
 import GooglePlacesDropdown
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -11,15 +13,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -35,13 +40,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
@@ -49,6 +57,7 @@ import com.agile.officepool.components.TimePicker
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
@@ -66,6 +75,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import getRoutePolylineWithInfo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -161,38 +171,69 @@ fun SearchScreen(navController: NavController) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        if (
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    userLocation = LatLng(it.latitude, it.longitude)
+                }
+            }
+        } else {
+            Toast.makeText(context, "Location permission not granted", Toast.LENGTH_LONG).show()
+        }
+    }
+
+
+// When source/destination change, launch coroutine to get polyline
+    LaunchedEffect(sourceLat, sourceLng,destinationLat, destinationLng) {
+        if (sourceLat != null && sourceLng != null && destinationLat != null && destinationLng != null) {
+            source = LatLng(sourceLat!!, sourceLng!!)
+            destination = LatLng(destinationLat!!, destinationLng!!)
+            try {
+
+                    val routeResult = getRoutePolylineWithInfo(
+                        source = source!!,
+                        destination = destination!!,
+                        apiKey = BuildConfig.MAPS_API_KEY
+                    )
+                    polylinePoints = routeResult.polyline
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
 
     Column(
         modifier = Modifier
+            .fillMaxWidth()
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(rememberScrollState()) // ✅ Make screen scrollable
+            .padding(bottom = 15.dp)
+
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp) // ✅ Adjust height as you like
-        ) {
-            // Map Background
-            GoogleMapView(userLocation, source, destination, polylinePoints,isRider=isRider )
-
-            // Floating Header Text
-            Text(
-                text = "Find your Ride Buddy",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.inverseSurface,
-                modifier = Modifier
-                    .align(Alignment.TopCenter) // ✅ Centered Top
-                    .padding(top = 16.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        // Floating Header Text
+        Text(
+            text = "Find your Ride Buddy",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.inverseSurface,
+            modifier = Modifier.padding(16.dp),
+            fontSize = 25.sp,
+            fontWeight = FontWeight.SemiBold
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()), // ✅ Make screen scrollable,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -206,8 +247,8 @@ fun SearchScreen(navController: NavController) {
                 },
                 onSearch = { fetchPlaces(it) },
                 currentLocation = "Your current location",
-                currentLat = 0.0,
-                currentLng = 0.0
+                currentLat = userLocation?.latitude,
+                currentLng = userLocation?.longitude
             )
 
 //        Spacer(modifier = Modifier.height(10.dp))
@@ -222,8 +263,8 @@ fun SearchScreen(navController: NavController) {
                 },
                 onSearch = { fetchPlaces(it) },
                 currentLocation = "Your current location",
-                currentLat = 0.0,
-                currentLng = 0.0
+                currentLat = userLocation?.latitude,
+                currentLng = userLocation?.longitude
             )
 
             // Rider / Pillion Toggle
@@ -249,9 +290,10 @@ fun SearchScreen(navController: NavController) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
                         value = route,
                         onValueChange = { route = it },
-                        label = { Text("Route") },
+                        label = { Text("Route", fontSize = 14.sp) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         textStyle = TextStyle(
                             fontSize = 15.sp,
@@ -266,9 +308,10 @@ fun SearchScreen(navController: NavController) {
 
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
                         value = availableSeats,
                         onValueChange = { availableSeats = it },
-                        label = { Text("Available Seats") },
+                        label = { Text("Available Seats", fontSize = 14.sp) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         textStyle = TextStyle(
                             fontSize = 15.sp,
@@ -285,37 +328,58 @@ fun SearchScreen(navController: NavController) {
                         rideStartTime = selectedTime
                         println("Selected Time: $selectedTime")
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
+            }
+
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp), // ✅ Adjust height as you like
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                // Map Background
+                GoogleMapView(userLocation, source, destination, polylinePoints,isRider=isRider )
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    val role = if (isRider) "Rider" else "Pillion"
-                    println("Selected Role: $role")
-                    if (isRider) {
-                        submitRide()
-                    } else {
-                        if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Please fill in all fields",
-                                Toast.LENGTH_LONG
-                            ).show()
+            Box(
+                contentAlignment = Alignment.BottomCenter
+            ){
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val role = if (isRider) "Rider" else "Pillion"
+                        println("Selected Role: $role")
+                        if (isRider) {
+                            submitRide()
                         } else {
-                            navController.navigate("availableRides/${selectedSource}/${sourceLat}/${sourceLng}/${selectedDestination}/${destinationLat}/${destinationLng}")
+                            if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please fill in all fields",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                navController.navigate("availableRides/${selectedSource}/${sourceLat}/${sourceLng}/${selectedDestination}/${destinationLat}/${destinationLng}")
+                            }
                         }
                     }
+                ) {
+                    Text(
+                        text = if (isRider) "Add your ride" else "Search for your ride buddy",
+                        color = MaterialTheme.colorScheme.inverseSurface
+                    )
                 }
-            ) {
-                Text(
-                    text = if (isRider) "Add your ride" else "Search for your ride buddy",
-                    color = MaterialTheme.colorScheme.inverseSurface
-                )
             }
         }
+
+
+
     }
 }
 
@@ -330,17 +394,13 @@ fun GoogleMapView(
     val cameraPositionState = rememberCameraPositionState()
 
     // Move camera to source or destination if set
-    LaunchedEffect(source, destination) {
-        when {
-            destination != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(destination, 15f))
-            }
-            source != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(source, 15f))
-            }
-            userLocation != null -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(userLocation, 17f))
-            }
+    LaunchedEffect(source, destination, userLocation) {
+        if (source == null && destination == null && userLocation != null) {
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(userLocation, 17f))
+        } else if (source != null) {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(source, 15f))
+        } else if (destination != null) {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(destination, 15f))
         }
     }
 
@@ -364,14 +424,15 @@ fun GoogleMapView(
         properties = MapProperties(
             isMyLocationEnabled = true,
             mapType = MapType.NORMAL,
-            isTrafficEnabled = true
+            isTrafficEnabled = false
         ),
         uiSettings = MapUiSettings(
             zoomControlsEnabled = false,
+            zoomGesturesEnabled = false,
             compassEnabled = false,
             myLocationButtonEnabled = false,
-            tiltGesturesEnabled = true,
-            scrollGesturesEnabled = true
+            tiltGesturesEnabled = false,
+            scrollGesturesEnabled = false
         )
     ) {
         source?.let {
@@ -393,8 +454,8 @@ fun GoogleMapView(
         if (polylinePoints.isNotEmpty()) {
             Polyline(
                 points = polylinePoints,
-                color = Color.Blue,
-                width = 13f,
+                color = Color.Black,
+                width = 10f,
                 startCap = RoundCap(),
                 endCap = RoundCap(),
                 jointType = JointType.ROUND

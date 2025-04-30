@@ -131,11 +131,8 @@ fun GooglePlacesDropdown(
             label = { Text(text = label, fontSize = 14.sp) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.LightGray,
-                unfocusedBorderColor = Color.LightGray,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedLabelColor = Color.Gray
             )
         )

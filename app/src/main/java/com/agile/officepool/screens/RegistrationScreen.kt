@@ -53,6 +53,7 @@ import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.UserViewModel
 import com.agile.officepool.components.TextWithLines
+import com.agile.officepool.isLocationPermissionGranted
 import com.agile.officepool.model.RegisterRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
@@ -162,9 +163,17 @@ fun RegisterScreen(navController: NavController) {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     registerUser(fullName, email, password, context, {
                                         isLoading = false
-                                        navController.navigate("startUp") {
-                                            popUpTo("register") { inclusive = true }
+                                        if(!isLocationPermissionGranted(context)){
+                                            navController.navigate("locationPermission") {
+                                                popUpTo("register") { inclusive = true } // Clear login screen from back stack
+                                            }
+                                            return@registerUser
+                                        }else{
+                                            navController.navigate("startUp") {
+                                                popUpTo("register") { inclusive = true } // Clear login screen from back stack
+                                            }
                                         }
+
                                     }, {
                                         isLoading = false
                                         error = it
