@@ -83,7 +83,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

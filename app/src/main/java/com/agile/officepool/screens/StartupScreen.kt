@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +75,7 @@ fun StartupScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
+            // Left-aligned text
             Text(
                 modifier = Modifier.weight(8f),
                 text = "OfficePool",
@@ -83,6 +85,7 @@ fun StartupScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+
             )
 
             Box(
@@ -116,8 +119,8 @@ fun StartupScreen(navController: NavController) {
                 )
             }
 
-
-        }
+          }
+      
 
         Box(
             modifier = Modifier
@@ -130,6 +133,7 @@ fun StartupScreen(navController: NavController) {
             // Search Bar
             WhereToGoTextField()
         }
+
 
 
         Box(modifier = Modifier.padding(start = 14.dp,end = 14.dp, bottom = 25.dp)) {
@@ -178,9 +182,6 @@ fun StartupScreen(navController: NavController) {
                         )
                     }
 
-
-
-
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 // Motivational Full-width Card
@@ -215,15 +216,51 @@ fun StartupScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 5.dp)
                 )
-                // Horizontal Scrollable Cards
-                LazyRow(
-                    contentPadding = PaddingValues(end = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(businessZones) { zone ->
-                        BusinessZoneCard(zone.toString())
-                    }
-                }
+
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Nearest Business Zones",
+            fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 5.dp)
+
+        )
+        // Horizontal Scrollable Cards
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                BusinessZoneCard(
+                    zoneName = "Amar Tech Park",
+                    imagePainter = painterResource(id = R.drawable.amar)
+                )
+            }
+
+            // You can add more items like this:
+            item {
+                BusinessZoneCard(
+                    zoneName = "Icon Tower",
+                    imagePainter = painterResource(id = R.drawable.icon)
+                )
+            }
+
+            item {
+                BusinessZoneCard(
+                    zoneName = "Cognizant CDC",
+                    imagePainter = painterResource(id = R.drawable.cogni)
+                )
+            }
+
+
+        }
+
+               
 
             }
         }
@@ -231,28 +268,69 @@ fun StartupScreen(navController: NavController) {
 }
 
 @Composable
-fun BusinessZoneCard(zoneName: String) {
+fun BusinessZoneCard(
+    zoneName: String,
+    imagePainter: Painter
+) {
     Card(
         modifier = Modifier
             .width(200.dp)
-            .height(120.dp),
+            .height(200.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD1C4E9))
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Top image section
+            Image(
+                painter = imagePainter,
+                contentDescription = "Zone Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .height(100.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Zone name
             Text(
                 text = zoneName,
-                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
+
+                fontSize = 16.sp,
                 color = Color(0xFF311B92),
+                modifier = Modifier.padding(horizontal = 12.dp)
                 textAlign = TextAlign.Center
+
             )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Subtitle and arrow
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = "Travel to your IT park with your buddy",
+                    fontSize = 12.sp,
+                    color = Color.DarkGray,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = "Go",
+                    tint = Color(0xFF311B92)
+                )
+            }
         }
     }
 }
+
+
 
 // Sample Data
 val businessZones = listOf(
@@ -269,11 +347,16 @@ fun FeatureCard(
     title: String,
     bgColor: Color,
     imageResId: Int, // pass drawable resource ID
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+//        shape = RoundedCornerShape(8.dp),
         modifier = modifier
+            .clickable{
+                navController.navigate("searchScreen")
+            }
+            .border(1.dp, Color.LightGray, RoundedCornerShape(10))
             .height(150.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
@@ -289,7 +372,7 @@ fun FeatureCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)) // optional overlay for better text contrast
+//                    .background(Color.Black) // optional overlay for better text contrast
             )
             Box(
                 modifier = Modifier.fillMaxSize().padding(start = 10.dp, end = 5.dp, bottom = 5.dp),
@@ -312,9 +395,15 @@ fun FeatureCard(
 @Composable
 fun RecentChip(text: String) {
     Surface(
-        shape = RoundedCornerShape(10),
-        color = Color(0xFFE0F7FA),
-        modifier = Modifier.fillMaxWidth()
+
+        shape = RoundedCornerShape(20),
+
+        color = Color.White,
+        modifier = Modifier.padding(end = 4.dp)
+            .fillMaxWidth()
+            .height(60.dp)
+            .border(1.dp, Color.LightGray, RoundedCornerShape(20)) // ⬅️ Light grey border added
+
     ) {
         Text(
             text = text,
@@ -372,6 +461,7 @@ fun CorporateRideCard(imageResId: Int) {
         }
     }
 }
+
 @Composable
 fun WhereToGoTextField() {
     Row(
