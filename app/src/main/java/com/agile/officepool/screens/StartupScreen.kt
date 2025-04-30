@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -48,7 +49,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -136,7 +139,7 @@ fun StartupScreen(navController: NavController) {
 
 
 
-        Box(modifier = Modifier.padding(start = 14.dp,end = 14.dp, bottom = 25.dp)) {
+        Box(modifier = Modifier.padding(start = 14.dp,end = 14.dp, bottom = 20.dp)) {
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -165,6 +168,7 @@ fun StartupScreen(navController: NavController) {
                         "Travel Together",
                             Color(0xFF2196F3),
                             R.drawable.tt1,
+                            navController = navController
                         )
                     }
                     Box(modifier = Modifier.weight(1f)){
@@ -172,13 +176,15 @@ fun StartupScreen(navController: NavController) {
                             "Connect",
                             Color(0xFF4CAF50),
                             R.drawable.handshake,
+                            navController = navController
                         )
                     }
                     Box(modifier = Modifier.weight(1f)){
                         FeatureCard(
                             "Grow",
                             Color(0xFFFFC107),
-                            R.drawable.grow
+                            R.drawable.grow,
+                            navController = navController
                         )
                     }
 
@@ -209,63 +215,56 @@ fun StartupScreen(navController: NavController) {
                 // Corporate Booking Card
                 CorporateRideCard(R.drawable.card_img)
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = "Nearest Business Zones",
                     fontSize = 20.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 5.dp)
+
                 )
+                // Horizontal Scrollable Cards
+                LazyRow(
+                    modifier = Modifier.padding(bottom = 5.dp),
+                    contentPadding = PaddingValues(start = 1.dp,end = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    item {
+                        BusinessZoneCard(
+                            zoneName = "Amar Tech Park",
+                            imagePainter = painterResource(id = R.drawable.amar)
+                        )
+                    }
+
+                    // You can add more items like this:
+                    item {
+                        BusinessZoneCard(
+                            zoneName = "Icon Tower",
+                            imagePainter = painterResource(id = R.drawable.icon)
+                        )
+                    }
+
+                    item {
+                        BusinessZoneCard(
+                            zoneName = "Cognizant CDC",
+                            imagePainter = painterResource(id = R.drawable.cogni)
+                        )
+                    }
+
+
+                }
 
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Nearest Business Zones",
-            fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 5.dp)
-
-        )
-        // Horizontal Scrollable Cards
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                BusinessZoneCard(
-                    zoneName = "Amar Tech Park",
-                    imagePainter = painterResource(id = R.drawable.amar)
-                )
-            }
-
-            // You can add more items like this:
-            item {
-                BusinessZoneCard(
-                    zoneName = "Icon Tower",
-                    imagePainter = painterResource(id = R.drawable.icon)
-                )
-            }
-
-            item {
-                BusinessZoneCard(
-                    zoneName = "Cognizant CDC",
-                    imagePainter = painterResource(id = R.drawable.cogni)
-                )
-            }
-
-
-        }
 
                
 
-            }
-        }
     }
 }
+
 
 @Composable
 fun BusinessZoneCard(
@@ -277,7 +276,7 @@ fun BusinessZoneCard(
             .width(200.dp)
             .height(200.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -292,38 +291,36 @@ fun BusinessZoneCard(
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Zone name
             Text(
                 text = zoneName,
                 fontWeight = FontWeight.Bold,
-
                 fontSize = 16.sp,
                 color = Color(0xFF311B92),
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp),
                 textAlign = TextAlign.Center
 
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
             // Subtitle and arrow
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
             ) {
                 Text(
+                    modifier = Modifier.weight(8f),
                     text = "Travel to your IT park with your buddy",
                     fontSize = 12.sp,
                     color = Color.DarkGray,
-                    modifier = Modifier.weight(1f)
+                    textAlign = TextAlign.Start,
+
                 )
                 Icon(
+                    modifier = Modifier.weight(2f),
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = "Go",
-                    tint = Color(0xFF311B92)
+                    tint = Color(0xFF311B92),
                 )
             }
         }
@@ -351,12 +348,11 @@ fun FeatureCard(
     navController: NavController
 ) {
     Card(
-//        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = modifier
             .clickable{
                 navController.navigate("searchScreen")
             }
-            .border(1.dp, Color.LightGray, RoundedCornerShape(10))
             .height(150.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
@@ -381,7 +377,7 @@ fun FeatureCard(
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
-                    color = Color.LightGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Start,
                 )
             }
@@ -395,21 +391,17 @@ fun FeatureCard(
 @Composable
 fun RecentChip(text: String) {
     Surface(
-
-        shape = RoundedCornerShape(20),
-
-        color = Color.White,
-        modifier = Modifier.padding(end = 4.dp)
+        modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
-            .border(1.dp, Color.LightGray, RoundedCornerShape(20)) // ⬅️ Light grey border added
-
+            .border(1.dp, Color.LightGray,RoundedCornerShape(8.dp)), // ⬅️ Light grey border added
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.onSurface,
     ) {
         Text(
             text = text,
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            color = MaterialTheme.colorScheme.inverseOnSurface,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp
         )
