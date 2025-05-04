@@ -2,6 +2,7 @@ package com.agile.officepool.screens
 
 import GooglePlacesDropdown
 import android.Manifest
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
@@ -27,17 +28,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwitchDefaults
@@ -58,6 +63,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontVariation.weight
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +74,7 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
+import com.agile.officepool.R
 import com.agile.officepool.components.TimePicker
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
@@ -77,6 +84,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.RoundCap
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -92,8 +100,11 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import getRoutePolylineWithInfo
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +123,7 @@ fun SearchScreen(navController: NavController) {
     var isRider by remember { mutableStateOf(false) }
     var route by remember { mutableStateOf("") }
     var rideStartTime by remember { mutableStateOf<LocalTime?>(null) }
+    var rideDate by remember { mutableStateOf<LocalDate?>(null) }
     val statusOptions =
         listOf("Yet To Start", "Active", "Completed", "Cancelled",) // ✅ Dropdown options
     var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
@@ -121,6 +133,7 @@ fun SearchScreen(navController: NavController) {
     val userId = sessionManager.getUserId() ?: ""
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var polylinePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
 
     // Initialize the Places Client
     fun initializePlacesClient(context: Context): PlacesClient {
@@ -154,8 +167,10 @@ fun SearchScreen(navController: NavController) {
     fun submitRide() {
         coroutineScope.launch {
             if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank() ||
-                rideStartTime.toString().isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()
+                rideStartTime.toString().isBlank() || rideDate.toString()
+                    .isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()
             ) {
+                isLoading = false
                 Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
                 return@launch
             }
@@ -171,16 +186,19 @@ fun SearchScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = rideStartTime.toString()
+                rideStartTime = rideStartTime.toString(),
+                rideDate = rideDate?.toString() ?: ""
             )
 
             try {
                 val response = RetrofitClient.instance.addRide(rideInfo)
                 if (response.isSuccessful) {
                     Toast.makeText(context, "Ride added successfully!", Toast.LENGTH_LONG).show()
+                    isLoading = false
                     navController.navigate("startUp") // Navigate after success
                 } else {
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
+                    isLoading = false
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
@@ -192,8 +210,14 @@ fun SearchScreen(navController: NavController) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
         if (
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
@@ -207,18 +231,18 @@ fun SearchScreen(navController: NavController) {
 
 
 // When source/destination change, launch coroutine to get polyline
-    LaunchedEffect(sourceLat, sourceLng,destinationLat, destinationLng) {
+    LaunchedEffect(sourceLat, sourceLng, destinationLat, destinationLng) {
         if (sourceLat != null && sourceLng != null && destinationLat != null && destinationLng != null) {
             source = LatLng(sourceLat!!, sourceLng!!)
             destination = LatLng(destinationLat!!, destinationLng!!)
             try {
 
-                    val routeResult = getRoutePolylineWithInfo(
-                        source = source!!,
-                        destination = destination!!,
-                        apiKey = BuildConfig.MAPS_API_KEY
-                    )
-                    polylinePoints = routeResult.polyline
+                val routeResult = getRoutePolylineWithInfo(
+                    source = source!!,
+                    destination = destination!!,
+                    apiKey = BuildConfig.MAPS_API_KEY
+                )
+                polylinePoints = routeResult.polyline
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -234,113 +258,131 @@ fun SearchScreen(navController: NavController) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
-
     ) {
-        // Floating Header Text
-        Text(
-            text = "Find your Ride Buddy",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.inverseSurface,
-            modifier = Modifier.padding(10.dp),
-            fontSize = 25.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Start
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
+                onClick = { navController.popBackStack() }) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.inverseSurface,
+                )
+            }
+
+            // Floating Header Text
+            Text(
+                text = "Find your Ride Buddy",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                modifier = Modifier.padding(vertical = 20.dp).weight(8.5f),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Start
+            )
+        }
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()), // ✅ Make screen scrollable,
             verticalArrangement = Arrangement.spacedBy(5.dp)
-        ){
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Column for icons and dotted line
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .padding(top = 10.dp, bottom = 8.dp)
-                    .height(100.dp) // Adjust as needed
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "From",
-                    tint = Color.Gray
-                )
-
-                Canvas(modifier = Modifier.weight(1f)) {
-                    val canvasHeight = size.height
-                    val dashHeight = 10f
-                    val gap = 10f
-                    var y = 0f
-                    while (y < canvasHeight) {
-                        drawLine(
-                            color = Color.Gray,
-                            start = Offset(x = size.width / 2, y = y),
-                            end = Offset(x = size.width / 2, y = y + dashHeight),
-                            strokeWidth = 2f
-                        )
-                        y += dashHeight + gap
-                    }
-                }
-
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = "To",
-                    tint = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Column for icons and dotted line
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(top = 10.dp, bottom = 8.dp)
+                        .height(100.dp) // Adjust as needed
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "From",
+                        tint = Color.Gray
+                    )
 
-                GooglePlacesDropdown(
-                    label = "Source",
-                    placePredictions = placePredictions,
-                    onPlaceSelected = { name, lat, lng ->
-                        selectedSource = name
-                        sourceLat = lat
-                        sourceLng = lng
-                    },
-                    onSearch = { fetchPlaces(it) },
-                    currentLocation = "Your current location",
-                    currentLat = userLocation?.latitude,
-                    currentLng = userLocation?.longitude
-                )
+                    Canvas(modifier = Modifier.weight(1f)) {
+                        val canvasHeight = size.height
+                        val dashHeight = 10f
+                        val gap = 10f
+                        var y = 0f
+                        while (y < canvasHeight) {
+                            drawLine(
+                                color = Color.Gray,
+                                start = Offset(x = size.width / 2, y = y),
+                                end = Offset(x = size.width / 2, y = y + dashHeight),
+                                strokeWidth = 2f
+                            )
+                            y += dashHeight + gap
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = "To",
+                        tint = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+
+                    GooglePlacesDropdown(
+                        label = "Source",
+                        placePredictions = placePredictions,
+                        onPlaceSelected = { name, lat, lng ->
+                            selectedSource = name
+                            sourceLat = lat
+                            sourceLng = lng
+                        },
+                        onSearch = { fetchPlaces(it) },
+                        currentLocation = "Your current location",
+                        currentLat = userLocation?.latitude,
+                        currentLng = userLocation?.longitude
+                    )
 
 //        Spacer(modifier = Modifier.height(10.dp))
 
-                GooglePlacesDropdown(
-                    label = "Destination",
-                    placePredictions = placePredictions,
-                    onPlaceSelected = { name, lat, lng ->
-                        selectedDestination = name
-                        destinationLat = lat
-                        destinationLng = lng
-                    },
-                    onSearch = { fetchPlaces(it) },
-                    currentLocation = "Your current location",
-                    currentLat = userLocation?.latitude,
-                    currentLng = userLocation?.longitude
-                )
+                    GooglePlacesDropdown(
+                        label = "Destination",
+                        placePredictions = placePredictions,
+                        onPlaceSelected = { name, lat, lng ->
+                            selectedDestination = name
+                            destinationLat = lat
+                            destinationLng = lng
+                        },
+                        onSearch = { fetchPlaces(it) },
+                        currentLocation = "Your current location",
+                        currentLat = userLocation?.latitude,
+                        currentLng = userLocation?.longitude
+                    )
+                }
             }
-        }
 
             // Rider / Pillion Toggle
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Pillion", fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface)
+                Text(
+                    text = "Pillion",
+                    fontSize = 15.sp,
+                    color = Color.Gray
+                )
                 Switch(
                     checked = isRider,
                     onCheckedChange = { isRider = it },
@@ -352,7 +394,11 @@ fun SearchScreen(navController: NavController) {
                     ),
                     modifier = Modifier.padding(horizontal = 5.dp).scale(0.8f)
                 )
-                Text(text = "Rider", fontSize = 15.sp, color = MaterialTheme.colorScheme.inverseSurface)
+                Text(
+                    text = "Rider",
+                    fontSize = 15.sp,
+                    color = Color.Gray
+                )
             }
 
             if (isRider) {
@@ -371,7 +417,8 @@ fun SearchScreen(navController: NavController) {
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedLabelColor = Color.Gray
+                            unfocusedLabelColor = Color.Gray,
+
                         ),
                     )
 
@@ -393,12 +440,36 @@ fun SearchScreen(navController: NavController) {
                         ),
                     )
 
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    CustomTimePicker(label = "Ride begins at", selectedTime = rideStartTime) {
-                        rideStartTime = it
-                        println("Selected Time: $it")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between date and time pickers
+                    ) {
+                        // Date Picker
+                        Box(modifier = Modifier.weight(1f)) {
+                            ShowDatePicker(
+                                context = LocalContext.current,
+                                selectedDate = rideDate
+                            ) { pickedDate ->
+                                rideDate = pickedDate
+                                println("Selected Date: $pickedDate")
+                            }
+                        }
+
+                        // Time Picker
+                        Box(modifier = Modifier.weight(1f)) {
+                            CustomTimePicker(
+                                label = "Ride begins at",
+                                selectedTime = rideStartTime
+                            ) {
+                                rideStartTime = it
+                                println("Selected Time: $it")
+                            }
+                        }
                     }
-
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -412,7 +483,7 @@ fun SearchScreen(navController: NavController) {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 // Map Background
-                GoogleMapView(userLocation, source, destination, polylinePoints,isRider=isRider )
+                GoogleMapView(userLocation, source, destination, polylinePoints, isRider = isRider)
 
             }
 
@@ -420,48 +491,119 @@ fun SearchScreen(navController: NavController) {
 
             Box(
                 contentAlignment = Alignment.BottomCenter
-            ){
+            ) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
                     onClick = {
+                        isLoading = true
                         val role = if (isRider) "Rider" else "Pillion"
                         println("Selected Role: $role")
                         if (isRider) {
                             submitRide()
                         } else {
                             if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank()) {
+                                isLoading = false
                                 Toast.makeText(
                                     context,
                                     "Please fill in all fields",
                                     Toast.LENGTH_LONG
                                 ).show()
                             } else {
+                                isLoading = false
                                 navController.navigate("availableRides/${selectedSource}/${sourceLat}/${sourceLng}/${selectedDestination}/${destinationLat}/${destinationLng}")
                             }
                         }
                     }
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (isRider) Icons.Default.AddCircle else Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.inverseSurface,
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isRider) "Post ride" else "Find your ride",
-                            color = MaterialTheme.colorScheme.inverseSurface
-                        )
+
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (isRider) Icons.Default.AddCircle else Icons.Default.Search,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.inverseSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isRider) "Post ride" else "Find your ride",
+                                color = MaterialTheme.colorScheme.inverseSurface
+                            )
+                        }
                     }
+
 
                 }
             }
         }
-        }
+    }
+}
 
+
+
+
+
+@Composable
+fun ShowDatePicker(context: Context, selectedDate: LocalDate?, onDateSelected: (LocalDate) -> Unit) {
+    val datePickerDialog = remember {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val pickedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                onDateSelected(pickedDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
+
+    // You can use a clickable component to show the DatePicker
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { datePickerDialog.show() }
+    ) {
+        Text(
+            text = "Select Date",  // Or your label here
+            fontSize = 14.sp,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(vertical = 12.dp, horizontal = 16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                modifier = Modifier.weight(8.5f),
+                text = selectedDate?.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))?: "", // Display the formatted date or a default string
+                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Icon(
+                modifier = Modifier.weight(1.5f),
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 }
 
 @Composable
@@ -471,6 +613,7 @@ fun CustomTimePicker(
     onTimeSelected: (LocalTime) -> Unit
 ) {
     val context = LocalContext.current
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
     val timePickerDialog = remember {
         TimePickerDialog(
             context,
@@ -490,11 +633,11 @@ fun CustomTimePicker(
     ) {
         Text(
             text = label,
-            fontSize = 15.sp,
-            color = MaterialTheme.colorScheme.onSurface
+            fontSize = 14.sp,
+            color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -506,15 +649,15 @@ fun CustomTimePicker(
         ) {
 
             Text(
-                modifier = Modifier.weight(9f),
-                text = selectedTime?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: "Select time",
+                modifier = Modifier.weight(8.5f),
+                text = selectedTime?.format(formatter) ?: "",
                 fontSize = 14.sp,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.width(12.dp))
             Icon(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1.5f),
                 imageVector = Icons.Default.DateRange,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
@@ -522,6 +665,7 @@ fun CustomTimePicker(
         }
     }
 }
+
 
 
 @Composable
@@ -533,7 +677,10 @@ fun GoogleMapView(
     isRider: Boolean // ⬅️ Add this parameter
 ) {
     val cameraPositionState = rememberCameraPositionState()
-
+    val context = LocalContext.current
+    val mapStyleOptions = remember {
+        MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
+    }
     // Move camera to source or destination if set
     LaunchedEffect(source, destination, userLocation) {
         if (source == null && destination == null && userLocation != null) {
@@ -565,7 +712,8 @@ fun GoogleMapView(
         properties = MapProperties(
             isMyLocationEnabled = true,
             mapType = MapType.NORMAL,
-            isTrafficEnabled = false
+            isTrafficEnabled = false,
+            mapStyleOptions = mapStyleOptions
         ),
         uiSettings = MapUiSettings(
             zoomControlsEnabled = false,

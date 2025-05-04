@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -149,13 +150,13 @@ fun GooglePlacesDropdown(
                     text = {
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 5.dp, horizontal = 8.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 Icons.Default.LocationOn,
                                 contentDescription = null,
-                                modifier = Modifier.padding(end = 8.dp),
+                                modifier = Modifier.padding(end = 10.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text("Your Current Location", style = TextStyle(fontSize = 14.sp))
@@ -177,28 +178,22 @@ fun GooglePlacesDropdown(
                 // ✅ Predicted Places
                 placePredictions.drop(1).forEach { prediction ->
                     DropdownMenuItem(
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary)
+                        },
                         text = {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 5.dp, horizontal = 8.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                            Column {
+                                Text(
+                                    prediction.getPrimaryText(null).toString(),
+                                    style = TextStyle(fontSize = 14.sp)
                                 )
-                                Column {
-                                    Text(
-                                        prediction.getPrimaryText(null).toString(),
-                                        style = TextStyle(fontSize = 14.sp)
-                                    )
-                                    Text(
-                                        prediction.getSecondaryText(null).toString(),
-                                        style = TextStyle(fontSize = 12.sp, color = Color.Gray)
-                                    )
-                                }
+                                Text(
+                                    prediction.getSecondaryText(null).toString(),
+                                    style = TextStyle(fontSize = 12.sp, color = Color.Gray)
+                                )
                             }
                         },
                         onClick = {

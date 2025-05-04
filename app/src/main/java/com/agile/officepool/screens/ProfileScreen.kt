@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,31 +61,47 @@ fun ProfileScreen(navController: NavController, context: Context) {
         linkedInId = sessionManager.getLinkedInId() ?: ""
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
 
-                title = { Text("Profile",
-                    fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate("updateProfile") }) {
-                        Icon(Icons.Default.Create, contentDescription = "Edit Profile")
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 15.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
+                onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface,)
+            }
+
+            // Floating Header Text
+            Text(
+                text = "Profile",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(vertical = 20.dp).weight(7f),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Start
             )
-        }
 
-    ) { paddingValues ->
+
+            IconButton(
+                modifier = Modifier.padding(end = 10.dp).weight(1.5f),
+                onClick = { navController.navigate("updateProfile") }) {
+                Icon(Icons.Default.Create, contentDescription = "Edit Profile",tint = MaterialTheme.colorScheme.onSurface)
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(paddingValues),
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(20.dp))
@@ -99,7 +116,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = "Profile",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(60.dp)
                 )
             }
@@ -107,7 +124,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
             Spacer(modifier = Modifier.height(10.dp))
 
             // Profile Name
-            Text(name, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 
             // Mobile Number
             Text(phone, fontSize = 16.sp, color = Color.Gray)
@@ -177,7 +194,7 @@ fun ProfileOption(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
         Icon(icon, contentDescription = title, modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color=MaterialTheme.colorScheme.onSurface)
             Text(subtitle, fontSize = 14.sp, color = Color.Gray)
         }
     }

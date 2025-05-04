@@ -87,7 +87,8 @@ fun RiderScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = "Default"
+                rideStartTime = "Default",
+                rideDate = ""
             )
 
             try {

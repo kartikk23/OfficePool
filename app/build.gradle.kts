@@ -15,11 +15,6 @@ val localProperties = Properties().apply {
 
 val mapsApiKey: String? = localProperties.getProperty("GOOGLE_MAPS_API_KEY")
 
-android {
-    defaultConfig {
-        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
-    }
-}
 
 android {
     namespace = "com.agile.officepool"
@@ -29,9 +24,7 @@ android {
         compose = true
         buildConfig = true
     }
-    defaultConfig {
-        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
-    }
+
 
     defaultConfig {
         applicationId = "com.agile.officepool"
@@ -41,6 +34,8 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
         buildConfigField("String", "LINKEDIN_CLIENT_ID", "\"${project.findProperty("LINKEDIN_CLIENT_ID")}\"")
         buildConfigField("String", "LINKEDIN_CLIENT_SECRET", "\"${project.findProperty("LINKEDIN_CLIENT_SECRET")}\"")
 
@@ -48,12 +43,16 @@ android {
 //    }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "MAPS_API_KEY", "\"${mapsApiKey}\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "MAPS_API_KEY", "\"${mapsApiKey}\"")
         }
     }
     compileOptions {

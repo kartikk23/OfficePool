@@ -76,11 +76,11 @@ fun StartupScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Left-aligned text
             Text(
-                modifier = Modifier.weight(8f),
+                modifier = Modifier.weight(7f),
                 text = "OfficePool",
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
@@ -91,36 +91,29 @@ fun StartupScreen(navController: NavController) {
 
             )
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .clickable { navController.navigate("profile") }
-                    .background(color = MaterialTheme.colorScheme.onSurface)
-                    .weight(1f)
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(4.dp).size(30.dp).weight(1.5f)
+                    .clickable(
+                        onClick = {
+                            navController.navigate("profile")
+                        }
+                    )
+            )
 
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.align(Alignment.Center).padding(4.dp)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .clickable { navController.navigate("rideRequests") }
-                    .background(color = MaterialTheme.colorScheme.onSurface)
-                    .weight(1f)
-
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.align(Alignment.Center).padding(4.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(4.dp).size(30.dp).weight(1.5f)
+                    .clickable(
+                        onClick = {
+                            navController.navigate("rideRequests")
+                        }
+                    )
+            )
 
           }
       

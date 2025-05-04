@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,32 +44,40 @@ fun UpdateProfileScreen(navController: NavController) {
 
     var isLoading by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Update Profile") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF161e33),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 15.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
+                onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.inverseSurface,)
+            }
+
+            // Floating Header Text
+            Text(
+                text = "Update Profile",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                modifier = Modifier.padding(vertical = 20.dp).weight(8.5f),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Start
             )
-        },
-        containerColor = Color.White
-    ) { paddingValues ->
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(
-                    color = MaterialTheme.colorScheme.surface
-                )
-                .padding(paddingValues)
-                .padding(16.dp),
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -200,16 +210,14 @@ fun UpdateProfileScreen(navController: NavController) {
                     }
                 },
                 enabled = !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF161e33))
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(24.dp)
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 } else {
                     Text("Update Profile", color = Color.White)

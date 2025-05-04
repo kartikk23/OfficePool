@@ -177,7 +177,8 @@ fun HomeScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = rideStartTime
+                rideStartTime = rideStartTime,
+                rideDate = "",
             )
 
             try {

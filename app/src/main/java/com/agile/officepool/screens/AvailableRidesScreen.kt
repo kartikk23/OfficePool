@@ -35,6 +35,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,10 +54,8 @@ fun AvailableRidesScreen(navController: NavController,
 
     var availableRides by remember { mutableStateOf<List<RideInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
     var rideRequests by remember { mutableStateOf<List<RideRequest>>(emptyList()) }
     val passengerId = SessionManager(LocalContext.current).getUserId() ?: ""
-
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -61,7 +63,8 @@ fun AvailableRidesScreen(navController: NavController,
         coroutineScope.launch {
             isLoading = true
             fetchAvailableRides { rides ->
-                availableRides = filterNearbyRides(rides, sourceLat, sourceLng)
+                availableRides = filterNearbyRides(rides, sourceLat, sourceLng, destinationLat, destinationLng)
+                availableRides = availableRides.sortedByDescending { it.dateTime }
                 isLoading = false
             }
             fetchRideRequestsForPassenger(passengerId) { requests ->
@@ -153,7 +156,7 @@ fun RideCard2(ride:RideInfo, rideRequest: RideRequest?){
                         modifier = Modifier.padding(4.dp)
                     )
                     Text(
-                        text = "From : ${rideRequest?.riderId ?: "Unknown"}",
+                        text = "From : ${ride.riderId}",
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -170,11 +173,31 @@ fun RideCard2(ride:RideInfo, rideRequest: RideRequest?){
 //                        fontSize = 14.sp
 //                    )
 //                }
-                Text(
-                    text = "Starting Time: ${ride.rideStartTime}",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+
+                val formattedDateTime = try {
+                    val date =  LocalDate.parse(ride.rideDate).format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH))
+                    val time = LocalTime.parse(ride.rideStartTime).format(DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH))
+                    "$date at $time"
+                } catch (e: Exception) {
+                    "${ride.rideDate} at ${ride.rideStartTime}"
+                }
+
+
+                Box(
+                    modifier = Modifier.wrapContentWidth().wrapContentHeight()
+                        .background(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ){
+                    Text(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        text = formattedDateTime,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                }
+
             }
 //            Row(
 //                verticalAlignment = Alignment.Top,
@@ -548,10 +571,11 @@ fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {
     }
 }
 
-fun filterNearbyRides(rides: List<RideInfo>, sourceLat: Double, sourceLng: Double): List<RideInfo> {
+fun filterNearbyRides(rides: List<RideInfo>, sourceLat: Double, sourceLng: Double, destinationLat: Double, destinationLng: Double): List<RideInfo> {
     return rides.filter { ride ->
-        val distance = calculateDistance(sourceLat, sourceLng, ride.sourceLat, ride.sourceLng)
-        distance <= 2.0 // Show only rides within 1 km
+        val srcDistance = calculateDistance(sourceLat, sourceLng, ride.sourceLat, ride.sourceLng)
+        val destDistance = calculateDistance(destinationLat, destinationLng, ride.destinationLat, ride.destinationLng)
+        srcDistance <= 2.0 && destDistance <= 2.0 // Show only rides within 2 km
     }
 }
 
