@@ -8,5 +8,4 @@ data class User(
     val linkedInId: String,
     val phone: String,
     val companyName: String
-
 )

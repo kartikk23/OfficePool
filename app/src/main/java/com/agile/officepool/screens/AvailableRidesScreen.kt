@@ -490,7 +490,8 @@ fun sendRideRequest(
                 riderId = riderId,
                 requestStatus = "REQUESTED")
             Log.d("RIDE_REQUEST", "📤 Sending ride request to backend... $request")
-            val response = RetrofitClient.instance.sendRideRequest(request)
+
+            val response = RetrofitClient.instance.add(request)
 
 
             if (response.isSuccessful && response.body()?.success == true) {

@@ -4,6 +4,37 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SessionManager(context: Context) {
+
+
+    val PREF_NAME: String = "OfficePoolPrefs"
+
+    val KEY_EMAIL: String = "user_email"
+
+    fun setFcmToken(token: String) {
+        prefs.edit().putString("fcm_token", token).apply()
+    }
+
+    fun getFcmToken(): String? {
+        return prefs.getString("fcm_token", null)
+    }
+
+
+
+
+    fun saveEmail(context: Context, email: String?) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_EMAIL, email).apply()
+    }
+
+    fun getEmail(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_EMAIL, null)
+    }
+
+    fun clearSession(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+    }
     private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
 
     companion object {

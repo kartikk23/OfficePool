@@ -226,8 +226,8 @@ suspend fun loginUser(
                 sessionManager.setUsername(response.body()!!.user.name)
                 sessionManager.setUserPhone(response.body()!!.user.phone)
                 sessionManager.saveUserSession(email) // ✅ Save session
-                sessionManager.setCompanyName(response.body()!!.user.companyName)
-                sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
+//                sessionManager.setCompanyName(response.body()!!.user.companyName)
+//                sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()

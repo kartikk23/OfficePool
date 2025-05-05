@@ -75,7 +75,7 @@ interface ApiService {
     
 //    send ride request
     @POST("rides/request")
-    suspend fun sendRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
+    suspend fun notifyRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
 
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
@@ -91,6 +91,13 @@ interface ApiService {
 
     @POST("api/users/update-fcm-token")
     suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @GET("api/users/fcmToken/{userId}")
+    suspend fun getFcmTokenByUserId(@Path("userId") userId: Long): Response<Map<String, String>>
+
+
+
+
 
 
 }
