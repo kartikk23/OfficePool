@@ -124,5 +124,6 @@ dependencies {
     implementation(libs.protolite.well.known.types)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.core.ktx.v1120)
+    implementation (libs.volley)
 
 }

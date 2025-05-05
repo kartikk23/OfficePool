@@ -21,7 +21,13 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.location.LocationManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -54,6 +60,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var sessionManager: SessionManager
 
+    private val CHANNEL_ID = "startup_channel_id"
+    private val NOTIFICATION_ID = 1
+    private val REQUEST_CODE_POST_NOTIFICATIONS = 1001
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -77,7 +87,24 @@ class MainActivity : ComponentActivity() {
         // Fetch and send FCM token at app startup
         if(!isLoggedIn){
             uploadFcmTokenIfNeeded(this)
+
         }
+
+        // Create notification channel
+        createNotificationChannel()
+
+        // Check and request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_POST_NOTIFICATIONS)
+            } else {
+                showStartupNotification()
+            }
+        } else {
+            showStartupNotification()
+        }
+
+
 
 
 
@@ -122,6 +149,49 @@ class MainActivity : ComponentActivity() {
         } else {
             Log.d("LocationCheck", "Location permission and GPS are available.")
             // ✅ Everything okay, stay where you are
+        }
+    }
+
+    private fun createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Startup Channel"
+            val descriptionText = "Channel for startup notifications"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun showStartupNotification() {
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.car) // Replace with your app's icon
+            .setContentTitle("Welcome")
+            .setContentText("App started successfully!")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        with(NotificationManagerCompat.from(this)) {
+            if (ActivityCompat.checkSelfPermission(
+                    applicationContext,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            notify(NOTIFICATION_ID, builder.build())
         }
     }
 
@@ -202,7 +272,7 @@ fun uploadFcmTokenIfNeeded(context: Context) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
-                Log.d("FCM", "📲 Current token from Firebase: $token")
+                Log.d("FCM-token", "📲 Current token from Firebase: $token")
 
                 // Upload to backend
                 CoroutineScope(Dispatchers.IO).launch {

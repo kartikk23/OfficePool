@@ -33,6 +33,7 @@ firebase-messaging = "23.4.1"
 retrofit = "2.9.0"
 ui = "1.7.8"
 uiToolingPreview = "1.7.8"
+volley = "1.2.1"
 
 [libraries]
 androidx-activity-compose-v180 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
@@ -74,6 +75,7 @@ protolite-well-known-types = { group = "com.google.firebase", name = "protolite-
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
+volley = { module = "com.android.volley:volley", version.ref = "volley" }
 #firebase_messaging_ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebase-messaging" }
 #androidx_navigation_compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
 

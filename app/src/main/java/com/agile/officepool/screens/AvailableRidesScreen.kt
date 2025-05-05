@@ -490,7 +490,8 @@ fun sendRideRequest(
                 riderId = riderId,
                 requestStatus = "REQUESTED")
             Log.d("RIDE_REQUEST", "📤 Sending ride request to backend... $request")
-            val response = RetrofitClient.instance.sendRideRequest(request)
+
+            val response = RetrofitClient.instance.addRideReq(request);
 
 
             if (response.isSuccessful && response.body()?.success == true) {
@@ -503,19 +504,23 @@ fun sendRideRequest(
                 }
 
                 // 🔔 Trigger FCM Notification to Rider
-                val notifyResponse = RetrofitClient.instance.getFCMToken(request)
-                val message = notifyResponse.body()
-                Log.d("RIDE_REQUEST", "📨 Notification response body: $message")
+                val notifyResponse = RetrofitClient.instance.sendNotificationToRider(request)
+                val res = notifyResponse.body()
+                Log.d("RIDE_REQUEST", "📨 Notification response body: $res")
                 Log.d("RIDE_REQUEST", "📨 Notification response status: ${notifyResponse.code()}")
 
 
+
+
                 withContext(Dispatchers.Main) {
-                    if (notifyResponse.isSuccessful && message?.get("status") == "success") {
-                        Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
-                        onResult(true)
-                    } else {
-                        Toast.makeText(context, "⚠\uFE0F FCM failed: ${message?.get("message")}", Toast.LENGTH_LONG).show()
-                        onResult(false)
+                    if (res != null) {
+                        if (notifyResponse.isSuccessful && res.success){
+                            Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
+                            onResult(true)
+                        } else {
+                            Toast.makeText(context, "⚠\uFE0F FCM failed: ${res.message}", Toast.LENGTH_LONG).show()
+                            onResult(false)
+                        }
                     }
                 }
             } else {

@@ -151,37 +151,9 @@ fun StartupScreen(navController: NavController) {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 // Feature Cards
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)){
-                        FeatureCard(
-                        "Travel Together",
-                            Color(0xFF2196F3),
-                            R.drawable.tt1,
-                            navController = navController
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)){
-                        FeatureCard(
-                            "Connect",
-                            Color(0xFF4CAF50),
-                            R.drawable.handshake,
-                            navController = navController
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)){
-                        FeatureCard(
-                            "Grow",
-                            Color(0xFFFFC107),
-                            R.drawable.grow,
-                            navController = navController
-                        )
-                    }
 
-                }
+                FeatureCard("", Color(0xFF2196F3), R.drawable.carpool,modifier = Modifier.width(400.dp),navController)
+
                 Spacer(modifier = Modifier.height(10.dp))
                 // Motivational Full-width Card
                 Card(
@@ -206,8 +178,8 @@ fun StartupScreen(navController: NavController) {
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 // Corporate Booking Card
-                CorporateRideCard(R.drawable.card_img)
-                Spacer(modifier = Modifier.height(8.dp))
+//                CorporateRideCard(R.drawable.card_img)
+//                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Nearest Business Zones",
@@ -341,12 +313,13 @@ fun FeatureCard(
     navController: NavController
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+//        shape = RoundedCornerShape(50.dp),
         modifier = modifier
             .clickable{
                 navController.navigate("searchScreen")
             }
-            .height(150.dp),
+            .border(1.dp,Color.LightGray, RoundedCornerShape(10))
+            .height(160.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
         Box(
