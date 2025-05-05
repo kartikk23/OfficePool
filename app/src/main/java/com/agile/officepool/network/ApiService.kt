@@ -72,10 +72,16 @@ interface ApiService {
 //    update profile details of user
     @POST("api/users/updateProfile")
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
-    
-//    send ride request
-    @POST("rides/request")
-    suspend fun notifyRideRequest(@Body rideRequest: RideRequest): Response<RideResponse>
+
+
+
+    @POST("rides/addRideReq")
+    suspend fun addRideReq(@Body rideRequest : RideRequest) : Response<RideResponse>
+
+    @POST("rides/sendNotificationToRider")
+    suspend fun sendNotificationToRider(@Body rideRequest : RideRequest) : Response<RideResponse>
+
+
 
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
@@ -94,6 +100,8 @@ interface ApiService {
 
     @GET("api/users/fcmToken/{userId}")
     suspend fun getFcmTokenByUserId(@Path("userId") userId: Long): Response<Map<String, String>>
+
+
 
 
 
