@@ -122,23 +122,20 @@ fun RideRequestsScreen(navController: NavController) {
             }
 
         }
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
         ) {
             when {
                 isLoading1 -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
                 requests.isEmpty() -> {
                     Text(
                         "No ride requests yet.",
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        modifier = Modifier.align(Alignment.Center),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -146,8 +143,7 @@ fun RideRequestsScreen(navController: NavController) {
 
                 else -> {
                     LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(requests) { request ->
 

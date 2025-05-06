@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -73,15 +74,43 @@ fun AvailableRidesScreen(navController: NavController,
         }
     }
 
-    Scaffold(
-    topBar = {
-        TopAppBar(title = { Text("Available Rides") })
-    }
-    ) { paddingValues ->
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 15.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
+                onClick = { navController.popBackStack() }) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.inverseSurface,
+                )
+            }
+
+            // Floating Header Text
+            Text(
+                text = "Available Rides",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                modifier = Modifier.padding(vertical = 20.dp).weight(8.5f),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Start
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -89,10 +118,11 @@ fun AvailableRidesScreen(navController: NavController,
                 availableRides.isEmpty() -> Text("No nearby rides available")
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(availableRides) { ride ->
-                        val matchingRequest = rideRequests.find { it.rideId == ride.rideId.toString() }
+                        val matchingRequest =
+                            rideRequests.find { it.rideId == ride.rideId.toString() }
                         RideCard2(ride = ride, rideRequest = matchingRequest)
                     }
                 }
@@ -102,10 +132,11 @@ fun AvailableRidesScreen(navController: NavController,
 }
 
 
+
 @Composable
 fun RideCard2(ride:RideInfo, rideRequest: RideRequest?){
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSurface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp) // Gentle shadow
@@ -570,6 +601,7 @@ fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {
         } catch (e: Exception) {
             e.printStackTrace()
             withContext(Dispatchers.Main) {
+                Log.d("RIDE_REQUEST", "💥 Exception: ${e.localizedMessage}")
                 onRidesFetched(emptyList()) // Return empty list on failure
             }
         }

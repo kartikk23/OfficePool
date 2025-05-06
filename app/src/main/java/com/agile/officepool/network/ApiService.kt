@@ -51,11 +51,8 @@ interface ApiService {
     @POST("ride/addRide")
     suspend fun addRide(@Body rideInfo: RideInfo): Response<RideInfo>
 
-
     @GET("ride/getAllRides")
     suspend fun getAllRides(): Response<List<RideInfo>>
-
-
 
     @GET("ride/getRideByStatus")
     suspend fun getRideByStatus(@Query("status") status: String): Response<List<RideInfo>>
