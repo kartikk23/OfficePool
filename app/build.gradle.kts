@@ -29,7 +29,7 @@ android {
     defaultConfig {
         applicationId = "com.agile.officepool"
         minSdk = 30
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -114,8 +114,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
 
-}}
-dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
@@ -126,4 +124,5 @@ dependencies {
     implementation(libs.androidx.core.ktx.v1120)
     implementation (libs.volley)
 
-}
+}}
+
