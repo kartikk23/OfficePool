@@ -29,6 +29,8 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.Date
 import java.util.Locale
 
@@ -87,8 +89,8 @@ fun RiderScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = "Default",
-                rideDate = ""
+                rideStartTime = LocalTime.now().toString(),
+                rideDate = LocalDate.now().toString()
             )
 
             try {

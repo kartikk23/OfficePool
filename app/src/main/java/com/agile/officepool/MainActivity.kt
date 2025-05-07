@@ -85,10 +85,10 @@ class MainActivity : ComponentActivity() {
 
 
         // Fetch and send FCM token at app startup
-        if(!isLoggedIn){
-            uploadFcmTokenIfNeeded(this)
-
-        }
+//        if(!isLoggedIn){
+//            uploadFcmTokenIfNeeded(this)
+//
+//        }
 
         // Create notification channel
         createNotificationChannel()

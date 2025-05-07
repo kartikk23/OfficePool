@@ -232,7 +232,7 @@ suspend fun loginUser(
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
                     onSuccess()
-                    updateFcmTokenAfterLogin(context)
+//                    updateFcmTokenAfterLogin(context)
                 }
 
             } else {
@@ -252,10 +252,11 @@ suspend fun loginUser(
     }
 }
 
-fun updateFcmTokenAfterLogin(context: Context) {
+fun updateFcmTokenAfterLoginOrResgister(context: Context) {
 
-    FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener {
-        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+        if (task.isSuccessful){
+            val token = task.result
             Log.d("FCM_TOKEN_DEBUG", "Fetched FCM Token: $token")
             // use newToken here
             CoroutineScope(Dispatchers.IO).launch {
@@ -274,6 +275,10 @@ fun updateFcmTokenAfterLogin(context: Context) {
                 }
             }
         }
+        else {
+            Log.e("FCM", "Failed to fetch token", task.exception)
+        }
+
     }
 }
 

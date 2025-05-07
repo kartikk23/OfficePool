@@ -252,13 +252,10 @@ suspend fun registerUser(
                 sessionManager.saveUserSession(email) // ✅ Save session
 //                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
 
-
-
-
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
                     onSuccess()
-                    updateFcmTokenAfterLogin(context)
+                    updateFcmTokenAfterLoginOrResgister(context)
                 }
             } else {
                 val errorBody = response.errorBody()?.string()

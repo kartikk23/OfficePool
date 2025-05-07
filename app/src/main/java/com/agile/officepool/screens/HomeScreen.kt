@@ -83,6 +83,8 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,7 +124,7 @@ fun HomeScreen(navController: NavController) {
     val isUserLoggedIn = sessionManager.isUserLoggedIn()
     var isRider by remember { mutableStateOf(false) }
     var route by remember { mutableStateOf("") }
-    var rideStartTime by remember { mutableStateOf("") }
+    var rideStartTime by remember { mutableStateOf<LocalTime?>(null) }
     val statusOptions = listOf("Yet To Start", "Active", "Completed","Cancelled", ) // ✅ Dropdown options
     var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
     var expanded by remember { mutableStateOf(false) } // Dropdown state
@@ -161,15 +163,15 @@ fun HomeScreen(navController: NavController) {
     fun submitRide() {
         coroutineScope.launch {
             if (selectedSource.isNullOrBlank() || selectedDestination.isNullOrBlank() ||
-                rideStartTime.isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()) {
+                rideStartTime.toString().isBlank() || route.isBlank() || status.isBlank() || availableSeats.isBlank()) {
                 Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_LONG).show()
                 return@launch
             }
 
             val rideInfo = RideInfo(
                 riderId = userId,
-                source = selectedSource!!,
-                destination = selectedDestination!!,
+                source = selectedSource,
+                destination = selectedDestination,
                 sourceLat = sourceLat!!,
                 sourceLng = sourceLng!!,
                 destinationLat = destinationLat!!,
@@ -177,8 +179,8 @@ fun HomeScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = rideStartTime,
-                rideDate = "",
+                rideStartTime = rideStartTime!!.toString(),
+                rideDate = LocalDate.now().toString(),
             )
 
             try {
@@ -366,7 +368,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 TimePicker(label = "Ride begins at") {
-                    rideStartTime = it
+                    rideStartTime = LocalTime.parse(it)
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

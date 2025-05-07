@@ -1,6 +1,9 @@
 package com.agile.officepool.model
 
 import com.google.gson.annotations.SerializedName
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 data class RideInfo(
     @SerializedName("rideId") val rideId: Int? = null,
@@ -18,4 +21,4 @@ data class RideInfo(
     @SerializedName("rideDate") val rideDate: String,
     @SerializedName("dateTime") val dateTime: String? = null,
 
-)
+    )

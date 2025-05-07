@@ -6,6 +6,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -186,8 +187,8 @@ fun SearchScreen(navController: NavController) {
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
-                rideStartTime = rideStartTime.toString(),
-                rideDate = rideDate?.toString() ?: ""
+                rideStartTime = rideStartTime!!.toString(),
+                rideDate = rideDate!!.toString()
             )
 
             try {
@@ -197,11 +198,15 @@ fun SearchScreen(navController: NavController) {
                     isLoading = false
                     navController.navigate("startUp") // Navigate after success
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("AddRideError", "Failed to add ride: $errorBody")
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
                     isLoading = false
                 }
             } catch (e: Exception) {
+                Log.e("AddRideException", "Exception occurred while adding ride", e)
                 Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                isLoading = false
             }
         }
     }

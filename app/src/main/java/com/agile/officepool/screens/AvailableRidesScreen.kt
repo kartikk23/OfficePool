@@ -370,7 +370,7 @@ fun RideCard(ride: RideInfo, rideRequest: RideRequest?) {
                     color = Color(0xFF333333) // Dark text for contrast
                 )
                 Text(
-                    text = ride.rideStartTime,
+                    text = ride.rideStartTime.toString(),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, fontSize = 15.sp),
                     color = Color(0xFF757575) // Muted grey for subtlety
                 )
