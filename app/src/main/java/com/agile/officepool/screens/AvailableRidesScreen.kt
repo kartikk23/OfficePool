@@ -531,7 +531,7 @@ fun sendRideRequest(
 
                 // Show immediate feedback to user
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Ride request saved. Sending notification...", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Ride request saved. Sending notification...", Toast.LENGTH_SHORT).show()
                 }
 
                 // 🔔 Trigger FCM Notification to Rider
@@ -546,10 +546,10 @@ fun sendRideRequest(
                 withContext(Dispatchers.Main) {
                     if (res != null) {
                         if (notifyResponse.isSuccessful && res.success){
-                            Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
+//                            Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
                             onResult(true)
                         } else {
-                            Toast.makeText(context, "⚠\uFE0F FCM failed: ${res.message}", Toast.LENGTH_LONG).show()
+//                            Toast.makeText(context, "⚠\uFE0F FCM failed: ${res.message}", Toast.LENGTH_LONG).show()
                             onResult(false)
                         }
                     }

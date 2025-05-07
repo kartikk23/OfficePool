@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.agile.officepool" />
-                  <option name="mobileSdkAppId" value="1:69725577892:android:227ef4009f48ac44113c31" />
-                  <option name="projectId" value="officepool-34610" />
-                  <option name="projectNumber" value="69725577892" />
+                  <option name="mobileSdkAppId" value="1:556097623874:android:0c20151f4630dad2509adb" />
+                  <option name="projectId" value="officepool-4b64c" />
+                  <option name="projectNumber" value="556097623874" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

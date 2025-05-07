@@ -60,8 +60,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var sessionManager: SessionManager
 
-    private val CHANNEL_ID = "startup_channel_id"
-    private val NOTIFICATION_ID = 1
     private val REQUEST_CODE_POST_NOTIFICATIONS = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,31 +81,6 @@ class MainActivity : ComponentActivity() {
         val rideId = intent?.getStringExtra("rideId")
 
 
-
-        // Fetch and send FCM token at app startup
-//        if(!isLoggedIn){
-//            uploadFcmTokenIfNeeded(this)
-//
-//        }
-
-        // Create notification channel
-        createNotificationChannel()
-
-        // Check and request notification permission for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_POST_NOTIFICATIONS)
-            } else {
-                showStartupNotification()
-            }
-        } else {
-            showStartupNotification()
-        }
-
-
-
-
-
         setContent {
 
 
@@ -115,7 +88,7 @@ class MainActivity : ComponentActivity() {
                 navController = rememberNavController()
                 if (rideId != null) {
                     LaunchedEffect(Unit) {
-                        navController.navigate("rideRequest/$rideId")
+                        navController.navigate("rideRequests")
                     }
                 }
                 Box(modifier = Modifier
@@ -151,50 +124,6 @@ class MainActivity : ComponentActivity() {
             // ✅ Everything okay, stay where you are
         }
     }
-
-    private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Startup Channel"
-            val descriptionText = "Channel for startup notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    private fun showStartupNotification() {
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.car) // Replace with your app's icon
-            .setContentTitle("Welcome")
-            .setContentText("App started successfully!")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-
-        with(NotificationManagerCompat.from(this)) {
-            if (ActivityCompat.checkSelfPermission(
-                    applicationContext,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return
-            }
-            notify(NOTIFICATION_ID, builder.build())
-        }
-    }
-
 
 }
 
@@ -317,27 +246,6 @@ fun isLocationPermissionGranted(context: Context): Boolean {
 }
 
 
-//private fun handleDeepLink(intent: Intent?, viewModel: UserViewModel, navController: NavHostController) {
-//    intent?.data?.let { uri ->
-//        Log.d("LinkedInLogin", "Received URI: $uri")
-//
-//        if (uri.scheme == "myapp" && uri.host == "oauth") {
-//            val authCode = uri.getQueryParameter("code")
-//            Log.d("LinkedInLogin", "Authorization Code: $authCode")
-//
-//            if (!authCode.isNullOrEmpty()) {
-//                viewModel.loginWithLinkedIn(authCode,
-//                    onSuccess = {
-//                        Log.d("LinkedInLogin", "Login successful!")
-//                        navController.navigate("home") // Redirect to HomeScreen
-//                    },
-//                    onError = { error ->
-//                        Log.e("LinkedInLogin", "Error: ${error.message}")
-//                    }
-//                )
-//            }
-//        }
-//    }
 
 
 

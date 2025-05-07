@@ -56,7 +56,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         showNotification(
             title = "New Ride Request",
-            body = "$passengerName requested a ride!",
+            body = "$passengerName requested a ride for ride $rideId!",
             rideId = rideId
         )
     }
@@ -78,7 +78,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val notification = NotificationCompat.Builder(this, "ride_channel")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.car)
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(pendingIntent)
