@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationCompat
 import com.agile.officepool.MainActivity
 import com.agile.officepool.R
-import com.agile.officepool.network.FcmTokenRequest
+import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.google.firebase.messaging.FirebaseMessagingService

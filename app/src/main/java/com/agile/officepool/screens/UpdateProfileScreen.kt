@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.agile.officepool.components.TopAppBarWithTitle
 import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -33,7 +35,6 @@ import com.agile.officepool.ui.theme.OfficePoolTheme
 @Composable
 fun UpdateProfileScreen(navController: NavController) {
     val context = LocalContext.current
-//    var email by remember { mutableStateOf(TextFieldValue()) }
     val sessionManager = remember { SessionManager(context) }
     var email by remember { mutableStateOf(TextFieldValue(sessionManager.getUserEmail() ?: "")) }
     var name by remember { mutableStateOf(TextFieldValue(sessionManager.getUsername() ?: "")) }
@@ -41,7 +42,6 @@ fun UpdateProfileScreen(navController: NavController) {
     var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getCompanyName() ?: "")) }
     var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getLinkedInId() ?: "")) }
     val coroutineScope = rememberCoroutineScope()
-
     var isLoading by remember { mutableStateOf(false) }
 
     Column(
@@ -51,27 +51,11 @@ fun UpdateProfileScreen(navController: NavController) {
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            IconButton(
-                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
-                onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.inverseSurface,)
-            }
-
-            // Floating Header Text
-            Text(
-                text = "Update Profile",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.inverseSurface,
-                modifier = Modifier.padding(vertical = 20.dp).weight(8.5f),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Start
-            )
-        }
+        TopAppBarWithTitle(
+            title = "Update Profile",
+            onBackClick = { navController.popBackStack() },
+            showTrailingIcon = false,
+        )
 
         Column(
             modifier = Modifier
@@ -226,7 +210,6 @@ fun UpdateProfileScreen(navController: NavController) {
         }
     }
 }
-
 
 @Composable
 fun UpdateProfileScreenPreviewWrapper() {

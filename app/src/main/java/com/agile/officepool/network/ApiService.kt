@@ -1,6 +1,7 @@
 package com.agile.officepool.network
 
 
+import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.model.LoginResponse
 import com.agile.officepool.model.ProfileRequest
@@ -34,10 +35,6 @@ import java.util.concurrent.TimeUnit
 
 interface ApiService {
 
-    //for login and registration
-    @POST("/api/users/verify-linkedin")
-    suspend fun verifyLinkedIn(@Query("accessToken") accessToken: String): Response<User>
-
     @POST("api/users/register")
     suspend fun register(@Body newRegisterRequest: RegisterRequest): Response<RegisterResponse>
 
@@ -66,19 +63,23 @@ interface ApiService {
     @DELETE("ride/deleteRide/{rideId}")
     suspend fun deleteRide(@Path("rideId") rideId: Int): Response<String>
 
-//    update profile details of user
+    // update profile details of user
     @POST("api/users/updateProfile")
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
 
+    @POST("api/users/update-fcm-token")
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @GET("api/users/fcmToken/{userId}")
+    suspend fun getFcmTokenByUserId(@Path("userId") userId: Long): Response<Map<String, String>>
 
 
+    // for ride request
     @POST("rides/addRideReq")
     suspend fun addRideReq(@Body rideRequest : RideRequest) : Response<RideResponse>
 
     @POST("rides/sendNotificationToRider")
     suspend fun sendNotificationToRider(@Body rideRequest : RideRequest) : Response<RideResponse>
-
-
 
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
@@ -88,22 +89,6 @@ interface ApiService {
 
     @PUT("rides/updateRequestStatus")
     suspend fun updateRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
-
-    @POST("rides/fcm-token")
-    suspend fun getFCMToken(@Body request: RideRequest): Response<Map<String, String>>
-
-    @POST("api/users/update-fcm-token")
-    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
-
-    @GET("api/users/fcmToken/{userId}")
-    suspend fun getFcmTokenByUserId(@Path("userId") userId: Long): Response<Map<String, String>>
-
-
-
-
-
-
-
 
 }
 
@@ -150,8 +135,4 @@ object RetrofitClient {
     }
 }
 
-data class FcmTokenRequest(
-    val userId: String,
-    val token: String
-)
 

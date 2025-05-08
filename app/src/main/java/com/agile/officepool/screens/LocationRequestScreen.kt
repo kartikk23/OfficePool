@@ -2,10 +2,7 @@ package com.agile.officepool.screens
 
 import android.Manifest
 import android.app.Activity
-import android.content.IntentSender
-import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -21,28 +18,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.agile.officepool.helper.ApplicationHelper.checkLocationEnabled
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.Priority
 
 @Composable
 fun LocationRequestScreen(navController: NavHostController) {
     val context = LocalContext.current
     val activity = context as Activity
+    val sessionManager = SessionManager(context)
+
 
     val locationLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             // 🎯 Location (GPS) was turned ON
-            navController.navigate("startUp") {
-                popUpTo("locationPermission") { inclusive = true }
+            if(sessionManager.isUserLoggedIn()){
+                navController.navigate("startUp") {
+                    popUpTo("locationPermission") { inclusive = true }
+                }
+            }else{
+                navController.navigate("login") {
+                    popUpTo("locationPermission") { inclusive = true }
+                }
             }
         } else {
             // ❌ User cancelled
@@ -110,40 +111,7 @@ fun LocationRequestScreen(navController: NavHostController) {
     }
 }
 
-private fun checkLocationEnabled(
-    activity: Activity,
-    navController: NavHostController,
-    launcher: androidx.activity.result.ActivityResultLauncher<IntentSenderRequest>
-) {
-    val locationRequest = LocationRequest.Builder(
-        Priority.PRIORITY_HIGH_ACCURACY, 1000L
-    ).build()
 
-    val builder = LocationSettingsRequest.Builder()
-        .addLocationRequest(locationRequest)
-        .setAlwaysShow(true)
-
-    val settingsClient = LocationServices.getSettingsClient(activity)
-    val task = settingsClient.checkLocationSettings(builder.build())
-
-    task.addOnSuccessListener {
-        // 🎯 GPS is already ON
-        navController.navigate("startUp") {
-            popUpTo("locationPermission") { inclusive = true }
-        }
-    }
-
-    task.addOnFailureListener { e ->
-        if (e is ResolvableApiException) {
-            try {
-                val intentSenderRequest = IntentSenderRequest.Builder(e.resolution).build()
-                launcher.launch(intentSenderRequest)
-            } catch (sendEx: Exception) {
-                sendEx.printStackTrace()
-            }
-        }
-    }
-}
 @Composable
 fun LocationScreenPreviewWrapper() {
     val navController = rememberNavController()

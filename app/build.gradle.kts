@@ -92,20 +92,20 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.gson)
-    implementation("com.github.scribejava:scribejava-apis:8.3.3") // For LinkedIn OAuth
+    implementation(libs.scribejava.apis) // For LinkedIn OAuth
 
 
-    implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
+    implementation(libs.androidx.material3.v131)
+    implementation(libs.accompanist.systemuicontroller)
 
-    implementation ("androidx.compose.material3:material3:1.3.2")
+    implementation (libs.androidx.material3)
 
     //Google Map
-    implementation("com.google.maps.android:maps-compose:6.4.1") // Maps Compose library
-    implementation("com.google.android.gms:play-services-maps:19.0.0") // Google Maps SDK
-    implementation("androidx.compose.foundation:foundation:1.7.7") // Compose foundation
-    implementation("androidx.compose.ui:ui:1.7.7")
-    implementation("androidx.compose.material:material:1.7.7") // Compose Material")
+    implementation(libs.maps.compose) // Maps Compose library
+    implementation(libs.gms.play.services.maps) // Google Maps SDK
+    implementation(libs.androidx.foundation) // Compose foundation
+    implementation(libs.androidx.ui.v177)
+    implementation(libs.androidx.material.v177) // Compose Material")
 
     implementation(libs.androidx.material.v100)
     implementation(libs.places.v310)

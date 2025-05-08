@@ -23,12 +23,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 
@@ -41,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +45,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +52,7 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
+import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
@@ -72,26 +68,15 @@ import com.google.android.gms.maps.model.CustomCap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.URL
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 @Composable
 fun LiveTrackingMapScreen(
@@ -105,25 +90,20 @@ fun LiveTrackingMapScreen(
         MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
     }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
-    var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     var currentPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }  // Dynamic Polyline
     var staticPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }  // Static Polyline (Source to Destination)
     val coroutineScope = rememberCoroutineScope()  // Coroutine scope for launching coroutines
-    val apiKey by remember { mutableStateOf<String>(BuildConfig.MAPS_API_KEY) }
+    val apiKey by remember { mutableStateOf(BuildConfig.MAPS_API_KEY) }
     var travelTime by remember { mutableStateOf("") }
     var travelDistance by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf<List<String>>(emptyList()) }
-
     var source by remember { mutableStateOf<LatLng?>(null) }
     var destination by remember { mutableStateOf<LatLng?>(null) }
-
     var sourceTitle by remember { mutableStateOf<String?>(null) }
     var destinationTitle by remember { mutableStateOf<String?>(null) }
-
     var isLoading by remember { mutableStateOf(true) }
     var isLoading1 by remember { mutableStateOf(false) }
     var rideInfo by  remember {mutableStateOf<RideInfo?>(null)}
-
     val cameraPositionState = rememberCameraPositionState()
 
     LaunchedEffect(rideId) {
@@ -150,12 +130,8 @@ fun LiveTrackingMapScreen(
                                     staticPolyline = routeInfo.polyline
                                 }
                             }
-
-
-
                             // Update camera to source
                             cameraPositionState.position = CameraPosition.fromLatLngZoom(source!!, 15f)
-
                             // ✅ Mark loading complete
                             isLoading = false
                         }
@@ -297,6 +273,7 @@ fun LiveTrackingMapScreen(
                     }
 
                     // Source Marker
+
 //        if (source != null) {
 //            Marker(state = sourceMarkerState, title = sourceTitle,
 //                icon = BitmapDescriptorFactory.fromResource(R.drawable.start))
@@ -350,15 +327,7 @@ fun LiveTrackingMapScreen(
                         )
                     }
 
-                    // Custom User Location Marker
-//        if (userLocation != null) {
-//            Marker(
-//                state = userLocationMarkerState,
-//                title = "You",
-////                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)
-//                icon = BitmapDescriptorFactory.fromResource(R.drawable.bike)
-//            )
-//        }
+
                 }
 
                 Column(
@@ -451,7 +420,7 @@ fun LiveTrackingMapScreen(
                                             if (success) {
                                                 isLoading1 = false
                                                 navController.popBackStack()
-//                                            Toast.makeText(context, "Accepted ${selectedRequest.passengerName}", Toast.LENGTH_SHORT).show()
+//                                            Toast.makeText(context, "Accepted \${selectedRequest.passengerName}", Toast.LENGTH\_SHORT).show()
                                             } else {
                                                 isLoading1 = false
                                                 Toast.makeText(context, "Failed to accept request", Toast.LENGTH_SHORT).show()
@@ -491,7 +460,6 @@ fun LiveTrackingMapScreen(
                     }
                 }
             }
-
             // ✅ Top-left Back Button Overlay
             Box(
                 modifier = Modifier
@@ -512,129 +480,6 @@ fun LiveTrackingMapScreen(
             }
         }
 
-
     }
 
-
-
-
-
-
-}
-
-private fun findNearestPointIndex(userLocation: LatLng, path: List<LatLng>): Int {
-    var minDistance = Double.MAX_VALUE
-    var nearestIndex = 0
-    path.forEachIndexed { index, latLng ->
-        val distance = haversine(userLocation.latitude, userLocation.longitude, latLng.latitude, latLng.longitude)
-        if (distance < minDistance) {
-            minDistance = distance
-            nearestIndex = index
-        }
-    }
-    return nearestIndex
-}
-
-private fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val R = 6371e3 // Earth radius in meters
-    val dLat = Math.toRadians(lat2 - lat1)
-    val dLon = Math.toRadians(lon2 - lon1)
-    val a = sin(dLat / 2).pow(2.0) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLon / 2).pow(2.0)
-    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c
-}
-
-
-data class RouteInfo(
-    val polyline: List<LatLng>,
-    val durationText: String,
-    val distanceText: String,
-    val steps: List<String>
-)
-
-suspend fun getRoutePolylineWithInfo(source: LatLng, destination: LatLng, apiKey: String): RouteInfo {
-    return withContext(Dispatchers.IO) {
-        try {
-            val url = "https://maps.googleapis.com/maps/api/directions/json" +
-                    "?origin=${source.latitude},${source.longitude}" +
-                    "&destination=${destination.latitude},${destination.longitude}" +
-                    "&key=$apiKey"
-
-            val response = URL(url).readText()
-            val json = JSONObject(response)
-            val routes = json.getJSONArray("routes")
-
-            if (routes.length() > 0) {
-                val route = routes.getJSONObject(0)
-                val polyline = route
-                    .getJSONObject("overview_polyline")
-                    .getString("points")
-
-                val leg = route.getJSONArray("legs").getJSONObject(0)
-                val durationText = leg.getJSONObject("duration").getString("text")
-                val distanceText = leg.getJSONObject("distance").getString("text")
-                val stepsJson = leg.getJSONArray("steps")
-                val steps = mutableListOf<String>()
-                for (i in 0 until stepsJson.length()) {
-                    val step = stepsJson.getJSONObject(i)
-                    val htmlInstruction = step.getString("html_instructions")
-                    val cleanText = htmlInstruction.replace(Regex("<[^>]*>"), "")
-                    steps.add(cleanText)
-                }
-
-                RouteInfo(
-                    polyline = decodePolyline(polyline),
-                    durationText = durationText,
-                    distanceText = distanceText,
-                    steps = steps,
-
-                )
-            } else {
-                RouteInfo(emptyList(), "","", emptyList())
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            RouteInfo(emptyList(), "", "",emptyList())
-        }
-    }
-}
-
-
-
-
-fun decodePolyline(encoded: String): List<LatLng> {
-    Log.d("LiveTrackingMap", "Decoding polyline")
-    val poly = ArrayList<LatLng>()
-    var index = 0
-    val len = encoded.length
-    var lat = 0
-    var lng = 0
-
-    while (index < len) {
-        var b: Int
-        var shift = 0
-        var result = 0
-        do {
-            b = encoded[index++].code - 63
-            result = result or (b and 0x1f shl shift)
-            shift += 5
-        } while (b >= 0x20)
-        val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-        lat += dlat
-
-        shift = 0
-        result = 0
-        do {
-            b = encoded[index++].code - 63
-            result = result or (b and 0x1f shl shift)
-            shift += 5
-        } while (b >= 0x20)
-        val dlng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-        lng += dlng
-
-        val p = LatLng(lat / 1E5, lng / 1E5)
-        poly.add(p)
-    }
-
-    return poly
 }

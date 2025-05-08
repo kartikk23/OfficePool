@@ -1,8 +1,5 @@
 package com.agile.officepool.screens
 
-import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -47,19 +44,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
-import com.agile.officepool.isLocationPermissionGranted
-import com.agile.officepool.model.LoginRequest
-import com.agile.officepool.network.FcmTokenRequest
-import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
+import com.agile.officepool.helper.ApplicationHelper.loginUser
 import com.agile.officepool.ui.theme.OfficePoolTheme
-import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-@OptIn(ExperimentalMaterial3Api::class)
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -88,9 +78,9 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier.padding(24.dp)
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    painter = painterResource(R.drawable.car),
                     contentDescription = "App Logo",
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(70.dp),
                 )
 
 
@@ -99,8 +89,9 @@ fun LoginScreen(navController: NavController) {
                 OutlinedTextField(
                     value = email.value,
                     onValueChange = { email.value = it },
-                    label = { Text("Email") },
+                    label = { Text("Email", fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
@@ -109,21 +100,24 @@ fun LoginScreen(navController: NavController) {
                 OutlinedTextField(
                     value = password.value,
                     onValueChange = { password.value = it },
-                    label = { Text("Password") },
+                    label = { Text("Password", fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
                 if (error.value.isNotEmpty()) {
                     Text(
                         text = error.value,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
+                        fontSize = 14.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = {
@@ -205,82 +199,6 @@ fun LoginScreen(navController: NavController) {
 }
 
 
-
-suspend fun loginUser(
-    email: String,
-    password: String,
-    context: Context,
-    onSuccess: () -> Unit,
-    onError: (String) -> Unit
-) {
-    val sessionManager = SessionManager(context)
-    withContext(Dispatchers.IO) {
-        try {
-            val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
-            Log.d("API_RESPONSE", "Raw Response: ${response.body()}")
-
-            if (response.isSuccessful && response.body() != null ) {
-
-                val userId = response.body()!!.user.id.toLong()
-                sessionManager.setUserId(userId)
-                sessionManager.setUsername(response.body()!!.user.name)
-                sessionManager.setUserPhone(response.body()!!.user.phone)
-                sessionManager.saveUserSession(email) // ✅ Save session
-//                sessionManager.setCompanyName(response.body()!!.user.companyName)
-//                sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    onSuccess()
-//                    updateFcmTokenAfterLogin(context)
-                }
-
-            } else {
-                val errorMessage = when (response.code()) {
-                    401 -> "Invalid email or password"
-                    else -> "Login failed: ${response.message()}"
-                }
-                withContext(Dispatchers.Main) {
-                    onError(errorMessage)
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                onError("Network error: ${e.message}")
-            }
-        }
-    }
-}
-
-fun updateFcmTokenAfterLoginOrResgister(context: Context) {
-
-    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-        if (task.isSuccessful){
-            val token = task.result
-            Log.d("FCM_TOKEN_DEBUG", "Fetched FCM Token: $token")
-            // use newToken here
-            CoroutineScope(Dispatchers.IO).launch {
-                val sessionManager = SessionManager(context)
-                val userId = sessionManager.getUserId()
-                Log.d("FCM_TOKEN_DEBUG", "SessionManager userId: $userId, FCM token: $token")
-                if (userId != null && token != null) {
-                    val response = RetrofitClient.instance.updateFcmToken(
-                        FcmTokenRequest(userId = userId, token = token)
-                    )
-                    if (response.isSuccessful) {
-                        Log.d("FCM_TOKEN_DEBUG", "FCM token updated post-login/registration: $token")
-                    } else {
-                        Log.e("FCM_TOKEN_DEBUG", "Failed to update token: ${response.errorBody()?.string()}")
-                    }
-                }
-            }
-        }
-        else {
-            Log.e("FCM", "Failed to fetch token", task.exception)
-        }
-
-    }
-}
 
 @Composable
 fun LoginScreenPreviewWrapper() {

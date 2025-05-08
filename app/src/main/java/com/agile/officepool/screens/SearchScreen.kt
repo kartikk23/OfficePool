@@ -2,9 +2,6 @@ package com.agile.officepool.screens
 
 import GooglePlacesDropdown
 import android.Manifest
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
-import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
@@ -12,13 +9,11 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,11 +28,10 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -58,13 +52,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontVariation.weight
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -76,7 +68,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
-import com.agile.officepool.components.TimePicker
+import com.agile.officepool.components.TopAppBarWithTitle
+import com.agile.officepool.helper.ApplicationHelper.CustomTimePicker
+import com.agile.officepool.helper.ApplicationHelper.ShowDatePicker
+import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
+import com.agile.officepool.helper.MapHelperFunctions.initializePlacesClient
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
@@ -99,13 +95,9 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import getRoutePolylineWithInfo
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,9 +117,8 @@ fun SearchScreen(navController: NavController) {
     var route by remember { mutableStateOf("") }
     var rideStartTime by remember { mutableStateOf<LocalTime?>(null) }
     var rideDate by remember { mutableStateOf<LocalDate?>(null) }
-    val statusOptions =
-        listOf("Yet To Start", "Active", "Completed", "Cancelled",) // ✅ Dropdown options
-    var status by remember { mutableStateOf(statusOptions[0]) } // Default selection
+    val statusOptions = listOf("Yet To Start", "Active", "Completed", "Cancelled",) // ✅ Dropdown options
+    val status by remember { mutableStateOf(statusOptions[0]) } // Default selection
     var expanded by remember { mutableStateOf(false) } // Dropdown state
     var availableSeats by remember { mutableStateOf("") }
     val sessionManager = SessionManager(LocalContext.current)
@@ -136,31 +127,21 @@ fun SearchScreen(navController: NavController) {
     var polylinePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Initialize the Places Client
-    fun initializePlacesClient(context: Context): PlacesClient {
-        if (!Places.isInitialized()) {
-            Places.initialize(context, BuildConfig.MAPS_API_KEY)
-        }
-        return Places.createClient(context)
-    }
-
     val placesClient = remember { initializePlacesClient(context) }
-
     var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
 
-//    TransparentStatusBar()
 
     fun fetchPlaces(query: String) {
         val request = FindAutocompletePredictionsRequest.builder()
             .setQuery(query)
             .build()
-
         placesClient.findAutocompletePredictions(request)
             .addOnSuccessListener { response ->
                 placePredictions = response.autocompletePredictions
             }
             .addOnFailureListener { exception ->
                 placePredictions = emptyList()
+                Log.e("PlacesAPI", "Autocomplete failed: ${exception.message}", exception)
             }
     }
 
@@ -264,31 +245,11 @@ fun SearchScreen(navController: NavController) {
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            IconButton(
-                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
-                onClick = { navController.popBackStack() }) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.inverseSurface,
-                )
-            }
-
-            // Floating Header Text
-            Text(
-                text = "Find your Ride Buddy",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.inverseSurface,
-                modifier = Modifier.padding(vertical = 20.dp).weight(8.5f),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Start
-            )
-        }
+        TopAppBarWithTitle(
+            title = "Find your Ride Buddy",
+            onBackClick = { navController.popBackStack() },
+            showTrailingIcon = false,
+        )
 
         Column(
             modifier = Modifier
@@ -552,127 +513,6 @@ fun SearchScreen(navController: NavController) {
     }
 }
 
-
-
-
-
-@Composable
-fun ShowDatePicker(context: Context, selectedDate: LocalDate?, onDateSelected: (LocalDate) -> Unit) {
-    val datePickerDialog = remember {
-        val calendar = Calendar.getInstance()
-        DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                val pickedDate = LocalDate.of(year, month + 1, dayOfMonth)
-                onDateSelected(pickedDate)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-    }
-
-    // You can use a clickable component to show the DatePicker
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { datePickerDialog.show() }
-    ) {
-        Text(
-            text = "Select Date",  // Or your label here
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-                .fillMaxWidth()
-        ) {
-            Text(
-                modifier = Modifier.weight(8.5f),
-                text = selectedDate?.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))?: "", // Display the formatted date or a default string
-                fontSize = 14.sp,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                modifier = Modifier.weight(1.5f),
-                imageVector = Icons.Default.DateRange,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-@Composable
-fun CustomTimePicker(
-    label: String,
-    selectedTime: LocalTime?,
-    onTimeSelected: (LocalTime) -> Unit
-) {
-    val context = LocalContext.current
-    val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
-    val timePickerDialog = remember {
-        TimePickerDialog(
-            context,
-            { _, hour: Int, minute: Int ->
-                val selected = LocalTime.of(hour, minute)
-                onTimeSelected(selected)
-            },
-            selectedTime?.hour ?: 12,
-            selectedTime?.minute ?: 0,
-            false
-        )
-    }
-
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { timePickerDialog.show() }
-    ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-                .fillMaxWidth()
-        ) {
-
-            Text(
-                modifier = Modifier.weight(8.5f),
-                text = selectedTime?.format(formatter) ?: "",
-                fontSize = 14.sp,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Icon(
-                modifier = Modifier.weight(1.5f),
-                imageVector = Icons.Default.DateRange,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-
-
 @Composable
 fun GoogleMapView(
     userLocation: LatLng?,
@@ -757,6 +597,8 @@ fun GoogleMapView(
         }
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

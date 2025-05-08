@@ -1,21 +1,15 @@
 package com.agile.officepool.screens
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
-import android.widget.Toast
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,7 +17,6 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -37,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -50,17 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.agile.officepool.R
-import com.agile.officepool.ViewModel.UserViewModel
-import com.agile.officepool.components.TextWithLines
-import com.agile.officepool.isLocationPermissionGranted
-import com.agile.officepool.model.RegisterRequest
-import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
+import com.agile.officepool.helper.ApplicationHelper.registerUser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,8 +86,9 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("Name") },
+                    label = { Text("Name", fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
 
@@ -110,8 +97,9 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text("Email", fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
@@ -120,8 +108,9 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text("Password" , fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
@@ -131,21 +120,24 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
+                    label = { Text("Confirm Password", fontSize = 14.sp) },
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
+                Spacer(modifier = Modifier.height(15.dp))
 
                 if (error.isNotEmpty()) {
                     Text(
                         text = error,
+                        fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp)
+
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = {
@@ -218,63 +210,6 @@ fun RegisterScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-//                TextWithLines("Or")
-
-//                Spacer(modifier = Modifier.height(12.dp))
-                // LinkedIn OAuth Login Button
-
-            }
-        }
-    }
-}
-
-
-suspend fun registerUser(
-    name: String,
-    email: String,
-    password: String,
-    context: Context,
-    onSuccess: () -> Unit,
-    onError: (String) -> Unit
-) {
-    withContext(Dispatchers.IO) {  // Run API call in the background
-        try {
-            val sessionManager = SessionManager(context)
-            val response = RetrofitClient.instance.register(RegisterRequest(name, email, password))
-
-            Log.d("API_RESPONSE", "Raw Response: ${response.body()}")  // ✅ Log the response
-
-            if (response.isSuccessful && response.body() != null) {
-
-                val userId = response.body()!!.user.id.toLong()
-                sessionManager.setUserId(userId)
-                sessionManager.setUsername(response.body()!!.user.name)
-                sessionManager.saveUserSession(email) // ✅ Save session
-//                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
-                    onSuccess()
-                    updateFcmTokenAfterLoginOrResgister(context)
-                }
-            } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e("API_ERROR", "Error Body: $errorBody")  // ✅ Log error response
-
-                val errorMessage = when (response.code()) {
-                    409 -> "User already exists"
-                    500 -> "Server error. Please try again later."
-                    else -> "Registration failed: ${response.message()} \nError Body: $errorBody"
-                }
-
-                withContext(Dispatchers.Main) {
-                    onError(errorMessage)
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Log.e("API_EXCEPTION", "Exception: ${e.message}")
-                onError("Network error: ${e.message}")
             }
         }
     }
@@ -282,32 +217,8 @@ suspend fun registerUser(
 
 
 
-// Function to handle LinkedIn OAuth flow
-
-fun startLinkedInOAuth(context: Context) {
-    val viewModel=  UserViewModel()
-
-    // Implement LinkedIn OAuth logic here
-    // This typically involves:
-    // 1. Redirecting to LinkedIn's OAuth authorization URL
-    // 2. Handling the callback with the authorization code
-    // 3. Exchanging the code for an access token
-    // 4. Navigating to the home screen or handling errors
-
-    // Step 1: Generate the authorization URL
-    val authUrl = viewModel.getAuthorizationUrl()
 
 
-    // Step 2: Open the authorization URL in a browser
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-    context.startActivity(intent)
-
-    // Step 3: Capture the redirect URL and extract the code
-
-
-
-
-}
 
 
 @Preview(showBackground = true)

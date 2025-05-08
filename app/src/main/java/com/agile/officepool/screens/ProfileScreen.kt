@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.agile.officepool.components.TopAppBarWithTitle
+import com.agile.officepool.helper.ApplicationHelper.logoutUser
+import com.agile.officepool.helper.ApplicationHelper.restartApp
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
@@ -69,34 +72,15 @@ fun ProfileScreen(navController: NavController, context: Context) {
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            IconButton(
-                modifier = Modifier.padding(start = 10.dp).weight(1.5f),
-                onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface,)
+        TopAppBarWithTitle(
+            title = "Profile",
+            onBackClick = { navController.popBackStack() },
+            showTrailingIcon = true,
+            trailingIcon = Icons.Default.Create,
+            onTrailingIconClick = {
+                navController.navigate("updateProfile")
             }
-
-            // Floating Header Text
-            Text(
-                text = "Profile",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(vertical = 20.dp).weight(7f),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Start
-            )
-
-
-            IconButton(
-                modifier = Modifier.padding(end = 10.dp).weight(1.5f),
-                onClick = { navController.navigate("updateProfile") }) {
-                Icon(Icons.Default.Create, contentDescription = "Edit Profile",tint = MaterialTheme.colorScheme.onSurface)
-            }
-        }
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -151,6 +135,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
                             logoutUser(
                                 context = context,
                                 onSuccess = {
+                                    sessionManager.clearSession() // ✅ Clear session token
                                     navController.navigate("login") {
                                         popUpTo("startUp") { inclusive = true }
                                     }
@@ -199,45 +184,6 @@ fun ProfileOption(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
         }
     }
 }
-
-
-//logout user
-
-suspend fun logoutUser(
-    context: Context,
-    onSuccess: () -> Unit,
-    onError: (String) -> Unit
-) {
-    withContext(Dispatchers.IO) {
-        try {
-            val response = RetrofitClient.instance.logout()
-
-            Log.d("LOGOUT_RESPONSE", "Response Code: ${response.code()} | Body: ${response.body()}")
-
-            if (response.isSuccessful) {
-                val jsonResponse = response.body()?.toString()  // Read response as string
-                val message = JSONObject(jsonResponse.toString()).optString("message", "Logout successful")
-
-                withContext(Dispatchers.Main) {
-                    val sessionManager = SessionManager(context)
-                    sessionManager.clearSession() // ✅ Clear session token
-                    restartApp(context) // ✅ Restart the app
-                    onSuccess()
-                }
-            } else {
-                val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                withContext(Dispatchers.Main) {
-                    onError("Logout failed: $errorBody")
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                onError("Network error: ${e.message}")
-            }
-        }
-    }
-}
-
 
 @Composable
 fun ProfileScreenPreviewWrapper() {

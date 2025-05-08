@@ -5,21 +5,21 @@ import android.content.SharedPreferences
 
 class SessionManager(context: Context) {
 
+    private var PREF_NAME: String = "OfficePoolPrefs"
+    private var KEY_EMAIL: String = "user_email"
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
 
-    val PREF_NAME: String = "OfficePoolPrefs"
-
-    val KEY_EMAIL: String = "user_email"
-
-    fun setFcmToken(token: String) {
-        prefs.edit().putString("fcm_token", token).apply()
+    companion object {
+        private const val KEY_RIDER_MODE = "rider_mode"
+        private const val KEY_USER_EMAIL = "user_email"
+        private const val KEY_USER_ID = "userId"
+        private const val KEY_AUTH_TOKEN = "authToken"
+        private const val KEY_IS_LOGGED_IN = "is_logged_in"
+        private const val KEY_USERNAME = "username"
+        private const val KEY_USER_PHONE = "phone"
+        private const val KEY_USER_COMPANY = "companyName"
+        private const val KEY_USER_LINKEDIN_ID = "linkedinId"
     }
-
-    fun getFcmToken(): String? {
-        return prefs.getString("fcm_token", null)
-    }
-
-
-
 
     fun saveEmail(context: Context, email: String?) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -34,22 +34,6 @@ class SessionManager(context: Context) {
     fun clearSession(context: Context) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
-    }
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-
-    companion object {
-        private const val KEY_RIDER_MODE = "rider_mode"
-        private const val KEY_USER_EMAIL = "user_email"
-        private const val KEY_USER_ID = "userId"
-        private const val KEY_AUTH_TOKEN = "authToken"
-        private const val KEY_IS_LOGGED_IN = "is_logged_in"
-        private const val KEY_USERNAME = "username"
-        private const val KEY_USER_PHONE = "phone"
-        private const val KEY_USER_COMPANY = "companyName"
-        private const val KEY_USER_LINKEDIN_ID = "linkedinId"
-        
-        
-
     }
 
     fun setRiderMode(isRider: Boolean) {

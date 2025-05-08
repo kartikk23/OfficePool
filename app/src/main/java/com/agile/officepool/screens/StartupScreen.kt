@@ -63,6 +63,7 @@ import com.agile.officepool.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartupScreen(navController: NavController) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -216,20 +217,11 @@ fun StartupScreen(navController: NavController) {
                             imagePainter = painterResource(id = R.drawable.cogni)
                         )
                     }
-
-
                 }
-
             }
         }
-
-
-
-               
-
     }
 }
-
 
 @Composable
 fun BusinessZoneCard(
@@ -292,18 +284,6 @@ fun BusinessZoneCard(
     }
 }
 
-
-
-// Sample Data
-val businessZones = listOf(
-    "Tech Park Zone",
-    "Industrial Business Hub",
-    "Downtown Business Center"
-)
-
-
-
-
 @Composable
 fun FeatureCard(
     title: String,
@@ -351,9 +331,6 @@ fun FeatureCard(
     }
 }
 
-
-
-
 @Composable
 fun RecentChip(text: String) {
     Surface(
@@ -371,52 +348,6 @@ fun RecentChip(text: String) {
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp
         )
-    }
-}
-
-@Composable
-fun CorporateRideCard(imageResId: Int) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp),
-        shape = RoundedCornerShape(16.dp)
-//        colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Use transparent to show image
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = imageResId),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize()
-            )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-//                    .background(Color(0xFFE1BEE7).copy(alpha = 0.6f)) // Optional tint overlay
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-//                Text(
-//                    text = "🤝 Corporate Ride",
-//                    fontSize = 18.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    color = Color(0xFF4A148C)
-//                )
-//                Text(
-//                    text = "You're booking a ride with your colleague. Travel smart, travel together!",
-//                    fontSize = 14.sp,
-//                    color = Color(0xFF6A1B9A),
-//                    modifier = Modifier.padding(top = 8.dp)
-//                )
-            }
-        }
     }
 }
 
@@ -444,35 +375,6 @@ fun WhereToGoTextField() {
     }
 
 }
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .clickable {
-//                    navController.navigate("searchScreen")  // 👈 navigate to your search screen
-//                }
-//                .background(MaterialTheme.colorScheme.onSurface, RoundedCornerShape(50))
-//                .padding(horizontal = 16.dp, vertical = 10.dp),
-//            contentAlignment = Alignment.CenterStart
-//        ) {
-//            Row(verticalAlignment = Alignment.CenterVertically) {
-//                Icon(
-//                    imageVector = Icons.Default.Search,
-//                    contentDescription = "Search Icon",
-//                    tint = MaterialTheme.colorScheme.surfaceDim
-//                )
-//                Spacer(modifier = Modifier.width(8.dp))
-//                Text(
-//                    text = "Where to go?",
-//                    color = MaterialTheme.colorScheme.surfaceDim,
-//                    fontSize = 16.sp
-//                )
-//            }
-//        }
-
-
-
-
-
 
 @Preview(showBackground = true)
 @Composable
