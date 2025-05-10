@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.agile.officepool.helper.RideHelperFunctions.sendRideRequest
+import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.SessionManager

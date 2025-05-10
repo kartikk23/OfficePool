@@ -8,6 +8,7 @@ import com.agile.officepool.model.ProfileRequest
 import com.agile.officepool.model.ProfileResponse
 import com.agile.officepool.model.RegisterRequest
 import com.agile.officepool.model.RegisterResponse
+import com.agile.officepool.model.ReqResponseDTO
 import com.agile.officepool.model.User
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
@@ -80,6 +81,9 @@ interface ApiService {
 
     @POST("rides/sendNotificationToRider")
     suspend fun sendNotificationToRider(@Body rideRequest : RideRequest) : Response<RideResponse>
+
+    @POST("rides/sendNotificationToPassenger")
+    suspend fun sendNotificationToPassenger(@Body reqRes : ReqResponseDTO) : Response<RideResponse>
 
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>

@@ -22,6 +22,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+    companion object {
+        private const val CHANNEL_ID = "officepool_channel"
+        private const val CHANNEL_NAME = "OfficePool Notifications"
+    }
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         // Send token to backend (see section below)
@@ -51,17 +56,45 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        val rideId = remoteMessage.data["rideId"]
-        val passengerName = remoteMessage.data["passengerName"]
+        val data = remoteMessage.data
+        val type = data["type"] // "ride_request" or "ride_accepted"
 
-        showNotification(
-            title = "New Ride Request",
-            body = "$passengerName requested a ride for ride $rideId!",
-            rideId = rideId
-        )
+        when (type) {
+            "ride_request" -> {
+                val rideId = data["rideId"]
+                val passengerName = data["passengerName"]
+                showNotification(
+                    title = "New Ride Request",
+                    body = "$passengerName requested a ride for ride $rideId!",
+                    rideId = rideId,
+                    notificationId=1
+                )
+            }
+
+            "request_response" -> {
+                val passengerId = data["passengerId"]
+                reqResNotification(
+                    title = data["title"],
+                    message = data["msg"],
+                    notificationId=2
+                )
+            }
+
+            else -> {
+                // Default notification if no type specified
+                remoteMessage.notification?.let {
+                    showNotification(it.title ?: "OfficePool", it.body ?: "", null, 3)
+                }
+            }
+
+        }
+
+
     }
 
-    private fun showNotification(title: String, body: String, rideId: String?) {
+    private fun showNotification(title: String, body: String, rideId: String?,notificationId:Int) {
+        createNotificationChannel()
+
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("rideId", rideId)
@@ -69,15 +102,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("ride_channel",
-                "Ride Notifications",
-                NotificationManager.IMPORTANCE_HIGH)
-            manager.createNotificationChannel(channel)
-        }
 
-        val notification = NotificationCompat.Builder(this, "ride_channel")
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.car)
             .setContentTitle(title)
             .setContentText(body)
@@ -85,9 +111,34 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setAutoCancel(true)
             .build()
 
-        manager.notify(0,notification)
+        val manager= getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(notificationId,notification)
 
     }
 
+    private fun reqResNotification(title: String?, message: String?,notificationId:Int) {
+        createNotificationChannel()
+
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(notificationId, notification)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+            manager.createNotificationChannel(channel)
+        }
+    }
 
 }

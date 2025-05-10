@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.agile.officepool.BuildConfig
@@ -152,8 +153,8 @@ fun GooglePlacesDropdown(
                         },
                         text = {
                             Column {
-                                Text(prediction.getPrimaryText(null).toString(), fontSize = 14.sp)
-                                Text(prediction.getSecondaryText(null).toString(), fontSize = 12.sp, color = Color.Gray)
+                                Text(prediction.getPrimaryText(null).toString(), fontSize = 14.sp, maxLines = 1,overflow = TextOverflow.Ellipsis)
+                                Text(prediction.getSecondaryText(null).toString(), fontSize = 12.sp, color = Color.Gray, maxLines = 1,overflow = TextOverflow.Ellipsis)
                             }
                         },
                         onClick = {

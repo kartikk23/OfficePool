@@ -5,6 +5,7 @@ import com.agile.officepool.network.RetrofitClient
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
@@ -70,6 +71,7 @@ fun UpdateProfileScreen(navController: NavController) {
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.inverseSurface
@@ -88,6 +90,7 @@ fun UpdateProfileScreen(navController: NavController) {
                 onValueChange = { name = it },
                 label = { Text("Name") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.inverseSurface
@@ -106,6 +109,7 @@ fun UpdateProfileScreen(navController: NavController) {
                 onValueChange = { phone = it },
                 label = { Text("Phone") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.inverseSurface
@@ -123,6 +127,7 @@ fun UpdateProfileScreen(navController: NavController) {
                 onValueChange = { companyName = it },
                 label = { Text("Company Name") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.inverseSurface
@@ -140,6 +145,7 @@ fun UpdateProfileScreen(navController: NavController) {
                 onValueChange = { linkedInId = it },
                 label = { Text("Linkedin id") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.inverseSurface

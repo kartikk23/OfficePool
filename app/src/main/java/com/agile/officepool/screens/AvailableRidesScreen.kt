@@ -8,7 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.agile.officepool.composableUIScreens.AvailableRidesContent
 import com.agile.officepool.helper.RideHelperFunctions.fetchAvailableRides
-import com.agile.officepool.helper.RideHelperFunctions.fetchRideRequestsForPassenger
+import com.agile.officepool.helper.RideRequestHelper.fetchRideRequestsForPassenger
 import com.agile.officepool.helper.RideHelperFunctions.filterNearbyRides
 import com.agile.officepool.helper.RideHelperFunctions.isFutureRide
 import com.agile.officepool.model.RideInfo

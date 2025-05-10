@@ -92,29 +92,36 @@ fun StartupScreen(navController: NavController) {
 
             )
 
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(4.dp).size(30.dp).weight(1.5f)
-                    .clickable(
-                        onClick = {
-                            navController.navigate("profile")
-                        }
-                    )
-            )
+            IconButton(
+                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
+                onClick = {
+                    navController.navigate("profile")
+                }
+            ){
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(4.dp).size(30.dp)
+                )
+            }
 
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(4.dp).size(30.dp).weight(1.5f)
-                    .clickable(
-                        onClick = {
-                            navController.navigate("rideRequests")
-                        }
-                    )
-            )
+            IconButton(
+                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
+                onClick = {
+                    navController.navigate("rideRequests")
+                }
+            ){
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(4.dp).size(30.dp)
+                )
+            }
+
+
+
 
           }
       

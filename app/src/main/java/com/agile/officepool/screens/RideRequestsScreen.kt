@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,12 +25,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agile.officepool.components.RideRequestCard
 import com.agile.officepool.components.TopAppBarWithTitle
+import com.agile.officepool.helper.RideRequestHelper.fetchRideRequestsForRider
+import com.agile.officepool.helper.RideRequestHelper.onRideReqAccept
+import com.agile.officepool.helper.RideRequestHelper.onRideReqReject
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -45,35 +50,20 @@ fun RideRequestsScreen(navController: NavController) {
     val sessionManager = SessionManager(context)
     val riderId = sessionManager.getUserId()?.toLong()
 
-    suspend fun fetchRequests() {
-        try {
-            Log.d("RideRequestsScreen", "Fetching ride requests for riderId: $riderId")
-            val response = riderId?.let { RetrofitClient.instance.getAllReqByRiderId(it) }
-
-            if (response != null && response.isSuccessful) {
-                val body = response.body() ?: emptyList()
-
-                // Sort by requestTime in descending order (newest first)
-                requests = body.sortedByDescending { it.requestTime }
-
-                Log.d("RideRequestsScreen", "Ride requests received: ${body.size}")
-//                Toast.makeText(context, "Fetched ${body.size} requests", Toast.LENGTH_SHORT).show()
-            } else {
-                Log.e("RideRequestsScreen", "Failed response: ${response?.code()}")
-//                Toast.makeText(context, "Failed to fetch requests", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("RideRequestsScreen", "Error fetching requests: ${e.message}")
-            Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-        } finally {
-            isLoading1 = false
-        }
-    }
-
     // ✅ Run every time refreshTrigger changes
     LaunchedEffect(refreshTrigger) {
-        fetchRequests()
+        fetchRideRequestsForRider(
+            riderId = riderId,
+            onResult = { result ->
+                requests = result
+            },
+            onError = { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            },
+            onComplete = {
+                isLoading1 = false
+            }
+        )
     }
 
     Column(
@@ -124,68 +114,23 @@ fun RideRequestsScreen(navController: NavController) {
                                 isLoading1 = loadingRequestIds.contains(request.id),
                                 onAccept = { selectedRequest ->
                                     coroutineScope.launch {
-                                        val requestId = selectedRequest.id ?: return@launch
-                                        loadingRequestIds.add(requestId) // 🔄 Add to loading set
-
-                                        val success = try {
-                                            val response =
-                                                RetrofitClient.instance.updateRequestStatus(
-                                                    RideRequestStatusUpdateDTO(
-                                                        id = requestId,
-                                                        requestStatus = "ACCEPTED"
-                                                    )
-                                                )
-                                            response.isSuccessful
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                            false
-                                        }
-
-                                        loadingRequestIds.remove(requestId) // ✅ Remove after done
-
-                                        if (success) {
-                                            refreshTrigger++
-//                                            Toast.makeText(context, "Accepted ${selectedRequest.passengerName}", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Failed to accept request",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
+                                        onRideReqAccept(
+                                            selectedRequest = selectedRequest,
+                                            loadingRequestIds = loadingRequestIds,
+                                            refreshTrigger = mutableIntStateOf(refreshTrigger),
+                                            context = context
+                                        )
                                     }
+
                                 },
                                 onReject = { selectedRequest ->
                                     coroutineScope.launch {
-                                        val requestId = selectedRequest.id ?: return@launch
-                                        loadingRequestIds.add(requestId) // 🔄 Add to loading set
-
-                                        val success = try {
-                                            val response =
-                                                RetrofitClient.instance.updateRequestStatus(
-                                                    RideRequestStatusUpdateDTO(
-                                                        id = selectedRequest.id ?: return@launch,
-                                                        requestStatus = "REJECTED"
-                                                    )
-                                                )
-                                            response.isSuccessful
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                            false
-                                        }
-
-                                        loadingRequestIds.remove(requestId) // ✅ Remove after done
-
-                                        if (success) {
-                                            refreshTrigger++ // 🔄 Trigger a refresh
-//                                            Toast.makeText(context, "Rejected ${selectedRequest.passengerName}", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Failed to reject request",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
+                                        onRideReqReject(
+                                            selectedRequest = selectedRequest,
+                                            loadingRequestIds = loadingRequestIds,
+                                            refreshTrigger = mutableIntStateOf(refreshTrigger),
+                                            context = context
+                                        )
                                     }
                                 },
                                 navController = navController,
@@ -200,6 +145,13 @@ fun RideRequestsScreen(navController: NavController) {
     }
 
 }
+
+
+
+
+
+
+
 
 
 

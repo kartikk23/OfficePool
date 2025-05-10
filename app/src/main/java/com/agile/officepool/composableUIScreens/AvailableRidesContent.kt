@@ -4,8 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,16 +44,31 @@ fun AvailableRidesContent(
             onBackClick = { navController.popBackStack() }
         )
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
         ) {
             when {
-                isLoading -> CircularProgressIndicator()
-                availableRides.isEmpty() -> Text("No nearby rides available")
+                isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                availableRides.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No nearby rides available")
+                    }
+                }
                 else -> LazyColumn(
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(availableRides) { ride ->
