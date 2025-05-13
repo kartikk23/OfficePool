@@ -75,6 +75,7 @@ fun LocationRequestScreen(navController: NavHostController) {
 
             Text(
                 text = "Enable Location Access",
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineMedium
             )
 

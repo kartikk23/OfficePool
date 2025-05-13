@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 fun RideRequestsScreen(navController: NavController) {
     var requests by remember { mutableStateOf<List<RideRequest>>(emptyList()) }
     var isLoading1 by remember { mutableStateOf(true) }
-    var refreshTrigger by remember { mutableIntStateOf(0) }
+    var refreshTrigger = remember { mutableIntStateOf(0) }
     val loadingRequestIds = remember { mutableStateListOf<Long>() }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -51,7 +51,7 @@ fun RideRequestsScreen(navController: NavController) {
     val riderId = sessionManager.getUserId()?.toLong()
 
     // ✅ Run every time refreshTrigger changes
-    LaunchedEffect(refreshTrigger) {
+    LaunchedEffect(refreshTrigger.intValue) {
         fetchRideRequestsForRider(
             riderId = riderId,
             onResult = { result ->
@@ -59,6 +59,7 @@ fun RideRequestsScreen(navController: NavController) {
             },
             onError = { message ->
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                isLoading1 = false
             },
             onComplete = {
                 isLoading1 = false
@@ -80,8 +81,7 @@ fun RideRequestsScreen(navController: NavController) {
             trailingIcon = Icons.Default.Refresh,
             onTrailingIconClick = {
                 isLoading1 = true
-                // Trigger reload
-                refreshTrigger++ // ✅ This will re-trigger the LaunchedEffect}
+                refreshTrigger.intValue++
             }
         )
         Box(
@@ -117,7 +117,7 @@ fun RideRequestsScreen(navController: NavController) {
                                         onRideReqAccept(
                                             selectedRequest = selectedRequest,
                                             loadingRequestIds = loadingRequestIds,
-                                            refreshTrigger = mutableIntStateOf(refreshTrigger),
+                                            refreshTrigger = refreshTrigger,
                                             context = context
                                         )
                                     }
@@ -128,7 +128,7 @@ fun RideRequestsScreen(navController: NavController) {
                                         onRideReqReject(
                                             selectedRequest = selectedRequest,
                                             loadingRequestIds = loadingRequestIds,
-                                            refreshTrigger = mutableIntStateOf(refreshTrigger),
+                                            refreshTrigger = refreshTrigger,
                                             context = context
                                         )
                                     }

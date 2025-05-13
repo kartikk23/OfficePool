@@ -119,7 +119,7 @@ object RideRequestHelper {
         selectedRequest: RideRequest,
         loadingRequestIds: SnapshotStateList<Long>,
         refreshTrigger: MutableState<Int>,
-        context: android.content.Context
+        context: Context
     ) {
         val requestId = selectedRequest.id ?: return
         loadingRequestIds.add(requestId)
@@ -147,7 +147,7 @@ object RideRequestHelper {
                 val notifyResponse = RetrofitClient.instance.sendNotificationToPassenger(
                     ReqResponseDTO(
                         title = "Ride Accepted",
-                        message = "Your ride request has been accepted!",
+                        msg = "Your ride has been accepted. Get ready to roll!",
                         passengerId = selectedRequest.passengerId ?: ""
                     )
                 )
@@ -167,7 +167,7 @@ object RideRequestHelper {
         selectedRequest: RideRequest,
         loadingRequestIds: SnapshotStateList<Long>,
         refreshTrigger: MutableState<Int>,
-        context: android.content.Context
+        context: Context
     ){
         val requestId = selectedRequest.id ?: return
         loadingRequestIds.add(requestId) // 🔄 Add to loading set
@@ -195,8 +195,8 @@ object RideRequestHelper {
             try {
                 val notifyResponse = RetrofitClient.instance.sendNotificationToPassenger(
                     ReqResponseDTO(
-                        title = "Ride Accepted",
-                        message = "Your ride request has been accepted!",
+                        title = "Ride Rejected",
+                        msg = "Your ride request has been rejected.",
                         passengerId = selectedRequest.passengerId ?: ""
                     )
                 )

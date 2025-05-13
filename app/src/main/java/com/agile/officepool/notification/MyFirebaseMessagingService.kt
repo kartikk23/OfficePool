@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
-        private const val CHANNEL_ID = "officepool_channel"
+        private const val CHANNEL_ID = "OfficePool_Channel"
         private const val CHANNEL_NAME = "OfficePool Notifications"
     }
 
@@ -75,7 +75,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 val passengerId = data["passengerId"]
                 reqResNotification(
                     title = data["title"],
-                    message = data["msg"],
+                    msg = data["msg"],
                     notificationId=2
                 )
             }
@@ -116,15 +116,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     }
 
-    private fun reqResNotification(title: String?, message: String?,notificationId:Int) {
+    private fun reqResNotification(title: String?, msg: String?,notificationId:Int) {
         createNotificationChannel()
 
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.car)
             .setContentTitle(title)
-            .setContentText(message)
+            .setContentText(msg)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
