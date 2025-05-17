@@ -1,6 +1,6 @@
 package com.agile.officepool.notification
 
-import android.app.Application
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,18 +8,20 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationCompat
 import com.agile.officepool.MainActivity
 import com.agile.officepool.R
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
@@ -31,6 +33,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
         // Send token to backend (see section below)
         Log.d("FCM", "New token: $token")
+
+
 
         val sessionManager = SessionManager(applicationContext)
         // Fetch user ID and auth token from SharedPreferences or a secure store
@@ -54,6 +58,38 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             }
         }
     }
+
+//    private fun triggerTestNotification(token: String) {
+//        val url = "https://fcm.googleapis.com/fcm/send"
+//
+//        val requestQueue = Volley.newRequestQueue(this)
+//
+//        val json = JSONObject().apply {
+//            put("to", token)
+//            put("notification", JSONObject().apply {
+//                put("title", "Test Notification")
+//                put("body", "This is a test message!")
+//            })
+//        }
+//
+//        val request = object : JsonObjectRequest(
+//            Method.POST, url, json,
+//            { response -> Log.d("FCM", "Notification sent: $response") },
+//            { error -> Log.e("FCM", "Error: ${error.message}") }
+//        ) {
+//            override fun getHeaders(): MutableMap<String, String> {
+//                val headers = HashMap<String, String>()
+//                headers["Authorization"] = "key=YOUR_SERVER_KEY" // Replace with actual FCM server key
+//                headers["Content-Type"] = "application/json"
+//                return headers
+//            }
+//        }
+//
+//        requestQueue.add(request)
+//    }
+
+
+
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val data = remoteMessage.data

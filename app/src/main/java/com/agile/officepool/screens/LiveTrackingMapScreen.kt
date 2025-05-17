@@ -49,9 +49,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
+import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
@@ -82,7 +84,8 @@ import kotlinx.coroutines.launch
 fun LiveTrackingMapScreen(
     navController: NavController,
     rideId: String?,
-    requestId:String?
+    requestId:String?,
+    sharedRideViewModel: SharedRideViewModel
 ) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -105,6 +108,11 @@ fun LiveTrackingMapScreen(
     var isLoading1 by remember { mutableStateOf(false) }
     var rideInfo by  remember {mutableStateOf<RideInfo?>(null)}
     val cameraPositionState = rememberCameraPositionState()
+
+
+
+
+
 
     LaunchedEffect(rideId) {
         if (rideId != null) {
@@ -389,44 +397,41 @@ fun LiveTrackingMapScreen(
                             Log.d("LiveTrackingMap", "End Ride button clicked")
                             coroutineScope.launch {
                                 try {
-                                    // Construct RideInfo with updated status
-                                    val updatedRide = rideInfo!!.copy(status = "Completed") // assuming `response` is RideInfo
-
+                                    val updatedRide = rideInfo!!.copy(status = "Completed")
                                     val response = RetrofitClient.instance.updateRide(updatedRide)
+
                                     if (response.isSuccessful) {
                                         Log.d("EndRide", "Ride status updated to Completed")
 
+                                        // Update ride info in ViewModel before navigation
 
-                                        // Update the status of the ride request
 
-                                        val reqId = requestId?: return@launch
-                                        coroutineScope.launch {
-                                            val success = try {
-                                                val response2 = RetrofitClient.instance.updateRequestStatus(
-                                                    RideRequestStatusUpdateDTO(
-                                                        id = reqId.toLong(),
-                                                        requestStatus = "Completed"
-                                                    )
+                                        val reqId = requestId ?: return@launch
+                                        val success = try {
+                                            val response2 = RetrofitClient.instance.updateRequestStatus(
+                                                RideRequestStatusUpdateDTO(
+                                                    id = reqId.toLong(),
+                                                    requestStatus = "Completed"
                                                 )
-                                                response2.isSuccessful
-
-                                            } catch (e: Exception) {
-                                                isLoading1 = false
-                                                e.printStackTrace()
-                                                false
-                                            }
-
-
-                                            if (success) {
-                                                isLoading1 = false
-                                                navController.popBackStack()
-//                                            Toast.makeText(context, "Accepted \${selectedRequest.passengerName}", Toast.LENGTH\_SHORT).show()
-                                            } else {
-                                                isLoading1 = false
-                                                Toast.makeText(context, "Failed to accept request", Toast.LENGTH_SHORT).show()
-                                            }
+                                            )
+                                            response2.isSuccessful
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            false
                                         }
 
+                                        isLoading1 = false
+
+                                        if (success) {
+                                            Toast.makeText(context, "End Ride Successful", Toast.LENGTH_SHORT).show()
+                                            // Navigate to Rider Payment screen only after both updates
+                                            sharedRideViewModel.updateRideInfo(updatedRide)
+                                            Log.d("upDatedRide", updatedRide.toString())
+                                            Log.d("sharedrideInfo", sharedRideViewModel.rideInfo.value.toString())
+                                            navController.navigate("riderPayment")
+                                        } else {
+                                            Toast.makeText(context, "Failed to update request", Toast.LENGTH_SHORT).show()
+                                        }
                                     } else {
                                         isLoading1 = false
                                         Log.e("EndRide", "Failed to update ride: ${response.code()}")
@@ -436,28 +441,29 @@ fun LiveTrackingMapScreen(
                                     Log.e("EndRide", "Exception while updating ride", e)
                                 }
                             }
-
                         },
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (isLoading1) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(20.dp))
-
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.size(20.dp)
+                            )
                         } else {
-                            Text("End Ride",
-                                Modifier.padding(0.dp,5.dp),
+                            Text(
+                                "End Ride",
+                                Modifier.padding(0.dp, 5.dp),
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.surface,
-
-                                    )
-
+                                    color = MaterialTheme.colorScheme.surface
+                                )
                             )
                         }
-
                     }
+
+
                 }
             }
             // ✅ Top-left Back Button Overlay

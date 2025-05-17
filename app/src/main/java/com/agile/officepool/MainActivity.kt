@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
@@ -25,16 +26,20 @@ import com.agile.officepool.screens.LocationRequestScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
+import com.agile.officepool.screens.RiderPaymentScreen
 import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.screens.StartupScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
-
+import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var sessionManager: SessionManager
+
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +72,9 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier
                     .fillMaxSize()
                 ) {
-                    Navigation(navController, this@MainActivity, startDestination)
+                    Navigation(
+                        navController, this@MainActivity, startDestination
+                    )
                 }
             }
         }
@@ -96,11 +103,13 @@ class MainActivity : ComponentActivity() {
             // ✅ Everything okay, stay where you are
         }
     }
-
 }
 
 @Composable
 fun Navigation(navController: NavHostController, context: Context, startDestination: String) {
+
+    val sharedRideViewModel: SharedRideViewModel = viewModel()
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
@@ -110,6 +119,12 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("startUp"){ StartupScreen(navController) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
+        composable("riderPayment") { RiderPaymentScreen(navController = navController,
+                                    rideViewModel = sharedRideViewModel,
+                                    onPaymentConfirmed = {
+                                        navController.popBackStack()
+                                    }
+                                        )}
         composable(
             route = "liveTrackingMap/{rideId}/{requestId}",
             arguments = listOf(
@@ -119,7 +134,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         ) { backStackEntry ->
             val rideId = backStackEntry.arguments?.getString("rideId") ?: ""
             val requestId = backStackEntry.arguments?.getString("requestId") ?: ""
-            LiveTrackingMapScreen(navController,rideId = rideId, requestId = requestId)
+            LiveTrackingMapScreen(navController,rideId = rideId, requestId = requestId,sharedRideViewModel = sharedRideViewModel )
         }
         // ✅ Define availableRides with route parameters
         composable(

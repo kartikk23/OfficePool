@@ -118,6 +118,15 @@ object RetrofitClient {
         }
     }
 
+    // code to send the test notification to the device
+
+
+
+
+
+
+
+
 
 
     private val client = OkHttpClient.Builder()
