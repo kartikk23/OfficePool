@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.composableUIScreens.AvailableRidesContent
 import com.agile.officepool.helper.RideHelperFunctions.fetchAvailableRides
 import com.agile.officepool.helper.RideRequestHelper.fetchRideRequestsForPassenger
@@ -14,6 +16,7 @@ import com.agile.officepool.helper.RideHelperFunctions.isFutureRide
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,13 +63,3 @@ fun AvailableRidesScreen(
         rideRequests = rideRequests
     )
 }
-
-
-
-
-
-
-
-
-
-
