@@ -105,7 +105,8 @@ fun RideRequestsScreen(navController: NavController) {
 
                 else -> {
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(15.dp),
+                        contentPadding = PaddingValues(top = 2.dp, bottom = 10.dp)
                     ) {
                         items(requests) { request ->
 

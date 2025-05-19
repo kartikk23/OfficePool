@@ -19,6 +19,9 @@ class SessionManager(context: Context) {
         private const val KEY_USER_PHONE = "phone"
         private const val KEY_USER_COMPANY = "companyName"
         private const val KEY_USER_LINKEDIN_ID = "linkedinId"
+        private const val HAS_RIDE_STARTED = "has_ride_started"
+
+
     }
 
     fun saveEmail(context: Context, email: String?) {
@@ -115,5 +118,13 @@ class SessionManager(context: Context) {
 
     fun getLinkedInId(): String? {
         return prefs.getString(KEY_USER_LINKEDIN_ID, "")
+    }
+
+    fun setHasRideStarted(boolean: Boolean) {
+        prefs.edit().putBoolean(HAS_RIDE_STARTED, boolean).apply()
+    }
+
+    fun getHasRideStarted(): Boolean {
+        return prefs.getBoolean(HAS_RIDE_STARTED, false)
     }
 }

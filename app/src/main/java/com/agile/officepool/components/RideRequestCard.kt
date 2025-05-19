@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 
@@ -54,9 +56,24 @@ fun RideRequestCard(
 ) {
     var isLoading by remember { mutableStateOf(false) }
 
+    var rideStatus by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(request.rideId) {
+        try {
+            val response = RetrofitClient.instance.getRideByRideId(request.rideId)
+            if (response.isSuccessful) {
+                rideStatus = response.body()?.status
+            }
+        } catch (e: Exception) {
+            Log.e("RideRequestCard", "Failed to fetch ride status", e)
+        }
+    }
+
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
         modifier = Modifier
             .fillMaxWidth()
@@ -68,18 +85,18 @@ fun RideRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = request.passengerName.trim(),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        text = request.passengerName.trim().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Ride ID: ${request.rideId}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -117,7 +134,7 @@ fun RideRequestCard(
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Accept")
+                                Text("Accept",style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                             }
 
                             OutlinedButton(
@@ -127,7 +144,7 @@ fun RideRequestCard(
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Reject")
+                                Text("Reject",style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
                             }
                         }
                     }
@@ -137,33 +154,37 @@ fun RideRequestCard(
                     OutlinedButton(
                         onClick = {
                             isLoading = true
+
+                            if (rideStatus == "Active") {
+                                // Direct navigation for active ride
+                                navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
+                                isLoading = false
+                                return@OutlinedButton // Exit click handler early
+                            }
+
                             coroutineScope.launch {
                                 try {
-                                    val response = RetrofitClient.instance.getRideByRideId(request.rideId)
+                                    val response = RetrofitClient.instance.startRideAndNotifyPassenger(request)
+
                                     if (response.isSuccessful) {
-                                        val updatedRide = response.body()!!.copy(status = "Active")
-                                        val response2 = RetrofitClient.instance.updateRide(updatedRide)
-                                        if (response2.isSuccessful) {
-                                            isLoading = false
-                                            navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
-                                        } else {
-                                            isLoading = false
-                                            Log.e("StartRide", "Failed to update ride: ${response2.code()}")
-                                        }
+                                        navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
                                     } else {
-                                        isLoading = false
-                                        Log.e("RideRequestScreen", "Failed to fetch ride details: ${response.code()}")
+                                        Log.e("RideRequestCard", "Failed to start ride: ${response.errorBody()?.string()}")
                                     }
                                 } catch (e: Exception) {
+                                    Log.e("RideRequestCard", "Exception in starting ride", e)
+                                } finally {
                                     isLoading = false
-                                    Log.e("RideRequestScreen", "Error fetching ride details", e)
                                 }
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp),
+                        enabled = !isLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -173,12 +194,13 @@ fun RideRequestCard(
                             )
                         } else {
                             Text(
-                                "Start Ride",
+                                if (rideStatus == "Active") "Ride In Progress" else "Start Ride",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                             )
                         }
                     }
                 }
+
             }
         }
     }

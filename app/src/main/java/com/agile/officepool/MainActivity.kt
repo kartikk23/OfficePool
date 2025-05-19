@@ -3,6 +3,7 @@ package com.agile.officepool
 import LiveTrackingMapScreen
 import RideRequestsScreen
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,6 +24,7 @@ import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
+import com.agile.officepool.screens.LiveTrackingForPassenger
 import com.agile.officepool.screens.LocationRequestScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.ProfileScreen
@@ -31,15 +34,12 @@ import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.screens.StartupScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
-import androidx.activity.viewModels
-import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var sessionManager: SessionManager
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +50,17 @@ class MainActivity : ComponentActivity() {
 
         val rideId = intent?.getStringExtra("rideId")
 
+        val targetRoute = intent.getStringExtra("target_route")
+
+
+
         val startDestination = when {
-            rideId != null && isLoggedIn -> "rideRequests"
             !isLoggedIn -> "login"
+            targetRoute != null -> targetRoute
+            rideId != null -> "rideRequests"
             hasLocationPermission -> "startUp"
             else -> "locationPermission"
         }
-
 
         Log.d("StartDestination", "hasLocationPermission: $hasLocationPermission")
         Log.d("StartDestination", "Start Destination: $startDestination")
@@ -72,9 +76,7 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier
                     .fillMaxSize()
                 ) {
-                    Navigation(
-                        navController, this@MainActivity, startDestination
-                    )
+                    Navigation(navController, this@MainActivity, startDestination)
                 }
             }
         }
@@ -86,6 +88,28 @@ class MainActivity : ComponentActivity() {
             checkLocationOnStart()
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        intent.let {
+            val rideId = it.getStringExtra("rideId")
+            val targetRoute = it.getStringExtra("target_route")
+
+            Log.d("onNewIntent", "rideId: $rideId, targetRoute: $targetRoute")
+
+            // Navigate dynamically to the desired route if navController is initialized
+            if (::navController.isInitialized && !targetRoute.isNullOrEmpty()) {
+                navController.navigate(targetRoute) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
 
     private fun checkLocationOnStart() {
         if (!isLocationPermissionGranted(this)) {
@@ -103,11 +127,11 @@ class MainActivity : ComponentActivity() {
             // ✅ Everything okay, stay where you are
         }
     }
+
 }
 
 @Composable
 fun Navigation(navController: NavHostController, context: Context, startDestination: String) {
-
     val sharedRideViewModel: SharedRideViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -119,12 +143,15 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("startUp"){ StartupScreen(navController) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
+
         composable("riderPayment") { RiderPaymentScreen(navController = navController,
-                                    rideViewModel = sharedRideViewModel,
-                                    onPaymentConfirmed = {
-                                        navController.popBackStack()
-                                    }
-                                        )}
+            rideViewModel = sharedRideViewModel,
+            onPaymentConfirmed = {
+                navController.popBackStack()
+            }
+        )}
+
+        //for rider
         composable(
             route = "liveTrackingMap/{rideId}/{requestId}",
             arguments = listOf(
@@ -134,8 +161,20 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         ) { backStackEntry ->
             val rideId = backStackEntry.arguments?.getString("rideId") ?: ""
             val requestId = backStackEntry.arguments?.getString("requestId") ?: ""
-            LiveTrackingMapScreen(navController,rideId = rideId, requestId = requestId,sharedRideViewModel = sharedRideViewModel )
+            LiveTrackingMapScreen(navController,rideId = rideId, requestId = requestId, sharedRideViewModel = sharedRideViewModel)
         }
+
+        //for passenger
+        composable(
+            "liveTrackingForPassenger/{rideId}",
+            arguments = listOf(
+                navArgument("rideId") { type = NavType.StringType },
+            )
+        ) {
+            val rideId = it.arguments?.getString("rideId") ?: ""
+            LiveTrackingForPassenger(navController, rideId)
+        }
+
         // ✅ Define availableRides with route parameters
         composable(
             "availableRides/{source}/{sourceLat}/{sourceLng}/{destination}/{destinationLat}/{destinationLng}"
@@ -151,6 +190,8 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
     }
 
 }
+
+
 
 
 

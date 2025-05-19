@@ -60,6 +60,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -374,11 +375,12 @@ fun SearchScreen(navController: NavController) {
                         shape = RoundedCornerShape(12.dp),
                         value = route,
                         onValueChange = { route = it },
-                        label = { Text("Route", fontSize = 14.sp) },
+                        label = { Text("Route", fontSize = 14.sp,maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         textStyle = TextStyle(
                             fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.inverseSurface
+                            color = MaterialTheme.colorScheme.inverseSurface,
+
                         ),
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -393,7 +395,8 @@ fun SearchScreen(navController: NavController) {
                         shape = RoundedCornerShape(12.dp),
                         value = availableSeats,
                         onValueChange = { availableSeats = it },
-                        label = { Text("Available Seats", fontSize = 14.sp) },
+                        label = { Text("Available Seats", fontSize = 14.sp,maxLines = 1,
+                            overflow = TextOverflow.Ellipsis) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         textStyle = TextStyle(
                             fontSize = 15.sp,

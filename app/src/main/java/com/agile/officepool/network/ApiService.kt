@@ -64,6 +64,10 @@ interface ApiService {
     @DELETE("ride/deleteRide/{rideId}")
     suspend fun deleteRide(@Path("rideId") rideId: Int): Response<String>
 
+    @POST("ride/startRideAndNotifyPassenger")
+    suspend fun startRideAndNotifyPassenger(@Body request:RideRequest): Response<Unit>
+
+
     // update profile details of user
     @POST("api/users/updateProfile")
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>

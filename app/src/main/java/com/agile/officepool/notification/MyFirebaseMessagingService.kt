@@ -1,6 +1,5 @@
 package com.agile.officepool.notification
 
-
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -14,19 +13,23 @@ import com.agile.officepool.R
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val CHANNEL_ID = "OfficePool_Channel"
         private const val CHANNEL_NAME = "OfficePool Notifications"
+    }
+
+    private lateinit var sessionManager: SessionManager
+
+    override fun onCreate() {
+        super.onCreate()
+        sessionManager = SessionManager(applicationContext)
     }
 
     override fun onNewToken(token: String) {
@@ -35,8 +38,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d("FCM", "New token: $token")
 
 
-
-        val sessionManager = SessionManager(applicationContext)
         // Fetch user ID and auth token from SharedPreferences or a secure store
         val userId = sessionManager.getUserId()
 
@@ -59,38 +60,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-//    private fun triggerTestNotification(token: String) {
-//        val url = "https://fcm.googleapis.com/fcm/send"
-//
-//        val requestQueue = Volley.newRequestQueue(this)
-//
-//        val json = JSONObject().apply {
-//            put("to", token)
-//            put("notification", JSONObject().apply {
-//                put("title", "Test Notification")
-//                put("body", "This is a test message!")
-//            })
-//        }
-//
-//        val request = object : JsonObjectRequest(
-//            Method.POST, url, json,
-//            { response -> Log.d("FCM", "Notification sent: $response") },
-//            { error -> Log.e("FCM", "Error: ${error.message}") }
-//        ) {
-//            override fun getHeaders(): MutableMap<String, String> {
-//                val headers = HashMap<String, String>()
-//                headers["Authorization"] = "key=YOUR_SERVER_KEY" // Replace with actual FCM server key
-//                headers["Content-Type"] = "application/json"
-//                return headers
-//            }
-//        }
-//
-//        requestQueue.add(request)
-//    }
-
-
-
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val data = remoteMessage.data
         val type = data["type"] // "ride_request" or "ride_accepted"
@@ -103,7 +72,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     title = "New Ride Request",
                     body = "$passengerName requested a ride for ride $rideId!",
                     rideId = rideId,
-                    notificationId=1
                 )
             }
 
@@ -112,14 +80,27 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 reqResNotification(
                     title = data["title"],
                     msg = data["msg"],
-                    notificationId=2
                 )
             }
+
+
+            "ride_started" -> {
+                val rideId = data["rideId"]
+
+                sessionManager.setHasRideStarted(true)
+                // Optionally show notification
+                rideStartedNotification(rideId = rideId)
+                // Navigate user to live tracking screen if app is open
+                sendBroadcast(Intent("RIDE_STARTED_EVENT").apply {
+                    putExtra("rideId", rideId.toString())
+                })
+            }
+
 
             else -> {
                 // Default notification if no type specified
                 remoteMessage.notification?.let {
-                    showNotification(it.title ?: "OfficePool", it.body ?: "", null, 3)
+                    showNotification(it.title ?: "OfficePool", it.body ?: "", null, )
                 }
             }
 
@@ -128,7 +109,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     }
 
-    private fun showNotification(title: String, body: String, rideId: String?,notificationId:Int) {
+
+
+    private fun showNotification(title: String, body: String, rideId: String?) {
         createNotificationChannel()
 
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -148,11 +131,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val manager= getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(notificationId,notification)
+        manager.notify(1,notification)
 
     }
 
-    private fun reqResNotification(title: String?, msg: String?,notificationId:Int) {
+    private fun reqResNotification(title: String?, msg: String?) {
         createNotificationChannel()
 
         val intent = Intent(this, MainActivity::class.java)
@@ -167,8 +150,40 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(notificationId, notification)
+        notificationManager.notify(2, notification)
     }
+
+    private fun rideStartedNotification(rideId: String?) {
+        if (rideId == null) return
+
+        createNotificationChannel()
+
+        val route = "liveTrackingForPassenger/${rideId}" // Customize as per your navigation
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("rideId", rideId)
+            putExtra("target_route", route)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.car)
+            .setContentTitle("Ride Started")
+            .setContentText("Your ride has started!")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(3, notification)
+    }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -237,6 +237,7 @@ fun LiveTrackingMapScreen(
                         isMyLocationEnabled = false,
                         mapType = MapType.NORMAL,
                         isTrafficEnabled = false,
+                        isBuildingEnabled = true,
                         mapStyleOptions = mapStyleOptions
                     ),
                     uiSettings = MapUiSettings(
@@ -442,6 +443,7 @@ fun LiveTrackingMapScreen(
                                 }
                             }
                         },
+                        enabled = !isLoading1,
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth()
                     ) {
