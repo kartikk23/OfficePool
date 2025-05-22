@@ -38,6 +38,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,10 +61,34 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
+import com.agile.officepool.ViewModel.SharedRideViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartupScreen(navController: NavController) {
+fun StartupScreen(
+    navController: NavController,
+    rideViewModel: SharedRideViewModel = SharedRideViewModel()) {
+
+    // Mock rideId for testing — replace with your actual logic later
+    val mockRideId = "1"
+    val rideId = remember { mutableStateOf<String?>(mockRideId) }
+
+    // 👀 Observe ride status and navigate when started
+    rideId.value?.let { id ->
+        LaunchedEffect(id) {
+            rideViewModel.observePassengerRideStatus(id) {
+                navController.navigate("liveTrackingForPassenger/$id") {
+                    popUpTo("startUp") { inclusive = true }
+                }
+            }
+        }
+
+        DisposableEffect(id) {
+            onDispose {
+                rideViewModel.removeRideStatusListener(id)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier

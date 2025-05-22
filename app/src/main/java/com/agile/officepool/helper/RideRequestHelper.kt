@@ -127,15 +127,18 @@ object RideRequestHelper {
         loadingRequestIds.add(requestId)
 
         val success = try {
-            val response = RetrofitClient.instance.updateRequestStatus(
+            val response = RetrofitClient.instance.updateRideRequestStatus(
                 RideRequestStatusUpdateDTO(
                     id = requestId,
                     requestStatus = "ACCEPTED"
                 )
             )
+            if (!response.isSuccessful) {
+                Log.e("RideRequest", "Failed to update status. Code: ${response.code()}, Body: ${response.errorBody()?.string()}")
+            }
             response.isSuccessful
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("RideRequest", "Exception while updating ride status", e)
             false
         }
 
@@ -154,7 +157,7 @@ object RideRequestHelper {
                     )
                 )
                 if (!notifyResponse.isSuccessful) {
-                    Log.e("FCM", "Notification failed")
+                    Log.e("FCM", "Notification failed. Code: ${notifyResponse.code()}, Body: ${notifyResponse.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("FCM", "Error sending notification", e)
@@ -176,7 +179,7 @@ object RideRequestHelper {
 
         val success = try {
             val response =
-                RetrofitClient.instance.updateRequestStatus(
+                RetrofitClient.instance.updateRideRequestStatus(
                     RideRequestStatusUpdateDTO(
                         id = selectedRequest.id,
                         requestStatus = "REJECTED"

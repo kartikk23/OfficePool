@@ -95,8 +95,8 @@ interface ApiService {
     @GET("rides/getAllReqByPassengerId")
     suspend fun getAllReqByPassengerId(@Query("passengerId") passengerId: Long): Response<List<RideRequest>>
 
-    @PUT("rides/updateRequestStatus")
-    suspend fun updateRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
+    @PUT("rides/updateRideRequestStatus")
+    suspend fun updateRideRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
 
 }
 

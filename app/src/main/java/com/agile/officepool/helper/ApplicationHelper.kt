@@ -51,10 +51,12 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
+import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.time.LocalDate
@@ -67,52 +69,53 @@ import java.util.Locale
 
 object ApplicationHelper{
 
-    //login user
-    suspend fun loginUser(
-        email: String,
-        password: String,
-        context: Context,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val sessionManager = SessionManager(context)
-        withContext(Dispatchers.IO) {
-            try {
-                val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
-                Log.d("API_RESPONSE", "Raw Response: ${response.body()}")
+        //login user
+        suspend fun loginUser(
+            email: String,
+            password: String,
+            context: Context,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit
+        ) {
+            val sessionManager = SessionManager(context)
+            withContext(Dispatchers.IO) {
+                try {
+                    val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
+                    Log.d("API_RESPONSE", "Raw Response: ${response.body()}")
 
-                if (response.isSuccessful && response.body() != null ) {
+                    if (response.isSuccessful && response.body() != null ) {
 
-                    val userId = response.body()!!.user.id.toLong()
-                    sessionManager.setUserId(userId)
-                    sessionManager.setUsername(response.body()!!.user.name)
-                    sessionManager.setUserPhone(response.body()!!.user.phone)
-                    sessionManager.setCompanyName(response.body()!!.user.companyName)
-                    sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
-                    sessionManager.saveUserSession(email) // ✅ Save session
+                        val userId = response.body()!!.user.id.toLong()
+                        sessionManager.setUserId(userId)
+                        sessionManager.setUsername(response.body()!!.user.name)
+                        sessionManager.setUserPhone(response.body()!!.user.phone)
+                        sessionManager.setCompanyName(response.body()!!.user.companyName)
+                        sessionManager.setLinkedInId(response.body()!!.user.linkedInId)
+                        sessionManager.saveUserSession(email) // ✅ Save session
 
+                        updateFcmTokenAfterLoginOrRegister(context)
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                            onSuccess()
+                        }
+
+                    } else {
+                        val errorMessage = when (response.code()) {
+                            401 -> "Invalid email or password"
+                            else -> "Login failed: ${response.message()}"
+                        }
+                        withContext(Dispatchers.Main) {
+                            onError(errorMessage)
+                        }
+                    }
+                } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                        onSuccess()
-//                    updateFcmTokenAfterLogin(context)
+                        onError("Network error: ${e.message}")
                     }
-
-                } else {
-                    val errorMessage = when (response.code()) {
-                        401 -> "Invalid email or password"
-                        else -> "Login failed: ${response.message()}"
-                    }
-                    withContext(Dispatchers.Main) {
-                        onError(errorMessage)
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("Network error: ${e.message}")
                 }
             }
         }
-    }
 
     // register user
     suspend fun registerUser(
@@ -138,10 +141,11 @@ object ApplicationHelper{
                     sessionManager.saveUserSession(email) // ✅ Save session
 //                sessionManager.setUserPhone(response.body()!!.user.phone ?: "")
 
+                    updateFcmTokenAfterLoginOrRegister(context)
+
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
                         onSuccess()
-                        updateFcmTokenAfterLoginOrRegister(context)
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -174,6 +178,35 @@ object ApplicationHelper{
     ) {
         withContext(Dispatchers.IO) {
             try {
+                // Step 1: Optionally inform backend to remove token for current user
+                val sessionManager = SessionManager(context)
+                val userId = sessionManager.getUserId()
+
+                if (userId != null) {
+                    // Send request to remove token association from backend
+                    try {
+                        val response = RetrofitClient.instance.updateFcmToken(
+                            FcmTokenRequest(userId = userId, token = "")
+                        )
+                        if (response.isSuccessful) {
+                            Log.d("FCM_TOKEN_DEBUG", "FCM token removed from backend")
+                        } else {
+                            Log.e("FCM_TOKEN_DEBUG", "Failed to remove token from backend")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FCM_TOKEN_DEBUG", "Exception during backend token removal: ${e.message}")
+                    }
+                }
+
+                // Step 2: Delete token locally
+                FirebaseMessaging.getInstance().deleteToken().addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        Log.d("FCM_TOKEN_DEBUG", "FCM token deleted from device on logout")
+                    } else {
+                        Log.e("FCM_TOKEN_DEBUG", "Failed to delete FCM token locally", it.exception)
+                    }
+                }
+
                 val response = RetrofitClient.instance.logout()
 
                 Log.d("LOGOUT_RESPONSE", "Response Code: ${response.code()} | Body: ${response.body()}")
@@ -182,6 +215,7 @@ object ApplicationHelper{
                     val jsonResponse = response.body()?.toString()  // Read response as string
                     val message = JSONObject(jsonResponse.toString()).optString("message", "Logout successful")
 
+                    sessionManager.clearSession()
                     withContext(Dispatchers.Main) {
                        onSuccess()
                     }
@@ -198,6 +232,34 @@ object ApplicationHelper{
             }
         }
     }
+
+
+//    private suspend fun updateFcmTokenAfterLoginOrRegister(context: Context) {
+//        Log.d("FCM_TOKEN_DEBUG", "updateFcmTokenAfterLoginOrRegister CALLED")
+//
+//        try {
+//            val token = FirebaseMessaging.getInstance().token.await()
+//            Log.d("FCM_TOKEN_DEBUG", "Fetched FCM Token: $token")
+//
+//            val sessionManager = SessionManager(context)
+//            val userId = sessionManager.getUserId()
+//
+//            Log.d("FCM_TOKEN_DEBUG", "SessionManager userId: $userId, FCM token: $token")
+//
+//            if (userId != null && token != null) {
+//                val response = RetrofitClient.instance.updateFcmToken(
+//                    FcmTokenRequest(userId = userId, token = token)
+//                )
+//                if (response.isSuccessful) {
+//                    Log.d("FCM_TOKEN_DEBUG", "FCM token updated post-login/registration: $token")
+//                } else {
+//                    Log.e("FCM_TOKEN_DEBUG", "Failed to update token: ${response.errorBody()?.string()}")
+//                }
+//            }
+//        } catch (e: Exception) {
+//            Log.e("FCM_TOKEN_DEBUG", "Failed to fetch or update token: ${e.message}")
+//        }
+//    }
 
 
     private fun updateFcmTokenAfterLoginOrRegister(context: Context) {
@@ -229,8 +291,6 @@ object ApplicationHelper{
 
         }
     }
-
-
 
 
     @Composable

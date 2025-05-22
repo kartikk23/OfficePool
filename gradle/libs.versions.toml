@@ -1,45 +1,46 @@
 [versions]
 accompanistSystemuicontroller = "0.34.0"
-activityComposeVersion = "1.8.0"
-agp = "8.7.2"
-androidxMaterial = "1.7.7"
-androidxMaterialVersion = "1.0.0"
+activityComposeVersion = "1.10.1"
+agp = "8.7.3"
+androidxMaterial = "1.8.2"
+androidxMaterialVersion = "1.8.2"
 #androidxNavigationCompose = "2.7.0"
 converterGson = "2.9.0"
-coreKtxVersion = "1.12.0"
-firebaseBom = "33.12.0"
-foundation = "1.8.0"
+coreKtxVersion = "1.16.0"
+firebaseBom = "33.14.0"
+foundation = "1.8.2"
 gson = "2.10.1"
 kotlin = "2.0.0"
-coreKtx = "1.15.0"
+coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxCoroutinesAndroid = "1.9.0"
-lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.10.0"
-composeBom = "2024.04.01"
+kotlinxCoroutinesPlayServices = "1.9.0"
+lifecycleRuntimeKtx = "2.9.0"
+activityCompose = "1.10.1"
+composeBom = "2025.05.01"
 appcompat = "1.7.0"
-lifecycleRuntimeKtxVersion = "2.6.2"
+lifecycleRuntimeKtxVersion = "2.9.0"
 mapsCompose = "6.4.1"
 material = "1.12.0"
-activity = "1.10.0"
-constraintlayout = "2.1.4"
-material3 = "1.3.1"
-materialVersion = "1.7.8"
-navigationCompose = "2.8.9"
-places = "4.1.0"
-placesVersion = "3.1.0"
+activity = "1.10.1"
+constraintlayout = "2.2.1"
+material3 = "1.3.2"
+materialVersion = "1.8.2"
+navigationCompose = "2.9.0"
+places = "4.2.0"
+placesVersion = "4.2.0"
 playServicesMapsVersion = "19.2.0"
-protoliteWellKnownTypes = "18.0.0"
+protoliteWellKnownTypes = "18.0.1"
 gms="4.4.2"
 firebase-messaging = "24.1.1"
 
 retrofit = "2.9.0"
 scribejavaApis = "8.3.3"
-ui = "1.7.8"
-uiToolingPreview = "1.7.8"
-uiVersion = "1.7.7"
+ui = "1.8.2"
+uiToolingPreview = "1.8.2"
+uiVersion = "1.8.2"
 volley = "1.2.1"
 
 [libraries]
@@ -59,6 +60,8 @@ androidx-ui-v177 = { module = "androidx.compose.ui:ui", version.ref = "uiVersion
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
+firebase-installations-ktx = { module = "com.google.firebase:firebase-installations-ktx" }
 firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" , version.ref = "firebase-messaging"}
 gms-play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMapsVersion" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
@@ -78,6 +81,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3",
 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }

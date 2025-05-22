@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.agile.officepool.model.RideRequestStatusUpdateDTO
 
 
 @Composable
@@ -60,12 +61,16 @@ fun RideRequestCard(
 
     LaunchedEffect(request.rideId) {
         try {
+            isLoading = true
             val response = RetrofitClient.instance.getRideByRideId(request.rideId)
             if (response.isSuccessful) {
                 rideStatus = response.body()?.status
             }
+            isLoading = false
         } catch (e: Exception) {
             Log.e("RideRequestCard", "Failed to fetch ride status", e)
+        }finally {
+            isLoading = false
         }
     }
 
@@ -107,6 +112,7 @@ fun RideRequestCard(
                         "ACCEPTED" -> MaterialTheme.colorScheme.primary
                         "REJECTED" -> MaterialTheme.colorScheme.error
                         "COMPLETED" -> Color.Gray
+                        "ACTIVE"-> Color.Green
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
@@ -150,27 +156,62 @@ fun RideRequestCard(
                     }
                 }
 
+                "ACTIVE" -> {
+                    OutlinedButton(
+                        onClick = {
+
+                            navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
+
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp),
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                "Ride in Progress",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF2E7D32)
+                                ),
+                            )
+                        }
+                    }
+                }
+
                 "ACCEPTED" -> {
                     OutlinedButton(
                         onClick = {
                             isLoading = true
 
-                            if (rideStatus == "Active") {
-                                // Direct navigation for active ride
-                                navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
-                                isLoading = false
-                                return@OutlinedButton // Exit click handler early
-                            }
-
                             coroutineScope.launch {
                                 try {
-                                    val response = RetrofitClient.instance.startRideAndNotifyPassenger(request)
+//                                    val response = RetrofitClient.instance.startRideAndNotifyPassenger(request)
 
-                                    if (response.isSuccessful) {
-                                        navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
-                                    } else {
-                                        Log.e("RideRequestCard", "Failed to start ride: ${response.errorBody()?.string()}")
-                                    }
+//                                    if (response.isSuccessful) {
+                                        // 2. Update the ride status (assuming you have an API like updateRideStatus(rideId, "ACTIVE"))
+                                        val updateStatusResponse = RetrofitClient.instance.updateRideRequestStatus(
+                                            RideRequestStatusUpdateDTO(request.id!!, "Active")
+                                        )
+
+                                        if (updateStatusResponse.isSuccessful) {
+                                            // 3. Navigate only if both APIs succeeded
+                                            navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
+                                        } else {
+                                            Log.e("RideRequestCard", "Failed to update ride status: ${updateStatusResponse.errorBody()?.string()}")
+                                        }
+//                                    } else {
+//                                        Log.e("RideRequestCard", "Failed to start ride: ${response.errorBody()?.string()}")
+//                                    }
                                 } catch (e: Exception) {
                                     Log.e("RideRequestCard", "Exception in starting ride", e)
                                 } finally {
@@ -184,7 +225,6 @@ fun RideRequestCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 6.dp),
-                        enabled = !isLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -194,7 +234,7 @@ fun RideRequestCard(
                             )
                         } else {
                             Text(
-                                if (rideStatus == "Active") "Ride In Progress" else "Start Ride",
+                                "Start Ride",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                             )
                         }

@@ -113,6 +113,9 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.database.ktx) // ✅ Realtime DB
+    implementation(libs.kotlinx.coroutines.play.services)
+
 
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -121,6 +124,7 @@ dependencies {
     implementation(libs.places)
     implementation(libs.protolite.well.known.types)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.installations.ktx)
     implementation(libs.androidx.core.ktx.v1120)
     implementation (libs.volley)
 

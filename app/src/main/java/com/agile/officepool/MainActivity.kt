@@ -34,7 +34,8 @@ import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.screens.StartupScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
-
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 
 
 class MainActivity : ComponentActivity() {
@@ -44,6 +45,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+        val status = FirebaseApp.getApps(this)
+        Log.d("FCM_DEBUG", "Firebase initialized apps: $status")
         sessionManager = SessionManager(this)
         val hasLocationPermission = isLocationPermissionGranted(this)
         val isLoggedIn = sessionManager.isUserLoggedIn()
@@ -140,7 +144,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("locationPermission") { LocationRequestScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("rideRequests") { RideRequestsScreen(navController) }
-        composable("startUp"){ StartupScreen(navController) }
+        composable("startUp"){ StartupScreen(navController,rideViewModel = sharedRideViewModel,) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
 
@@ -165,15 +169,12 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         }
 
         //for passenger
-        composable(
-            "liveTrackingForPassenger/{rideId}",
-            arguments = listOf(
-                navArgument("rideId") { type = NavType.StringType },
-            )
-        ) {
-            val rideId = it.arguments?.getString("rideId") ?: ""
-            LiveTrackingForPassenger(navController, rideId)
+        composable("liveTrackingForPassenger/{rideId}"
+        ) { backStackEntry ->
+                val rideId = backStackEntry.arguments?.getString("rideId")
+                LiveTrackingForPassenger(navHostController=navController,rideId = rideId!!)
         }
+
 
         // ✅ Define availableRides with route parameters
         composable(

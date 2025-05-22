@@ -8,27 +8,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,12 +38,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.components.mapComponents.DynamicRoutePolyline
+import com.agile.officepool.components.mapComponents.RouteInfoCard
+import com.agile.officepool.components.mapComponents.StaticRoutePolyline
+import com.agile.officepool.helper.MapHelperFunctions.deleteLocationFromFirebase
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
+import com.agile.officepool.helper.MapHelperFunctions.pushLocationToFirebase
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
@@ -92,7 +85,7 @@ fun LiveTrackingMapScreen(
     val mapStyleOptions = remember {
         MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
     }
-    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    var riderLocation by remember { mutableStateOf<LatLng?>(null) }
     var currentPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }  // Dynamic Polyline
     var staticPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }  // Static Polyline (Source to Destination)
     val coroutineScope = rememberCoroutineScope()  // Coroutine scope for launching coroutines
@@ -108,10 +101,7 @@ fun LiveTrackingMapScreen(
     var isLoading1 by remember { mutableStateOf(false) }
     var rideInfo by  remember {mutableStateOf<RideInfo?>(null)}
     val cameraPositionState = rememberCameraPositionState()
-
-
-
-
+    var isRideActive by remember { mutableStateOf(true) }
 
 
     LaunchedEffect(rideId) {
@@ -172,20 +162,29 @@ fun LiveTrackingMapScreen(
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
                     val location = result.lastLocation ?: return
-                    userLocation = LatLng(location.latitude, location.longitude)
+                    riderLocation = LatLng(location.latitude, location.longitude)
 
-                    // Fetch the updated polyline based on current location
-                    userLocation?.let { userLatLng ->
-                        destination?.let { destinationLatLng ->
-                            coroutineScope.launch {
-                                val routeInfo = getRoutePolylineWithInfo(userLatLng, destinationLatLng, apiKey)
-                                currentPolyline = routeInfo.polyline
-                                travelTime = routeInfo.durationText
-                                travelDistance = routeInfo.distanceText
-                                instructions = routeInfo.steps
-                            }
-                        } ?: Log.e("LiveTrackingMap", "Destination is null")
-                    } ?: Log.e("LiveTrackingMap", "User location is null")
+                    if (isRideActive) {
+                        // ✅ Push location to Firebase
+                        pushLocationToFirebase(rideId = rideId ?: "", location = riderLocation!!)
+
+                        // Fetch the updated polyline based on current location
+                        riderLocation?.let { userLatLng ->
+                            destination?.let { destinationLatLng ->
+                                coroutineScope.launch {
+                                    val routeInfo = getRoutePolylineWithInfo(
+                                        userLatLng,
+                                        destinationLatLng,
+                                        apiKey
+                                    )
+                                    currentPolyline = routeInfo.polyline
+                                    travelTime = routeInfo.durationText
+                                    travelDistance = routeInfo.distanceText
+                                    instructions = routeInfo.steps
+                                }
+                            } ?: Log.e("LiveTrackingMap", "Destination is null")
+                        } ?: Log.e("LiveTrackingMap", "User location is null")
+                    }
                 }
             }
 
@@ -220,274 +219,157 @@ fun LiveTrackingMapScreen(
 
         }
     } else {
-        // 👇 Your actual map and ride tracking UI
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Column(modifier = Modifier
-                .background(color = MaterialTheme.colorScheme.surface)
-                .fillMaxSize(),
-            ) {
+        rideInfo?.let {
 
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize().weight(1f),
-                    cameraPositionState = cameraPositionState,
-                    properties = MapProperties(
-                        isMyLocationEnabled = false,
-                        mapType = MapType.NORMAL,
-                        isTrafficEnabled = false,
-                        isBuildingEnabled = true,
-                        mapStyleOptions = mapStyleOptions
-                    ),
-                    uiSettings = MapUiSettings(
-                        zoomControlsEnabled = false,
-                        compassEnabled = false,
-                        myLocationButtonEnabled = false,
-                        tiltGesturesEnabled = true,
-                        scrollGesturesEnabled = true
-                    )
-                ) {
-
-
-                    val sourceMarkerState = rememberMarkerState()
-                    val destinationMarkerState = rememberMarkerState()
-                    val userLocationMarkerState = rememberMarkerState()
-
-                    // Move camera to user location initially
-                    LaunchedEffect(userLocation) {
-                        userLocation?.let {
-                            Log.d("LiveTrackingMap", "Moving camera to user location: $it")
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 17f))
-                            userLocationMarkerState.position = it
-                        }
-                    }
-
-                    // Update source marker dynamically
-                    LaunchedEffect(source) {
-                        source?.let {
-                            Log.d("LiveTrackingMap", "Moving camera to source location: $it")
-                            sourceMarkerState.position = it
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 16f))
-                        }
-                    }
-
-                    // Update destination marker dynamically
-                    LaunchedEffect(destination) {
-                        destination?.let {
-                            Log.d("LiveTrackingMap", "Moving camera to destination location: $it")
-                            destinationMarkerState.position = it
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 16f))
-                        }
-                    }
-
-                    // Source Marker
-
-//        if (source != null) {
-//            Marker(state = sourceMarkerState, title = sourceTitle,
-//                icon = BitmapDescriptorFactory.fromResource(R.drawable.start))
-//        }
-//
-//        // Destination Marker
-//        if (destination != null) {
-//            Marker(state = destinationMarkerState, title = destinationTitle,
-//                    icon = BitmapDescriptorFactory.fromResource(R.drawable.dest))
-//        }
-                    val startCustomCap = CustomCap(
-                        BitmapDescriptorFactory.fromResource(R.drawable.start),
-                        25f // Reference width in pixels (adjust as needed)
-
-                    )
-                    val endCustomCap = CustomCap(
-                        BitmapDescriptorFactory.fromResource(R.drawable.dest),
-                        25f // Reference width in pixels (adjust as needed)
-                    )
-
-                    // Display the static polyline (light color)
-                    if (staticPolyline.isNotEmpty()) {
-                        Log.d("LiveTrackingMap", "Drawing static polyline on the map")
-                        Polyline(
-                            points = staticPolyline,
-                            color = Color.Black, // Light-colored polyline
-                            width = 12f,
-                            startCap = startCustomCap,
-                            endCap = endCustomCap,
-                            jointType = JointType.DEFAULT
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+                    GoogleMap(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        cameraPositionState = cameraPositionState,
+                        properties = MapProperties(
+                            isMyLocationEnabled = false,
+                            mapType = MapType.NORMAL,
+                            isTrafficEnabled = false,
+                            mapStyleOptions = mapStyleOptions,
+                        ),
+                        uiSettings = MapUiSettings(
+                            zoomControlsEnabled = false,
+                            compassEnabled = false,
+                            myLocationButtonEnabled = false
                         )
-                    }
-
-                    val customCap = CustomCap(
-                        BitmapDescriptorFactory.fromResource(R.drawable.motorcyclet3),
-                        35f // Reference width in pixels (adjust as needed)
-                    )
-
-
-
-                    // Display the dynamic polyline (dark color)
-                    if (currentPolyline.isNotEmpty()) {
-                        Log.d("LiveTrackingMap", "Drawing dynamic polyline on the map")
-                        Polyline(
-                            points = currentPolyline,
-                            color = Color.Blue, // Dark-colored polyline for user's path
-                            width = 12f,
-                            startCap = customCap,
-                            endCap = RoundCap(),
-                            jointType = JointType.DEFAULT
-                        )
-                    }
-
-
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = MaterialTheme.colorScheme.surface)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (travelTime.isNotEmpty() && instructions.isNotEmpty()) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Info, contentDescription = "Time", tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Estimated Time: $travelTime",
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Place, contentDescription = "Distance", tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Distance: $travelDistance",
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Done, contentDescription = "Next Step", tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Next: ${instructions.firstOrNull()}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Button(
-                        onClick = {
-                            isLoading1 = true
-                            Log.d("LiveTrackingMap", "End Ride button clicked")
-                            coroutineScope.launch {
-                                try {
-                                    val updatedRide = rideInfo!!.copy(status = "Completed")
-                                    val response = RetrofitClient.instance.updateRide(updatedRide)
-
-                                    if (response.isSuccessful) {
-                                        Log.d("EndRide", "Ride status updated to Completed")
-
-                                        // Update ride info in ViewModel before navigation
-
-
-                                        val reqId = requestId ?: return@launch
-                                        val success = try {
-                                            val response2 = RetrofitClient.instance.updateRequestStatus(
-                                                RideRequestStatusUpdateDTO(
-                                                    id = reqId.toLong(),
-                                                    requestStatus = "Completed"
-                                                )
-                                            )
-                                            response2.isSuccessful
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                            false
-                                        }
-
-                                        isLoading1 = false
-
-                                        if (success) {
-                                            Toast.makeText(context, "End Ride Successful", Toast.LENGTH_SHORT).show()
-                                            // Navigate to Rider Payment screen only after both updates
-                                            sharedRideViewModel.updateRideInfo(updatedRide)
-                                            Log.d("upDatedRide", updatedRide.toString())
-                                            Log.d("sharedrideInfo", sharedRideViewModel.rideInfo.value.toString())
-                                            navController.navigate("riderPayment")
-                                        } else {
-                                            Toast.makeText(context, "Failed to update request", Toast.LENGTH_SHORT).show()
-                                        }
-                                    } else {
-                                        isLoading1 = false
-                                        Log.e("EndRide", "Failed to update ride: ${response.code()}")
-                                    }
-                                } catch (e: Exception) {
-                                    isLoading1 = false
-                                    Log.e("EndRide", "Exception while updating ride", e)
-                                }
-                            }
-                        },
-                        enabled = !isLoading1,
-                        shape = MaterialTheme.shapes.small,
-                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (isLoading1) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        } else {
-                            Text(
-                                "End Ride",
-                                Modifier.padding(0.dp, 5.dp),
-                                style = TextStyle(
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.surface
+                        StaticRoutePolyline(staticPolyline)
+                        DynamicRoutePolyline(currentPolyline)
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = MaterialTheme.colorScheme.surface)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Info card
+                        RouteInfoCard(
+                            time = travelTime,
+                            distance = travelDistance,
+                            steps = instructions
+                        )
+
+                        Button(
+                            onClick = {
+                                isLoading1 = true
+                                Log.d("LiveTrackingMap", "End Ride button clicked")
+                                coroutineScope.launch {
+                                    try {
+                                        val updatedRide = rideInfo!!.copy(status = "Completed")
+                                        val response =
+                                            RetrofitClient.instance.updateRide(updatedRide)
+
+                                        if (response.isSuccessful) {
+                                            Log.d("EndRide", "Ride status updated to Completed")
+
+                                            // Update ride info in ViewModel before navigation
+
+
+                                            val reqId = requestId ?: return@launch
+                                            val success = try {
+                                                val response2 =
+                                                    RetrofitClient.instance.updateRideRequestStatus(
+                                                        RideRequestStatusUpdateDTO(
+                                                            id = reqId.toLong(),
+                                                            requestStatus = "Completed"
+                                                        )
+                                                    )
+                                                response2.isSuccessful
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                                false
+                                            }
+
+                                            isLoading1 = false
+
+                                            if (success) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "End Ride Successful",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                isRideActive = false // ❌ Stop updates
+                                                deleteLocationFromFirebase(rideId ?: "") // 🧹 Delete Firebase node
+                                                // Navigate to Rider Payment screen only after both updates
+                                                sharedRideViewModel.updateRideInfo(updatedRide)
+                                                Log.d("upDatedRide", updatedRide.toString())
+                                                Log.d(
+                                                    "sharedrideInfo",
+                                                    sharedRideViewModel.rideInfo.value.toString()
+                                                )
+                                                navController.navigate("riderPayment")
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to update request",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        } else {
+                                            isLoading1 = false
+                                            Log.e(
+                                                "EndRide",
+                                                "Failed to update ride: ${response.code()}"
+                                            )
+                                        }
+                                    } catch (e: Exception) {
+                                        isLoading1 = false
+                                        Log.e("EndRide", "Exception while updating ride", e)
+                                    }
+                                }
+                            },
+                            enabled = !isLoading1,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isLoading1) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                            )
+                            } else {
+                                Text(
+                                    "End Ride",
+                                    Modifier.padding(0.dp, 5.dp),
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.surface
+                                    )
+                                )
+                            }
                         }
                     }
 
-
                 }
-            }
-            // ✅ Top-left Back Button Overlay
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.TopStart)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .clickable { navController.popBackStack() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+                // ✅ Top-left Back Button Overlay
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.TopStart)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .clickable { navController.popBackStack() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
             }
         }
-
     }
 
 }

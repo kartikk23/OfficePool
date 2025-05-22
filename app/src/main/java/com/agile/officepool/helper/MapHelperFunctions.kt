@@ -12,6 +12,10 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.maps.android.compose.Polyline
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -83,50 +87,6 @@ object MapHelperFunctions {
         }
     }
 
-    // Helper composable to draw polylines
-    @Composable
-    fun DrawPolyline(points: List<LatLng>, color: Color, width: Float, startCap: Cap?, endCap: Cap?) {
-        if (points.isNotEmpty()) {
-            Polyline(
-                points = points,
-                color = color,
-                width = width,
-                startCap = startCap!!,
-                endCap = endCap!!,
-                jointType = JointType.DEFAULT
-            )
-        }
-    }
-
-    suspend fun fetchRoute(source: LatLng, destination: LatLng): List<LatLng> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val apiKey = BuildConfig.MAPS_API_KEY
-                val url = "https://maps.googleapis.com/maps/api/directions/json?" +
-                        "origin=${source.latitude},${source.longitude}" +
-                        "&destination=${destination.latitude},${destination.longitude}" +
-                        "&key=$apiKey"
-
-                val response = URL(url).readText()
-                parseRoute(response)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        }
-    }
-
-    private fun parseRoute(response: String): List<LatLng> {
-        val json = JSONObject(response)
-        val routes = json.getJSONArray("routes")
-        if (routes.length() == 0) return emptyList()
-
-        val overviewPolyline = routes.getJSONObject(0)
-            .getJSONObject("overview_polyline")
-            .getString("points")
-
-        return decodePolyline(overviewPolyline)
-    }
-
     private fun decodePolyline(encoded: String): List<LatLng> {
         Log.d("LiveTrackingMap", "Decoding polyline")
         val poly = ArrayList<LatLng>()
@@ -163,6 +123,55 @@ object MapHelperFunctions {
 
         return poly
     }
+
+    data class LatLngData(val latitude: Double = 0.0, val longitude: Double = 0.0)
+    fun observeRiderLocation(rideId: String, onLocationUpdate: (LatLngData) -> Unit) {
+        val dbRef = FirebaseDatabase.getInstance().getReference("riderLocations").child(rideId)
+
+        dbRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                snapshot.getValue(LatLngData::class.java)?.let { onLocationUpdate(it) }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("Firebase", "Failed to read rider location", error.toException())
+            }
+        })
+    }
+
+
+    fun pushLocationToFirebase(rideId: String, location: LatLng) {
+        val database = FirebaseDatabase.getInstance()
+        val ref = database.getReference("riderLocations").child(rideId)
+
+        val locationData = mapOf(
+            "latitude" to location.latitude,
+            "longitude" to location.longitude,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        ref.updateChildren(locationData)
+            .addOnSuccessListener {
+                Log.d("FirebaseLocation", "Location pushed for rideId=$rideId")
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirebaseLocation", "Failed to push location", e)
+            }
+    }
+
+    fun deleteLocationFromFirebase(rideId: String) {
+        val databaseRef = FirebaseDatabase.getInstance().getReference("riderLocations/$rideId")
+        databaseRef.removeValue().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("Firebase", "Live location deleted for rideId: $rideId")
+            } else {
+                Log.e("Firebase", "Failed to delete live location for rideId: $rideId", task.exception)
+            }
+        }
+    }
+
+
+
 
 
 
