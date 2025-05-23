@@ -251,9 +251,9 @@ fun LiveTrackingMapScreen(
                     ) {
                         // Info card
                         RouteInfoCard(
-                            time = travelTime,
-                            distance = travelDistance,
-                            steps = instructions
+                            travelTime = travelTime,
+                            travelDistance = travelDistance,
+                            instructions = instructions
                         )
 
                         Button(
@@ -304,7 +304,11 @@ fun LiveTrackingMapScreen(
                                                     "sharedrideInfo",
                                                     sharedRideViewModel.rideInfo.value.toString()
                                                 )
-                                                navController.navigate("riderPayment")
+                                                navController.navigate("riderPayment"){
+                                                    popUpTo("rideRequests"){
+                                                        inclusive = true
+                                                    }
+                                                }
                                             } else {
                                                 Toast.makeText(
                                                     context,
@@ -349,24 +353,24 @@ fun LiveTrackingMapScreen(
                     }
 
                 }
-                // ✅ Top-left Back Button Overlay
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.TopStart)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .clickable { navController.popBackStack() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+//                // ✅ Top-left Back Button Overlay
+//                Box(
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .align(Alignment.TopStart)
+//                        .size(40.dp)
+//                        .clip(CircleShape)
+//                        .background(Color.Black.copy(alpha = 0.6f))
+//                        .clickable { navController.popBackStack() },
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+//                        contentDescription = "Back",
+//                        tint = Color.White,
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                }
 
             }
         }

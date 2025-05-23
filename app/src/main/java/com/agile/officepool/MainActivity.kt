@@ -172,7 +172,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("liveTrackingForPassenger/{rideId}"
         ) { backStackEntry ->
                 val rideId = backStackEntry.arguments?.getString("rideId")
-                LiveTrackingForPassenger(navHostController=navController,rideId = rideId!!)
+                LiveTrackingForPassenger(navHostController=navController,rideId = rideId!!,rideViewModel = sharedRideViewModel)
         }
 
 

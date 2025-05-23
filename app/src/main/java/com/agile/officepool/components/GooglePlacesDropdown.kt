@@ -71,8 +71,13 @@ fun GooglePlacesDropdown(
 
         debounceJob?.cancel()  // Cancel any previous debounced job
         debounceJob = coroutineScope.launch {
-            delay(500)  // Wait for the debounce delay
-            if (newText.isNotEmpty()) onSearch(newText)  // Call search only if text is non-empty
+            delay(400)  // Wait for the debounce delay
+            if (newText.length > 2) { // don't search until user has typed enough
+                onSearch(newText)
+                expanded = placePredictions.isNotEmpty()
+            } else {
+                expanded = false
+            }
         }
     }
 

@@ -3,27 +3,51 @@ package com.agile.officepool.ViewModel
 
 import android.util.Log
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.agile.officepool.model.RideInfo
+import com.agile.officepool.network.RetrofitClient
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.launch
 
 class SharedRideViewModel : ViewModel() {
     private val _rideInfo = mutableStateOf<RideInfo?>(null)
     private var rideStatusListener: ValueEventListener? = null
     val rideInfo: State<RideInfo?> = _rideInfo
 
+    private val _isRideActive = mutableStateOf<Boolean?>(null)
+    val isRideActive: State<Boolean?> get() = _isRideActive
+
+    fun setRideActive(status: Boolean?) {
+        _isRideActive.value = status
+    }
+
+
     fun updateRideInfo(info: RideInfo) {
         _rideInfo.value = info
     }
 
+    fun getActiveRideForPassenger(passengerId: Long, onResult: (Int?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.getActiveRideForPassengerId(passengerId)
+                if (response.isSuccessful) {
+                    onResult(response.body())
+                } else {
+                    onResult(null)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(null)
+            }
+        }
+    }
 
-    fun observePassengerRideStatus(rideId: String, onStarted: () -> Unit) {
+    fun observePassengerRideStatus(rideId: String, onStarted: () -> Unit,onNotActive: () -> Unit) {
         Log.d("RideStatusObserver", "observePassengerRideStatus called with rideId=$rideId")
 
         try {
@@ -44,11 +68,16 @@ class SharedRideViewModel : ViewModel() {
                     if (status == "Active") {
                         Log.d("RideStatusObserver", "Ride is Active, calling onStarted()")
                         onStarted()
+                    }else{
+                        onNotActive()
                     }
+
+
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("RideStatusObserver", "Failed to read status: ${error.message}", error.toException())
+                    onNotActive()
                 }
             }
 
@@ -57,6 +86,7 @@ class SharedRideViewModel : ViewModel() {
 
         } catch (e: Exception) {
             Log.e("RideStatusObserver", "Exception in observePassengerRideStatus", e)
+            onNotActive()
         }
     }
 

@@ -92,6 +92,9 @@ interface ApiService {
     @GET("rides/getAllReqByRiderId")
     suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
 
+    @GET("rides/getActiveRideForPassengerId")
+    suspend fun getActiveRideForPassengerId(@Query("passengerId") passengerId: Long): Response<Int>
+
     @GET("rides/getAllReqByPassengerId")
     suspend fun getAllReqByPassengerId(@Query("passengerId") passengerId: Long): Response<List<RideRequest>>
 
