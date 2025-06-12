@@ -48,6 +48,7 @@ import com.agile.officepool.components.mapComponents.StaticRoutePolyline
 import com.agile.officepool.helper.MapHelperFunctions.deleteLocationFromFirebase
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.pushLocationToFirebase
+import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
@@ -101,7 +102,6 @@ fun LiveTrackingMapScreen(
     var isLoading1 by remember { mutableStateOf(false) }
     var rideInfo by  remember {mutableStateOf<RideInfo?>(null)}
     val cameraPositionState = rememberCameraPositionState()
-    var isRideActive by remember { mutableStateOf(true) }
 
 
     LaunchedEffect(rideId) {
@@ -129,7 +129,10 @@ fun LiveTrackingMapScreen(
                                 }
                             }
                             // Update camera to source
-                            cameraPositionState.position = CameraPosition.fromLatLngZoom(source!!, 15f)
+                            riderLocation?.let {
+                                cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 18f)
+                            } ?: Log.d("LiveTrackingMap", "riderLocation is still null")
+
                             // ✅ Mark loading complete
                             isLoading = false
                         }
@@ -164,27 +167,24 @@ fun LiveTrackingMapScreen(
                     val location = result.lastLocation ?: return
                     riderLocation = LatLng(location.latitude, location.longitude)
 
-                    if (isRideActive) {
-                        // ✅ Push location to Firebase
-                        pushLocationToFirebase(rideId = rideId ?: "", location = riderLocation!!)
+                    pushLocationToFirebase(rideId = rideId ?: "", location = riderLocation!!)
 
-                        // Fetch the updated polyline based on current location
-                        riderLocation?.let { userLatLng ->
-                            destination?.let { destinationLatLng ->
-                                coroutineScope.launch {
-                                    val routeInfo = getRoutePolylineWithInfo(
-                                        userLatLng,
-                                        destinationLatLng,
-                                        apiKey
-                                    )
-                                    currentPolyline = routeInfo.polyline
-                                    travelTime = routeInfo.durationText
-                                    travelDistance = routeInfo.distanceText
-                                    instructions = routeInfo.steps
-                                }
-                            } ?: Log.e("LiveTrackingMap", "Destination is null")
-                        } ?: Log.e("LiveTrackingMap", "User location is null")
-                    }
+                    // Fetch the updated polyline based on current location
+                    riderLocation?.let { userLatLng ->
+                        destination?.let { destinationLatLng ->
+                            coroutineScope.launch {
+                                val routeInfo = getRoutePolylineWithInfo(
+                                    userLatLng,
+                                    destinationLatLng,
+                                    apiKey
+                                )
+                                currentPolyline = routeInfo.polyline
+                                travelTime = routeInfo.durationText
+                                travelDistance = routeInfo.distanceText
+                                instructions = routeInfo.steps
+                            }
+                        } ?: Log.e("LiveTrackingMap", "Destination is null")
+                    } ?: Log.e("LiveTrackingMap", "User location is null")
                 }
             }
 
@@ -215,6 +215,7 @@ fun LiveTrackingMapScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Preparing Map...", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 8.dp))
+                CircularProgressIndicator(modifier = Modifier.padding(top = 12.dp))
             }
 
         }
@@ -262,70 +263,51 @@ fun LiveTrackingMapScreen(
                                 Log.d("LiveTrackingMap", "End Ride button clicked")
                                 coroutineScope.launch {
                                     try {
-                                        val updatedRide = rideInfo!!.copy(status = "Completed")
-                                        val response =
-                                            RetrofitClient.instance.updateRide(updatedRide)
+                                        val rideIdVal = rideId ?: return@launch
+                                        val reqIdVal = requestId ?: return@launch
+
+                                        val dto = CompleteRideDTO(
+                                            rideId = rideIdVal.toInt(),
+                                            rideRequestId = reqIdVal.toLong()
+                                        )
+
+                                        val response = RetrofitClient.instance.completeRideAndRequestStatus(dto)
+
+                                        isLoading1 = false
 
                                         if (response.isSuccessful) {
-                                            Log.d("EndRide", "Ride status updated to Completed")
+                                            Toast.makeText(
+                                                context,
+                                                "End Ride Successful",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
 
-                                            // Update ride info in ViewModel before navigation
+                                            sharedRideViewModel.setRideActive(false)
+                                            deleteLocationFromFirebase(rideIdVal) // 🧹 Delete Firebase node
 
+                                            // Update local ViewModel with updated status
+                                            val updatedRide = rideInfo!!.copy(status = "Completed")
+                                            sharedRideViewModel.updateRideInfo(updatedRide)
 
-                                            val reqId = requestId ?: return@launch
-                                            val success = try {
-                                                val response2 =
-                                                    RetrofitClient.instance.updateRideRequestStatus(
-                                                        RideRequestStatusUpdateDTO(
-                                                            id = reqId.toLong(),
-                                                            requestStatus = "Completed"
-                                                        )
-                                                    )
-                                                response2.isSuccessful
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                                false
+                                            Log.d("updatedRide", updatedRide.toString())
+                                            Log.d("sharedrideInfo", sharedRideViewModel.rideInfo.value.toString())
+
+                                            navController.navigate("riderPayment") {
+                                                popUpTo("rideRequests") { inclusive = true }
                                             }
 
-                                            isLoading1 = false
-
-                                            if (success) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "End Ride Successful",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                isRideActive = false // ❌ Stop updates
-                                                deleteLocationFromFirebase(rideId ?: "") // 🧹 Delete Firebase node
-                                                // Navigate to Rider Payment screen only after both updates
-                                                sharedRideViewModel.updateRideInfo(updatedRide)
-                                                Log.d("upDatedRide", updatedRide.toString())
-                                                Log.d(
-                                                    "sharedrideInfo",
-                                                    sharedRideViewModel.rideInfo.value.toString()
-                                                )
-                                                navController.navigate("riderPayment"){
-                                                    popUpTo("rideRequests"){
-                                                        inclusive = true
-                                                    }
-                                                }
-                                            } else {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Failed to update request",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
                                         } else {
-                                            isLoading1 = false
-                                            Log.e(
-                                                "EndRide",
-                                                "Failed to update ride: ${response.code()}"
-                                            )
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to complete ride",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            Log.e("EndRide", "Failed with code: ${response.code()}")
                                         }
+
                                     } catch (e: Exception) {
                                         isLoading1 = false
-                                        Log.e("EndRide", "Exception while updating ride", e)
+                                        Log.e("EndRide", "Exception occurred", e)
                                     }
                                 }
                             },
@@ -350,6 +332,7 @@ fun LiveTrackingMapScreen(
                                 )
                             }
                         }
+
                     }
 
                 }

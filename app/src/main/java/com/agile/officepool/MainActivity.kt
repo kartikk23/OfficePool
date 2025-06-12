@@ -8,8 +8,13 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -21,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.ViewModel.StartupViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
@@ -45,6 +51,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         FirebaseApp.initializeApp(this)
         val status = FirebaseApp.getApps(this)
         Log.d("FCM_DEBUG", "Firebase initialized apps: $status")
@@ -76,7 +83,6 @@ class MainActivity : ComponentActivity() {
 
             OfficePoolTheme {
                 navController = rememberNavController()
-
                 Box(modifier = Modifier
                     .fillMaxSize()
                 ) {
@@ -137,6 +143,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Navigation(navController: NavHostController, context: Context, startDestination: String) {
     val sharedRideViewModel: SharedRideViewModel = viewModel()
+    val startupViewModel : StartupViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") { LoginScreen(navController) }
@@ -144,7 +151,7 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
         composable("locationPermission") { LocationRequestScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
         composable("rideRequests") { RideRequestsScreen(navController) }
-        composable("startUp"){ StartupScreen(navController,rideViewModel = sharedRideViewModel,) }
+        composable("startUp"){ StartupScreen(navController,rideViewModel = sharedRideViewModel,startupViewModel=startupViewModel) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
         composable("updateProfile") { UpdateProfileScreen(navController) }
 

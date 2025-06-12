@@ -46,24 +46,24 @@ fun OfficePoolTheme(
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
+    val context = LocalContext.current
     val systemUiController = rememberSystemUiController()
 
     SideEffect {
-//        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val window = (context as? Activity)?.window
+        window?.let {
+            WindowCompat.setDecorFitsSystemWindows(it, false) // ✅ Enable edge-to-edge
+        }
+
         systemUiController.setStatusBarColor(
-            color = colorScheme.background,
-            darkIcons = !darkTheme
-        )
-        systemUiController.setNavigationBarColor(
-            color = colorScheme.background,
+            color = Color.Transparent, // Optional: transparent for immersive look
             darkIcons = !darkTheme
         )
 
-        // Optional: Set window insets controller for edge-to-edge
-        view.setOnApplyWindowInsetsListener { v, insets ->
-            v.setOnApplyWindowInsetsListener(null) // Prevent infinite loop
-            insets
-        }
+        systemUiController.setNavigationBarColor(
+            color = Color.Transparent,
+            darkIcons = !darkTheme
+        )
     }
 
     MaterialTheme(

@@ -164,27 +164,19 @@ fun RideRequestCard(
 
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Green),
+                        border = BorderStroke(1.dp, Color(0xFF2E7D32)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 6.dp),
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                "Ride in Progress",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF2E7D32)
-                                ),
-                            )
-                        }
+                        Text(
+                            "Ride in Progress",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color =Color.Green
+                            ),
+                        )
                     }
                 }
 
@@ -195,9 +187,9 @@ fun RideRequestCard(
 
                             coroutineScope.launch {
                                 try {
-//                                    val response = RetrofitClient.instance.startRideAndNotifyPassenger(request)
+                                    val response = RetrofitClient.instance.startRideAndNotifyPassenger(request)
 
-//                                    if (response.isSuccessful) {
+                                    if (response.isSuccessful) {
                                         // 2. Update the ride status (assuming you have an API like updateRideStatus(rideId, "ACTIVE"))
                                         val updateStatusResponse = RetrofitClient.instance.updateRideRequestStatus(
                                             RideRequestStatusUpdateDTO(request.id!!, "Active")
@@ -209,9 +201,9 @@ fun RideRequestCard(
                                         } else {
                                             Log.e("RideRequestCard", "Failed to update ride status: ${updateStatusResponse.errorBody()?.string()}")
                                         }
-//                                    } else {
-//                                        Log.e("RideRequestCard", "Failed to start ride: ${response.errorBody()?.string()}")
-//                                    }
+                                    } else {
+                                        Log.e("RideRequestCard", "Failed to start ride: ${response}")
+                                    }
                                 } catch (e: Exception) {
                                     Log.e("RideRequestCard", "Exception in starting ride", e)
                                 } finally {

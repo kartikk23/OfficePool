@@ -12,14 +12,15 @@ import com.google.maps.android.compose.Polyline
 @Composable
 fun DynamicRoutePolyline(polyline: List<LatLng>) {
     if (polyline.isNotEmpty()) {
-        val movingCap = CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.motorcyclet3), 35f)
+        val movingCap = CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.motorcyclet3), 50f)
 
         Polyline(
             points = polyline,
             color = Color.Blue,
-            width = 12f,
+            width = 20f,
             startCap = movingCap,
-            endCap = RoundCap()
+            endCap = RoundCap(),
+
         )
     }
 }

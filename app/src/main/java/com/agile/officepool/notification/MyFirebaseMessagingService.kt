@@ -96,6 +96,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 })
             }
 
+            "ride_ended" -> {
+                val rideId = data["rideId"]
+                rideEndedNotification(rideId = rideId)
+
+            }
+
 
             else -> {
                 // Default notification if no type specified
@@ -108,6 +114,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
 
     }
+
 
 
 
@@ -184,6 +191,29 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         manager.notify(3, notification)
     }
 
+    private fun rideEndedNotification(rideId: String?) {
+        createNotificationChannel()
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("rideId", rideId)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.car)
+            .setContentTitle("Ride Ended...")
+            .setContentText("Your ride has ended!")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val manager= getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(4,notification)
+
+    }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

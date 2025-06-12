@@ -87,7 +87,7 @@ fun RideRequestsScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             when {
                 isLoading1 -> {

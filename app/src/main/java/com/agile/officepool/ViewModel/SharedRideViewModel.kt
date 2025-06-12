@@ -36,16 +36,19 @@ class SharedRideViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.instance.getActiveRideForPassengerId(passengerId)
                 if (response.isSuccessful) {
+                    Log.d("SharedRideVM", "Ride ID: ${response.body()}")
                     onResult(response.body())
                 } else {
+                    Log.e("SharedRideVM", "Error: ${response.code()}")
                     onResult(null)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("SharedRideVM", "Exception: ${e.message}")
                 onResult(null)
             }
         }
     }
+
 
     fun observePassengerRideStatus(rideId: String, onStarted: () -> Unit,onNotActive: () -> Unit) {
         Log.d("RideStatusObserver", "observePassengerRideStatus called with rideId=$rideId")
@@ -70,6 +73,7 @@ class SharedRideViewModel : ViewModel() {
                         onStarted()
                     }else{
                         onNotActive()
+                        removeRideStatusListener(rideId)
                     }
 
 
@@ -77,7 +81,6 @@ class SharedRideViewModel : ViewModel() {
 
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("RideStatusObserver", "Failed to read status: ${error.message}", error.toException())
-                    onNotActive()
                 }
             }
 

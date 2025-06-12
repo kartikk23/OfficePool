@@ -3,20 +3,25 @@ package com.agile.officepool.screens
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,17 +63,19 @@ fun RiderPaymentScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .background(color = MaterialTheme.colorScheme.surface)
+            .padding(20.dp)
+            .padding(WindowInsets.statusBars.asPaddingValues()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Ride Summary", style = MaterialTheme.typography.h3)
+        Text("Ride Summary", style = MaterialTheme.typography.headlineLarge,color = MaterialTheme.colorScheme.onSurface)
 
         RideInfoCard(rideInfo)
 
         Text(
             text = "Total Fare: ₹$totalFare",
-            style = MaterialTheme.typography.h3.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colors.surface
+            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -89,12 +96,12 @@ fun RideInfoCard(rideInfo: RideInfo) {
     Card (
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,
-        backgroundColor = MaterialTheme.colors.surface,
+        backgroundColor = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("From: ${rideInfo.source}", style = MaterialTheme.typography.h4)
-            Text("To: ${rideInfo.destination}", style = MaterialTheme.typography.h4)
+            Text("From: ${rideInfo.source}", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.surface)
+            Text("To: ${rideInfo.destination}", style = MaterialTheme.typography.headlineMedium,color = MaterialTheme.colorScheme.surface)
 //            Text("Time: ${rideInfo.rideTime}", style = MaterialTheme.typography.bodyMedium)
 //            Text("Seats Booked: ${rideInfo.seatsBooked}", style = MaterialTheme.typography.bodyMedium)
         }

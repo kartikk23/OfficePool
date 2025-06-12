@@ -8,10 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +42,7 @@ import androidx.navigation.NavHostController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.components.mapComponents.DynamicRoutePolyline
 import com.agile.officepool.components.mapComponents.RouteInfoCard
 import com.agile.officepool.components.mapComponents.StaticRoutePolyline
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
@@ -72,7 +77,7 @@ fun LiveTrackingForPassenger(
     var riderLatLng by remember { mutableStateOf<LatLng?>(null) }
     val coroutineScope = rememberCoroutineScope()
     var destination by remember { mutableStateOf<LatLng?>(null) }
-    var staticPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }
+    var currentPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     var travelTime by remember { mutableStateOf("") }
     var travelDistance by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -83,6 +88,7 @@ fun LiveTrackingForPassenger(
             }
     }
     val isRideActive by rideViewModel.isRideActive
+
 
     // Observe rideActive changes continuously
     LaunchedEffect(isRideActive, rideId) {
@@ -97,11 +103,11 @@ fun LiveTrackingForPassenger(
                             response.body()?.let { ride ->
                                 destination = LatLng(ride.destinationLat, ride.destinationLng)
                                 val routeInfo = getRoutePolylineWithInfo(riderLatLng!!, destination!!, apiKey)
-                                staticPolyline = routeInfo.polyline
+                                currentPolyline = routeInfo.polyline
                                 travelTime = routeInfo.durationText
                                 travelDistance = routeInfo.distanceText
                                 instructions = routeInfo.steps
-                                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(riderLatLng!!, 15f))
+                                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(riderLatLng!!, 18f))
                             }
                         } else {
                             Log.e("LiveTrackingForPassenger", "Failed to fetch ride details: ${response.code()}")
@@ -111,12 +117,24 @@ fun LiveTrackingForPassenger(
                     }
                 }
             }
+
+            rideViewModel.observePassengerRideStatus(
+                rideId = rideId,
+                onStarted = { rideViewModel.setRideActive(true) },
+                onNotActive = { rideViewModel.setRideActive(false) }
+            )
         } else {
             // If ride ended, navigate after a delay
             delay(2000)
-            navHostController.navigate("startup") {
-                popUpTo("startup") { inclusive = true }
-            }
+            //navigate to payment and ride summary
+//            navHostController.navigate("startup") {
+//                popUpTo("startup") { inclusive = true }
+//            }
+        }
+    }
+    DisposableEffect(rideId) {
+        onDispose {
+            rideViewModel.removeRideStatusListener(rideId)
         }
     }
 
@@ -138,17 +156,17 @@ fun LiveTrackingForPassenger(
                         myLocationButtonEnabled = false
                     )
                 ) {
-                    StaticRoutePolyline(polyline = staticPolyline)
-                    val riderIcon = remember(bitmap) {
-                        BitmapDescriptorFactory.fromBitmap(bitmap)
-                    }
-                    riderLatLng?.let {
-                        Marker(
-                            state = MarkerState(position = it),
-                            icon = riderIcon,
-                            title = "Rider"
-                        )
-                    }
+                    DynamicRoutePolyline(polyline = currentPolyline)
+//                    val riderIcon = remember(bitmap) {
+//                        BitmapDescriptorFactory.fromBitmap(bitmap)
+//                    }
+//                    riderLatLng?.let {
+//                        Marker(
+//                            state = MarkerState(position = it),
+//                            icon = riderIcon,
+//                            title = "Rider"
+//                        )
+//                    }
                 }
                 Box(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
@@ -162,7 +180,8 @@ fun LiveTrackingForPassenger(
             }
             Box(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(WindowInsets.statusBars.asPaddingValues())
                     .align(Alignment.TopStart)
                     .size(40.dp)
                     .clip(CircleShape)

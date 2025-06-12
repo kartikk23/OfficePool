@@ -1,6 +1,7 @@
 package com.agile.officepool.network
 
 
+import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.model.LoginRequest
 import com.agile.officepool.model.LoginResponse
@@ -58,6 +59,9 @@ interface ApiService {
     @GET("ride/getRideByRideId")
     suspend fun getRideByRideId(@Query("rideId") rideId: String): Response<RideInfo>
 
+    @GET("ride/getRecentRides")
+    suspend fun getRecentRides(@Query("passengerId") passengerId: String): Response<List<RideInfo>>
+
     @PUT("ride/updateRide")
     suspend fun updateRide(@Body rideInfo: RideInfo): Response<RideInfo>
 
@@ -82,6 +86,9 @@ interface ApiService {
     // for ride request
     @POST("rides/addRideReq")
     suspend fun addRideReq(@Body rideRequest : RideRequest) : Response<RideResponse>
+
+    @POST("rides/completeRide")
+    suspend fun completeRideAndRequestStatus(@Body completeRideDTO : CompleteRideDTO) : Response<ResponseBody>
 
     @POST("rides/sendNotificationToRider")
     suspend fun sendNotificationToRider(@Body rideRequest : RideRequest) : Response<RideResponse>

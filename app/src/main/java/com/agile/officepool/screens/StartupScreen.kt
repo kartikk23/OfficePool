@@ -1,6 +1,8 @@
 package com.agile.officepool.screens
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,11 +13,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
@@ -53,62 +59,74 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
 import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.ViewModel.StartupViewModel
+import com.agile.officepool.components.ShimmerRideCard
 import com.agile.officepool.network.SessionManager
 import kotlinx.coroutines.delay
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartupScreen(
     navController: NavController,
-    rideViewModel: SharedRideViewModel = SharedRideViewModel()) {
+    rideViewModel: SharedRideViewModel = viewModel(),
+    startupViewModel : StartupViewModel = viewModel()
+) {
 
-    var context = LocalContext.current
-    var sessionManager = SessionManager(context)
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
     val rideId = remember { mutableStateOf<String?>(null) }
     val isRideActive by rideViewModel.isRideActive
-
+    val lastObservedRideId = remember { mutableStateOf<String?>(null) }
     val passengerId = sessionManager.getUserId()
+    val recentRides by startupViewModel.recentRides
+    val isRecentRidesLoading by startupViewModel.isLoading
+    val errorMessage by startupViewModel.errorMessage
 
     LaunchedEffect(passengerId) {
         while (true) {
-            rideViewModel.getActiveRideForPassenger(passengerId!!.toLong()) { id ->
-                if (id != null) {
-                    rideId.value = id.toString()
-                    Log.d("StartupScreen", "Active ride found: $id")
-                } else {
-                    rideId.value = null
-                    Log.d("StartupScreen", "No active ride")
+            passengerId?.let {
+                rideViewModel.getActiveRideForPassenger(passengerId.toLong()) { id ->
+                    rideId.value = id?.toString()
                 }
+                delay(10000L)
             }
-            delay(1000L) // Wait 30 seconds before next check, adjust as needed
+
+        }
+    }
+
+    LaunchedEffect(passengerId) {
+        passengerId?.let {
+            startupViewModel.fetchRecentRides(it.toLong())
         }
     }
 
 
     // 👀 Observe ride status and navigate when started
-    rideId.value?.let { id ->
-        LaunchedEffect(id) {
+    if (rideId.value != null && lastObservedRideId.value != rideId.value) {
+        LaunchedEffect(rideId.value) {
+            lastObservedRideId.value = rideId.value
             rideViewModel.observePassengerRideStatus(
-                rideId = id,
-                onStarted = {
-                    rideViewModel.setRideActive(true)
-                },
-                onNotActive = {
-                    rideViewModel.setRideActive(false)
-                }
+                rideId = rideId.value!!,
+                onStarted = { rideViewModel.setRideActive(true) },
+                onNotActive = { rideViewModel.setRideActive(false) }
             )
         }
 
-        DisposableEffect(id) {
+        DisposableEffect(rideId.value) {
             onDispose {
-                rideViewModel.removeRideStatusListener(id)
+                rideViewModel.removeRideStatusListener(rideId.value!!)
+                lastObservedRideId.value = null
             }
         }
     }
+
 
     Column(
         modifier = Modifier
@@ -121,7 +139,8 @@ fun StartupScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(WindowInsets.statusBars.asPaddingValues())
+                .padding(horizontal = 20.dp   ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -231,10 +250,73 @@ fun StartupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    RecentChip("Workplace HQ")
-                    RecentChip("Tech Park 4")
+                    Text(
+                        text = "Recent Rides",
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 5.dp)
+                    )
+
+                    when {
+                        isRecentRidesLoading -> {
+                            // 👇 Shimmer placeholders while loading
+                            repeat(2) {
+                                ShimmerRideCard()
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+
+                        errorMessage != null -> {
+                            // 👇 Show error with retry button
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = errorMessage ?: "An unexpected error occurred",
+                                    color = Color.Red,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Button(onClick = { startupViewModel.fetchRecentRides(passengerId = YOUR_PASSENGER_ID) }) {
+//                                    Text("Retry")
+//                                }
+                            }
+                        }
+
+                        recentRides.isNotEmpty() -> {
+                            // 👇 Fade-in when data is available
+                            AnimatedVisibility(visible = true, enter = fadeIn()) {
+                                Column {
+                                    recentRides.forEach { ride ->
+                                        RecentRideCard(
+                                            date = ride.rideDate ?: "N/A",
+                                            time = ride.rideStartTime,
+                                            fromLocation = ride.source ?: "Unknown",
+                                            toLocation = ride.destination ?: "Unknown",
+                                            riderId = ride.riderId.toString() ?: "Unknown"
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+                            }
+                        }
+
+                        else -> {
+                            Text(
+                                text = "No recent rides available.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+
+                Spacer(modifier = Modifier.height(5.dp))
                 // Feature Cards
 
                 FeatureCard("", Color(0xFF2196F3), R.drawable.carpool,modifier = Modifier.width(400.dp),navController)
@@ -416,24 +498,94 @@ fun FeatureCard(
 }
 
 @Composable
-fun RecentChip(text: String) {
+fun RecentRideCard(
+    date: String,
+    time : String,
+    fromLocation: String,
+    toLocation: String,
+    riderId: String
+) {
+
+    // Format date and time
+    val displayDateTime = try {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val dateTime = LocalDateTime.parse("$date $time", formatter)
+
+        val formattedDate = dateTime.format(DateTimeFormatter.ofPattern("dd MMM"))
+        val formattedTime = dateTime.format(DateTimeFormatter.ofPattern("hh:mm a"))
+
+        "$formattedDate, $formattedTime"
+    } catch (e: Exception) {
+        Log.e("RecentRideCard", "Error parsing date and time: $e")
+        "$date $time"
+    }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color.LightGray,RoundedCornerShape(8.dp)), // ⬅️ Light grey border added
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.onSurface,
+            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            color = MaterialTheme.colorScheme.inverseOnSurface,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp
-        )
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // Date + Rider ID Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Rider ID: $riderId",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = displayDateTime,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column (
+                    modifier = Modifier.weight(1f)
+                ){
+                    Text(
+                        text = "From",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = fromLocation,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Column (
+                    modifier = Modifier.weight(1f)
+                ){
+                    Text(
+                        text = "To",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = toLocation,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
+
 
 @Composable
 fun WhereToGoTextField() {
