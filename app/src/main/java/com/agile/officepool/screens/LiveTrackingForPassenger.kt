@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,6 +67,10 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+
 
 @Composable
 fun LiveTrackingForPassenger(
@@ -76,30 +82,31 @@ fun LiveTrackingForPassenger(
     val mapStyle = MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
     val cameraPositionState = rememberCameraPositionState()
     val apiKey by remember { mutableStateOf(BuildConfig.MAPS_API_KEY) }
+
     var riderLatLng by remember { mutableStateOf<LatLng?>(null) }
-    val coroutineScope = rememberCoroutineScope()
     var destination by remember { mutableStateOf<LatLng?>(null) }
     var currentPolyline by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     var travelTime by remember { mutableStateOf("") }
     var travelDistance by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf<List<String>>(emptyList()) }
-    val bitmap = remember {
-        BitmapFactory.decodeResource(context.resources, R.drawable.motorcyclet3)
-            .let { original ->
-                Bitmap.createScaledBitmap(original, 150, 150, false)
-            }
-    }
-    val isRideActive by rideViewModel.isRideActive
-    var rideFare by remember { mutableStateOf<Int?>(null) }
 
+    val coroutineScope = rememberCoroutineScope()
     val sessionManager = SessionManager(context)
     val passengerId = sessionManager.getUserId() ?: ""
+    val isRideActive by rideViewModel.isRideActive
 
+    var rideFare by remember { mutableStateOf<Int?>(null) }
+    var riderUpiId by remember { mutableStateOf<String?>(null) }
+    var isFareLoading by remember { mutableStateOf(false) }
 
-    // Observe rideActive changes continuously
+    val bitmap = remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.motorcyclet3)
+            .let { Bitmap.createScaledBitmap(it, 150, 150, false) }
+    }
+
+    // Fetch route data when ride is active
     LaunchedEffect(isRideActive, rideId) {
         if (isRideActive == true) {
-            // Start listening to rider location updates
             observeRiderLocation(rideId) { data ->
                 riderLatLng = LatLng(data.latitude, data.longitude)
                 coroutineScope.launch {
@@ -115,11 +122,9 @@ fun LiveTrackingForPassenger(
                                 instructions = routeInfo.steps
                                 cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(riderLatLng!!, 18f))
                             }
-                        } else {
-                            Log.e("LiveTrackingForPassenger", "Failed to fetch ride details: ${response.code()}")
                         }
                     } catch (e: Exception) {
-                        Log.e("LiveTrackingForPassenger", "Error fetching ride details", e)
+                        Log.e("LiveTracking", "Error fetching ride: ${e.localizedMessage}")
                     }
                 }
             }
@@ -130,35 +135,47 @@ fun LiveTrackingForPassenger(
                 onNotActive = { rideViewModel.setRideActive(false) }
             )
         }
-        else {
+    }
+
+    // Fetch fare and UPI ID once ride ends
+    LaunchedEffect(key1 = isRideActive, key2 = rideId) {
+        if (!isRideActive!! && rideFare == null) {
+            isFareLoading = true
             coroutineScope.launch {
                 try {
                     val response = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
                     if (response.isSuccessful) {
-                        response.body()?.let { rideRequest ->
-                            Log.d("FareAPI", "Fetched fare: ${rideRequest.rideFare}")
-                            rideFare = rideRequest.rideFare
+                        response.body()?.let {
+                            rideFare = it.rideFare
                         }
-                    } else {
-                        Log.e("FareAPI", "Error: ${response.code()} - ${response.message()}")
-                        Log.e("LiveTrackingForPassenger", "RideRequest not found: ${response.code()}")
+                    }
+
+                    // Fetch rider UPI ID
+                    val rideDetails = RetrofitClient.instance.getRideByRideId(rideId)
+                    if (rideDetails.isSuccessful) {
+                        val riderId = rideDetails.body()?.riderId
+                        if (!riderId.isNullOrEmpty()) {
+                            val riderResponse = RetrofitClient.instance.getUserById(riderId)
+                            if (riderResponse.isSuccessful) {
+                                riderUpiId = riderResponse.body()?.upiId
+                            }
+                        }
                     }
                 } catch (e: Exception) {
-                    Log.e("LiveTrackingForPassenger", "Error fetching fare info", e)
+                    Log.e("FareAPI", "Exception: ${e.localizedMessage}")
+                } finally {
+                    isFareLoading = false
                 }
             }
         }
-
-
     }
+
     DisposableEffect(rideId) {
-        onDispose {
-            rideViewModel.removeRideStatusListener(rideId)
-        }
+        onDispose { rideViewModel.removeRideStatusListener(rideId) }
     }
 
     if (isRideActive == true) {
-        // Show map and UI here same as before
+        // Show active tracking
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 GoogleMap(
@@ -176,20 +193,9 @@ fun LiveTrackingForPassenger(
                     )
                 ) {
                     DynamicRoutePolyline(polyline = currentPolyline)
-//                    val riderIcon = remember(bitmap) {
-//                        BitmapDescriptorFactory.fromBitmap(bitmap)
-//                    }
-//                    riderLatLng?.let {
-//                        Marker(
-//                            state = MarkerState(position = it),
-//                            icon = riderIcon,
-//                            title = "Rider"
-//                        )
-//                    }
                 }
-                Box(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                ) {
+
+                Box(modifier = Modifier.padding(16.dp)) {
                     RouteInfoCard(
                         travelTime = travelTime,
                         travelDistance = travelDistance,
@@ -197,6 +203,7 @@ fun LiveTrackingForPassenger(
                     )
                 }
             }
+
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -217,7 +224,7 @@ fun LiveTrackingForPassenger(
             }
         }
     } else {
-        // Show ride ended UI (can omit navigation here since handled in LaunchedEffect)
+        // Show fare & UPI payment
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -234,28 +241,41 @@ fun LiveTrackingForPassenger(
 
                 Spacer(modifier = Modifier.padding(8.dp))
 
-                rideFare?.let { fare ->
-                    Text(
-                        text = "Total Fare: ₹$fare",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                if (isFareLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
                     )
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Text("Fetching fare details...")
+                } else {
+                    if (rideFare != null && !riderUpiId.isNullOrEmpty()) {
+                        Text(
+                            text = "Total Fare: ₹${rideFare}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
 
-                    Spacer(modifier = Modifier.padding(16.dp))
+                        Spacer(modifier = Modifier.padding(16.dp))
 
-                    androidx.compose.material3.Button(
-                        onClick = {
-                            // TODO: Trigger your payment screen or logic here
-                            navHostController.navigate("paymentScreen/$rideId/$fare")
+                        Button(
+                            onClick = {
+                                val uri = Uri.parse(
+                                    "upi://pay?pa=$riderUpiId&pn=OfficePool&tn=Ride Fare&am=$rideFare&cu=INR"
+                                )
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                val chooser = Intent.createChooser(intent, "Pay with UPI")
+                                context.startActivity(chooser)
+                            }
+                        ) {
+                            Text(text = "Make Payment")
                         }
-                    ) {
-                        Text(text = "Make Payment")
+                    } else {
+                        Text("Fare or UPI ID not available.")
                     }
-                } ?: Text("Fetching fare details...")
+                }
             }
         }
-
     }
 }
-

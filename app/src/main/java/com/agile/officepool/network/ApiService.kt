@@ -108,17 +108,25 @@ interface ApiService {
     @PUT("rides/updateRideRequestStatus")
     suspend fun updateRideRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
 
-    @GET("api/ride-request")
+    @GET("rides/ride-request")
     suspend fun getRideRequest(
         @Query("rideId") rideId: String,
         @Query("passengerId") passengerId: String
     ): Response<RideRequest>
 
-    @GET("ride-request/{rideId}/{passengerId}")
+    @GET("rides/ride-request/{rideId}/{passengerId}")
     suspend fun getRideRequestFare(
         @Path("rideId") rideId: String,
         @Path("passengerId") passengerId: String
     ): Response<RideRequest>
+
+
+    @GET("rides/rider-upi/{rideId}")
+    suspend fun getRiderUpiId(@Path("rideId") rideId: String): Response<String>
+
+    @GET("user/{userId}")
+    suspend fun getUserById(@Path("userId") userId: String): Response<User>
+
 
 
 
