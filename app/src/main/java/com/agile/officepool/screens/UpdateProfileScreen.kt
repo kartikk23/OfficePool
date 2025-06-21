@@ -42,6 +42,8 @@ fun UpdateProfileScreen(navController: NavController) {
     var phone by remember { mutableStateOf(TextFieldValue(sessionManager.getUserPhone() ?: "")) }
     var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getCompanyName() ?: "")) }
     var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getLinkedInId() ?: "")) }
+    var upiId by remember { mutableStateOf(TextFieldValue(sessionManager.getUserUpiId() ?: "")) }
+
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
 
@@ -170,7 +172,8 @@ fun UpdateProfileScreen(navController: NavController) {
                                     name.text,
                                     phone.text,
                                     companyName.text,
-                                    linkedInId.text
+                                    linkedInId.text,
+                                    upiId.text
                                 )
                             )
                             if (response.isSuccessful && response.body() != null) {

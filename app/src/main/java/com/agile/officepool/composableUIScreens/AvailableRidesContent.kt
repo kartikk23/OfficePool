@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -89,34 +88,34 @@ fun PreviewAvailableRidesContent() {
     val mockRides = listOf(
         RideInfo(
             rideId = 1,
+            riderId = "r123",
             source = "Downtown",
+            destination = "Office Park",
             sourceLat = 0.0,
             sourceLng = 0.0,
-            destination = "Office Park",
             destinationLat = 0.0,
             destinationLng = 0.0,
-            rideDate = "2025-05-09",
-            rideStartTime = "09:00:00",
-            availableSeats = "3",
-            riderId = "r123",
             route = "road",
             status = "Yet to start",
+            availableSeats = "3",
+            rideStartTime = "09:00:00",
+            rideDate = "2025-05-09",
             dateTime = "2025-05-09T09:00:00"
         ),
         RideInfo(
             rideId = 2,
+            riderId = "r123",
             source = "City Center",
             destination = "Tech Hub",
-            rideDate = "2025-05-09",
-            rideStartTime = "09:30:00",
             sourceLat = 0.0,
             sourceLng = 0.0,
             destinationLat = 0.0,
             destinationLng = 0.0,
-            availableSeats = "3",
-            riderId = "r123",
             route = "road",
             status = "Yet to start",
+            availableSeats = "3",
+            rideStartTime = "09:30:00",
+            rideDate = "2025-05-09",
             dateTime = "2025-05-09T09:00:00"
         ),
     )
@@ -138,6 +137,3 @@ fun PreviewAvailableRidesContent() {
         rideRequests = mockRequests
     )
 }
-
-
-

@@ -52,6 +52,8 @@ fun ProfileScreen(navController: NavController, context: Context) {
     var phone by remember { mutableStateOf("") }
     var companyName by remember { mutableStateOf("") }
     var linkedInId by remember { mutableStateOf("") }
+    var upiId by remember { mutableStateOf("") }
+
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
@@ -62,6 +64,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
         phone = sessionManager.getUserPhone() ?: ""
         companyName = sessionManager.getCompanyName() ?: ""
         linkedInId = sessionManager.getLinkedInId() ?: ""
+        upiId = sessionManager.getUserUpiId() ?: ""
     }
 
 
@@ -120,6 +123,7 @@ fun ProfileScreen(navController: NavController, context: Context) {
 
             // Profile options
             ProfileOption(Icons.Default.Star, "Rider Rating", "4.8 ⭐")
+            ProfileOption(Icons.Default.Star, "Account Details", "7721915955@pthdfc")
             ProfileOption(Icons.Default.Phone, "Help", "Get support")
             ProfileOption(Icons.Default.LocationOn, "My Rides", "View ride history")
             ProfileOption(Icons.Default.Info, "Safety", "Safety preferences")

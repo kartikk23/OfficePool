@@ -7,5 +7,6 @@ data class RideRequest(
     val passengerName: String,
     val riderId: String,
     val requestStatus: String,
-    val requestTime: String? = null
+    val requestTime: String? = null,
+    val rideFare: Int? = null
 )
