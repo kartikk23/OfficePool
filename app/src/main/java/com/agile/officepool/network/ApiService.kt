@@ -124,7 +124,7 @@ interface ApiService {
     @GET("rides/rider-upi/{rideId}")
     suspend fun getRiderUpiId(@Path("rideId") rideId: String): Response<String>
 
-    @GET("user/{userId}")
+    @GET("api/users/{userId}")
     suspend fun getUserById(@Path("userId") userId: String): Response<User>
 
 
