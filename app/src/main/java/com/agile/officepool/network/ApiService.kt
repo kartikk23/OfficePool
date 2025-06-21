@@ -108,6 +108,20 @@ interface ApiService {
     @PUT("rides/updateRideRequestStatus")
     suspend fun updateRideRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
 
+    @GET("api/ride-request")
+    suspend fun getRideRequest(
+        @Query("rideId") rideId: String,
+        @Query("passengerId") passengerId: String
+    ): Response<RideRequest>
+
+    @GET("ride-request/{rideId}/{passengerId}")
+    suspend fun getRideRequestFare(
+        @Path("rideId") rideId: String,
+        @Path("passengerId") passengerId: String
+    ): Response<RideRequest>
+
+
+
 }
 
 object RetrofitClient {

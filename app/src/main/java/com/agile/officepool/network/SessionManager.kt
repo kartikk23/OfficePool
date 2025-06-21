@@ -20,9 +20,21 @@ class SessionManager(context: Context) {
         private const val KEY_USER_COMPANY = "companyName"
         private const val KEY_USER_LINKEDIN_ID = "linkedinId"
         private const val HAS_RIDE_STARTED = "has_ride_started"
+        private const val KEY_USER_UPI_ID = "upiId"
+
+
 
 
     }
+
+    fun setUserUpiId(upiId: String) {
+        prefs.edit().putString(KEY_USER_UPI_ID, upiId).apply()
+    }
+
+    fun getUserUpiId(): String? {
+        return prefs.getString(KEY_USER_UPI_ID, null)
+    }
+
 
     fun saveEmail(context: Context, email: String?) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)

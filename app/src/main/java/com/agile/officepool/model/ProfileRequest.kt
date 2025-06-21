@@ -5,5 +5,6 @@ data class ProfileRequest(
     val name : String,
     val phone: String,
     val companyName: String,
-    val linkedInId: String
+    val linkedInId: String,
+    val upiId :String
 )

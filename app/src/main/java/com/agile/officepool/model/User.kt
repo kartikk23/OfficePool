@@ -7,5 +7,6 @@ data class User(
     val email: String,       // User's email
     val linkedInId: String,
     val phone: String,
-    val companyName: String
+    val companyName: String,
+    val upiId: String
 )

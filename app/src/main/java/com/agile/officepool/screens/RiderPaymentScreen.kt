@@ -1,7 +1,6 @@
 package com.agile.officepool.screens
 
 import android.util.Log
-import android.widget.Button
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,13 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.SharedRideViewModel
@@ -57,8 +53,7 @@ fun RiderPaymentScreen(
         return
     }
 
-    val distanceInKm = rideInfo.calculateDistanceInKm() ?: 0.0
-    val totalFare = rideInfo.calculatePrice()
+
 
     Column(
         modifier = Modifier
@@ -73,7 +68,7 @@ fun RiderPaymentScreen(
         RideInfoCard(rideInfo)
 
         Text(
-            text = "Total Fare: ₹$totalFare",
+            text = "Total Fare: ₹$0",
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -87,7 +82,7 @@ fun RiderPaymentScreen(
                 onPaymentConfirmed() // <-- Ensures screen is popped after confirmation
             }
         ) {
-            Text("Accept ₹$totalFare")
+            Text("Accept ₹$0")
         }
     }
 }
@@ -109,33 +104,34 @@ fun RideInfoCard(rideInfo: RideInfo) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun RiderPaymentScreenPreview() {
-    val mockViewModel = SharedRideViewModel().apply {
-        updateRideInfo(
-            RideInfo(
-                rideId = 12,
-                riderId = "23",
-                source = "MG Road",
-                destination = "Koramangala",
-                sourceLat = 12.9716,
-                sourceLng = 77.5946,
-                destinationLat = 12.9352,
-                destinationLng = 77.6146,
-                route = "3e",
-                status = "pending",
-                availableSeats = "4",
-                rideStartTime = "today",
-                rideDate = "today",
-                dateTime = "34"
-            )
-        )
-    }
-
-    RiderPaymentScreen(
-        navController = rememberNavController(),
-        rideViewModel = mockViewModel,
-        onPaymentConfirmed = {}
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RiderPaymentScreenPreview() {
+//    val mockViewModel = SharedRideViewModel().apply {
+//        updateRideInfo(
+//            RideInfo(
+//                rideId = 12,
+//                riderId = "23",
+//                source = "MG Road",
+//                destination = "Koramangala",
+//                sourceLat = 12.9716,
+//                sourceLng = 77.5946,
+//                destinationLat = 12.9352,
+//                destinationLng = 77.6146,
+//                route = "3e",
+//                status = "pending",
+//                availableSeats = "4",
+//                rideStartTime = "today",
+//                rideDate = "today",
+//                dateTime = "34"
+////                rideFare = rideFare
+//            )
+//        )
+//    }
+//
+//    RiderPaymentScreen(
+//        navController = rememberNavController(),
+//        rideViewModel = mockViewModel,
+//        onPaymentConfirmed = {}
+//    )
+//}

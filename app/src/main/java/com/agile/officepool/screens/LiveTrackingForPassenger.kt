@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +49,7 @@ import com.agile.officepool.components.mapComponents.StaticRoutePolyline
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.observeRiderLocation
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.network.SessionManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -88,6 +90,10 @@ fun LiveTrackingForPassenger(
             }
     }
     val isRideActive by rideViewModel.isRideActive
+    var rideFare by remember { mutableStateOf<Int?>(null) }
+
+    val sessionManager = SessionManager(context)
+    val passengerId = sessionManager.getUserId() ?: ""
 
 
     // Observe rideActive changes continuously
@@ -123,14 +129,27 @@ fun LiveTrackingForPassenger(
                 onStarted = { rideViewModel.setRideActive(true) },
                 onNotActive = { rideViewModel.setRideActive(false) }
             )
-        } else {
-            // If ride ended, navigate after a delay
-            delay(2000)
-            //navigate to payment and ride summary
-//            navHostController.navigate("startup") {
-//                popUpTo("startup") { inclusive = true }
-//            }
         }
+        else {
+            coroutineScope.launch {
+                try {
+                    val response = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
+                    if (response.isSuccessful) {
+                        response.body()?.let { rideRequest ->
+                            Log.d("FareAPI", "Fetched fare: ${rideRequest.rideFare}")
+                            rideFare = rideRequest.rideFare
+                        }
+                    } else {
+                        Log.e("FareAPI", "Error: ${response.code()} - ${response.message()}")
+                        Log.e("LiveTrackingForPassenger", "RideRequest not found: ${response.code()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("LiveTrackingForPassenger", "Error fetching fare info", e)
+                }
+            }
+        }
+
+
     }
     DisposableEffect(rideId) {
         onDispose {
@@ -200,16 +219,43 @@ fun LiveTrackingForPassenger(
     } else {
         // Show ride ended UI (can omit navigation here since handled in LaunchedEffect)
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Your ride has ended.",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Your ride has ended!",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.padding(8.dp))
+
+                rideFare?.let { fare ->
+                    Text(
+                        text = "Total Fare: ₹$fare",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.padding(16.dp))
+
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            // TODO: Trigger your payment screen or logic here
+                            navHostController.navigate("paymentScreen/$rideId/$fare")
+                        }
+                    ) {
+                        Text(text = "Make Payment")
+                    }
+                } ?: Text("Fetching fare details...")
+            }
         }
+
     }
 }
 

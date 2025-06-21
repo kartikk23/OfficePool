@@ -27,17 +27,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwitchDefaults
@@ -46,6 +43,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,9 +55,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -84,10 +80,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.RoundCap
-import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -127,6 +121,7 @@ fun SearchScreen(navController: NavController) {
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var polylinePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var rideFare by remember { mutableIntStateOf(0) }
 
     val placesClient = remember { initializePlacesClient(context) }
     var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
@@ -158,7 +153,7 @@ fun SearchScreen(navController: NavController) {
                 return@launch
             }
 
-            val rideInfo = RideInfo(
+            val rideInfo  = RideInfo(
                 riderId = userId,
                 source = selectedSource!!,
                 destination = selectedDestination!!,
@@ -171,8 +166,13 @@ fun SearchScreen(navController: NavController) {
                 availableSeats = availableSeats,
                 rideStartTime = rideStartTime!!.toString(),
                 rideDate = rideDate!!.toString()
+
             )
 
+//            val calculatedFare = rideInfoTemp.calculatePrice()
+
+            // Create final RideInfo with calculated fare
+//            val rideInfo = rideInfoTemp.copy(rideFare = calculatedFare)
             try {
                 val response = RetrofitClient.instance.addRide(rideInfo)
                 if (response.isSuccessful) {
