@@ -53,9 +53,6 @@ import com.agile.officepool.helper.MapHelperFunctions.observeRiderLocation
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.CustomCap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
@@ -65,11 +62,9 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -138,37 +133,53 @@ fun LiveTrackingForPassenger(
     }
 
     // Fetch fare and UPI ID once ride ends
+    // Inside LaunchedEffect (fare and UPI fetching logic)
     LaunchedEffect(key1 = isRideActive, key2 = rideId) {
         if (!isRideActive!! && rideFare == null) {
             isFareLoading = true
             coroutineScope.launch {
                 try {
+                    // 🔹 Fetch Ride Fare
                     val response = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
                     if (response.isSuccessful) {
                         response.body()?.let {
                             rideFare = it.rideFare
+                            Log.d("FareAPI", "✅ Fare fetched: ₹${it.rideFare}")
                         }
+                    } else {
+                        Log.e("FareAPI", "❌ Failed to fetch fare: ${response.code()} ${response.message()}")
                     }
 
-                    // Fetch rider UPI ID
+                    // 🔹 Fetch Rider UPI ID
                     val rideDetails = RetrofitClient.instance.getRideByRideId(rideId)
                     if (rideDetails.isSuccessful) {
                         val riderId = rideDetails.body()?.riderId
+                        Log.d("UPI_FETCH", "✅ Rider ID from ride: $riderId")
+
                         if (!riderId.isNullOrEmpty()) {
                             val riderResponse = RetrofitClient.instance.getUserById(riderId)
                             if (riderResponse.isSuccessful) {
                                 riderUpiId = riderResponse.body()?.upiId
+                                Log.d("UPI_FETCH", "✅ UPI ID fetched: $riderUpiId")
+                            } else {
+                                Log.e("UPI_FETCH", "❌ Failed to fetch rider: ${riderResponse.code()} ${riderResponse.message()}")
                             }
+                        } else {
+                            Log.e("UPI_FETCH", "❌ Rider ID is null or empty")
                         }
+                    } else {
+                        Log.e("UPI_FETCH", "❌ Failed to fetch ride details: ${rideDetails.code()} ${rideDetails.message()}")
                     }
+
                 } catch (e: Exception) {
-                    Log.e("FareAPI", "Exception: ${e.localizedMessage}")
+                    Log.e("FareAPI", "❌ Exception occurred: ${e.localizedMessage}", e)
                 } finally {
                     isFareLoading = false
                 }
             }
         }
     }
+
 
     DisposableEffect(rideId) {
         onDispose { rideViewModel.removeRideStatusListener(rideId) }
@@ -249,6 +260,8 @@ fun LiveTrackingForPassenger(
                     Spacer(modifier = Modifier.padding(8.dp))
                     Text("Fetching fare details...")
                 } else {
+                    Log.e("FARE: ", rideFare.toString())
+                    Log.e("UPI: ", riderUpiId.toString())
                     if (rideFare != null && !riderUpiId.isNullOrEmpty()) {
                         Text(
                             text = "Total Fare: ₹${rideFare}",
@@ -261,6 +274,8 @@ fun LiveTrackingForPassenger(
 
                         Button(
                             onClick = {
+                                Log.d("PaymentIntent", "Launching UPI for ₹$rideFare to $riderUpiId")
+
                                 val uri = Uri.parse(
                                     "upi://pay?pa=$riderUpiId&pn=OfficePool&tn=Ride Fare&am=$rideFare&cu=INR"
                                 )
@@ -271,6 +286,7 @@ fun LiveTrackingForPassenger(
                         ) {
                             Text(text = "Make Payment")
                         }
+
                     } else {
                         Text("Fare or UPI ID not available.")
                     }
