@@ -160,6 +160,24 @@ fun UpdateProfileScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            OutlinedTextField(
+                value = upiId,
+                onValueChange = { upiId = it },
+                label = { Text("Upi id") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.inverseSurface
+                ),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedLabelColor = Color.Gray
+                ),
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = {
                     coroutineScope.launch {
@@ -182,6 +200,7 @@ fun UpdateProfileScreen(navController: NavController) {
                                 sessionManager.setUserPhone(phone.text)
                                 sessionManager.setCompanyName(companyName.text)
                                 sessionManager.setLinkedInId(linkedInId.text)
+                                sessionManager.setUserUpiId(upiId.text)
                                 Toast.makeText(
                                     context,
                                     "Profile updated successfully",
