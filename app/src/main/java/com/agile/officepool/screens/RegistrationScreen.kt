@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.helper.ApplicationHelper.registerUser
+import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -79,7 +80,8 @@ fun RegisterScreen(navController: NavController) {
                     style = TextStyle(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 24.sp
+                        fontSize = 24.sp,
+                        fontFamily = RobotoCondensed
                     ),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
@@ -87,7 +89,8 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("Name", fontSize = 14.sp) },
+                    label = { Text("Name", fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
@@ -98,7 +101,8 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email", fontSize = 14.sp) },
+                    label = { Text("Email", fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -109,7 +113,8 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password" , fontSize = 14.sp) },
+                    label = { Text("Password" , fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
@@ -121,7 +126,8 @@ fun RegisterScreen(navController: NavController) {
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password", fontSize = 14.sp) },
+                    label = { Text("Confirm Password", fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
@@ -134,7 +140,8 @@ fun RegisterScreen(navController: NavController) {
                         text = error,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
+                        fontFamily = RobotoCondensed
 
                     )
                 }
@@ -189,7 +196,8 @@ fun RegisterScreen(navController: NavController) {
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                fontFamily = RobotoCondensed
                             )
                         )
                     }
@@ -198,10 +206,12 @@ fun RegisterScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ClickableText(
-                    text = buildAnnotatedString {withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.inverseSurface)){
+                    text = buildAnnotatedString {withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.inverseSurface,
+                        fontFamily = RobotoCondensed)){
                         append("Already have an account? ")
                     }
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary,
+                            fontFamily = RobotoCondensed)) {
                             append("Login here")
                         }
                     },

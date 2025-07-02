@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.agile.officepool.ViewModel.RideRequestsViewModel
 import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.ViewModel.StartupViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
@@ -64,7 +68,6 @@ class MainActivity : ComponentActivity() {
         val targetRoute = intent.getStringExtra("target_route")
 
 
-
         val startDestination = when {
             !isLoggedIn -> "login"
             targetRoute != null -> targetRoute
@@ -77,16 +80,20 @@ class MainActivity : ComponentActivity() {
         Log.d("StartDestination", "Start Destination: $startDestination")
 
 
-
         setContent {
-
-
             OfficePoolTheme {
                 navController = rememberNavController()
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                ) {
-                    Navigation(navController, this@MainActivity, startDestination)
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    contentWindowInsets = WindowInsets(0,0,0,0), // Proper handling of insets
+                ) { _ ->
+                    Box() {
+                        Navigation(
+                            navController = navController,
+                            context = this@MainActivity,
+                            startDestination = startDestination
+                        )
+                    }
                 }
             }
         }
@@ -144,13 +151,14 @@ class MainActivity : ComponentActivity() {
 fun Navigation(navController: NavHostController, context: Context, startDestination: String) {
     val sharedRideViewModel: SharedRideViewModel = viewModel()
     val startupViewModel : StartupViewModel = viewModel()
+    val rideRequestsViewModel : RideRequestsViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("locationPermission") { LocationRequestScreen(navController) }
         composable("searchScreen") { SearchScreen(navController) }
-        composable("rideRequests") { RideRequestsScreen(navController) }
+        composable("rideRequests") { RideRequestsScreen(navController,rideRequestsViewModel ) }
         composable("startUp"){ StartupScreen(navController,rideViewModel = sharedRideViewModel,startupViewModel=startupViewModel) }
         composable("profile") { ProfileScreen(navController, context = LocalContext.current) }
         composable("updateProfile") { UpdateProfileScreen(navController) }

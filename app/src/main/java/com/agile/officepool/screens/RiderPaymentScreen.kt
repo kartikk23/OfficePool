@@ -31,6 +31,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.model.RideInfo
+import com.agile.officepool.ui.theme.RobotoCondensed
 
 
 @Composable
@@ -63,14 +64,17 @@ fun RiderPaymentScreen(
             .padding(WindowInsets.statusBars.asPaddingValues()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Ride Summary", style = MaterialTheme.typography.headlineLarge,color = MaterialTheme.colorScheme.onSurface)
+        Text("Ride Summary", style = MaterialTheme.typography.headlineLarge,color = MaterialTheme.colorScheme.onSurface,
+            fontFamily = RobotoCondensed
+        )
 
         RideInfoCard(rideInfo)
 
         Text(
-            text = "Total Fare: ₹$0",
+            text = "Total Fare: ₹0",
             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            fontFamily = RobotoCondensed
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -82,7 +86,8 @@ fun RiderPaymentScreen(
                 onPaymentConfirmed() // <-- Ensures screen is popped after confirmation
             }
         ) {
-            Text("Accept ₹$0")
+            Text("Accept ₹0",
+                fontFamily = RobotoCondensed)
         }
     }
 }

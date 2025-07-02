@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,13 +71,14 @@ import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
 import com.agile.officepool.components.TopAppBarWithTitle
-import com.agile.officepool.helper.ApplicationHelper.CustomTimePicker
-import com.agile.officepool.helper.ApplicationHelper.ShowDatePicker
+import com.agile.officepool.components.ShowDatePicker
+import com.agile.officepool.components.CustomTimePicker
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.initializePlacesClient
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.JointType
@@ -125,7 +131,7 @@ fun SearchScreen(navController: NavController) {
 
     val placesClient = remember { initializePlacesClient(context) }
     var placePredictions by remember { mutableStateOf(emptyList<AutocompletePrediction>()) }
-
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     fun fetchPlaces(query: String) {
         val request = FindAutocompletePredictionsRequest.builder()
@@ -250,13 +256,16 @@ fun SearchScreen(navController: NavController) {
             title = "Find your Ride Buddy",
             onBackClick = { navController.popBackStack() },
             showTrailingIcon = false,
+            scrollBehavior = scrollBehavior
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()), // ✅ Make screen scrollable,
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState()) ,// ✅ Make screen scrollable,,
+
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             Row(
@@ -375,11 +384,13 @@ fun SearchScreen(navController: NavController) {
                         shape = RoundedCornerShape(12.dp),
                         value = route,
                         onValueChange = { route = it },
-                        label = { Text("Route", fontSize = 14.sp,maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        label = { Text("Route", fontSize = 14.sp,maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            fontFamily = RobotoCondensed) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         textStyle = TextStyle(
                             fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.inverseSurface,
+                            fontFamily = RobotoCondensed
 
                         ),
                         colors = TextFieldDefaults.colors(
@@ -396,11 +407,13 @@ fun SearchScreen(navController: NavController) {
                         value = availableSeats,
                         onValueChange = { availableSeats = it },
                         label = { Text("Available Seats", fontSize = 14.sp,maxLines = 1,
-                            overflow = TextOverflow.Ellipsis) },
+                            overflow = TextOverflow.Ellipsis,
+                            fontFamily = RobotoCondensed) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         textStyle = TextStyle(
                             fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.inverseSurface
+                            color = MaterialTheme.colorScheme.inverseSurface,
+                            fontFamily = RobotoCondensed
                         ),
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -504,7 +517,8 @@ fun SearchScreen(navController: NavController) {
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (isRider) "Post ride" else "Find your ride",
-                                color = MaterialTheme.colorScheme.inverseSurface
+                                color = MaterialTheme.colorScheme.inverseSurface,
+                                fontFamily = RobotoCondensed
                             )
                         }
                     }

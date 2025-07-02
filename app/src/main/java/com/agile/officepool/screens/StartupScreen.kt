@@ -2,11 +2,14 @@ package com.agile.officepool.screens
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +26,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,14 +37,21 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardDefaults.cardColors
+import androidx.compose.material3.CardDefaults.cardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,11 +61,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,6 +84,7 @@ import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.ViewModel.StartupViewModel
 import com.agile.officepool.components.ShimmerRideCard
 import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -101,7 +119,7 @@ fun StartupScreen(
         }
     }
 
-    LaunchedEffect(passengerId) {
+    LaunchedEffect(Unit) {
         passengerId?.let {
             startupViewModel.fetchRecentRides(it.toLong())
         }
@@ -127,148 +145,138 @@ fun StartupScreen(
         }
     }
 
+    val pinnedScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    Column(
+
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.surface),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        // Top Row with OfficePool Text and Profile Icon
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(WindowInsets.statusBars.asPaddingValues())
-                .padding(horizontal = 20.dp   ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            // Left-aligned text
-            Text(
-                modifier = Modifier.weight(7f),
-                text = "OfficePool",
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-            )
-
-            IconButton(
-                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
-                onClick = {
-                    navController.navigate("profile")
-                }
-            ){
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(4.dp).size(30.dp)
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
-                onClick = {
-                    navController.navigate("rideRequests")
-                }
-            ){
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(4.dp).size(30.dp)
-                )
-            }
-
-
-
-
-          }
-      
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 5.dp)
-                .clip(RoundedCornerShape(25.dp))
-                .background(Color(0xFF161e33))
-                .clickable { navController.navigate("searchScreen") }
-        ){
-            // Search Bar
-            WhereToGoTextField()
-        }
-
-        if (isRideActive==true) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable {
-                        navController.navigate("liveTrackingForPassenger/${rideId.value}")
-                    },
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                title = {
                     Text(
-                        text = "Active Ride in Progress",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = "OfficePool",
+                        fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0D47A1)
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     )
-                    Text(
-                        text = "Tap to view live tracking of your ride.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF1565C0)
+                },
+                actions = {
+                    IconButton(
+                        onClick = { navController.navigate("profile") }
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(30.dp),
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(
+                        onClick = { navController.navigate("rideRequests") }
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(30.dp),
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = Color.Transparent
+                )
+            )
+        }
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+
+        ) {
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+                contentPadding = PaddingValues(horizontal = 14.dp,),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                item {
+                    // 🔍 Search Bar with scroll-in effect
+                    WhereToGoTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate("searchScreen")}
+                            .clip(RoundedCornerShape(25.dp))
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
                     )
                 }
-            }
-        }
 
+                // ⬇ Add other `item {}` blocks for isRideActive, RecentRides, etc.
+                item {
+                    if (isRideActive == true) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .padding(vertical = 10.dp, horizontal =1.dp)
+                                .clickable {
+                                    navController.navigate("liveTrackingForPassenger/${rideId.value}")
+                                },
+                            colors = cardColors(containerColor = Color(0xFFE3F2FD))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "Active Ride in Progress",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = RobotoCondensed,
+                                    color = Color(0xFF0D47A1)
+                                )
+                                Text(
+                                    text = "Tap to view live tracking of your ride.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF1565C0)
+                                )
+                            }
+                        }
+                    }
+                }
 
-
-        Box(modifier = Modifier.padding(start = 14.dp,end = 14.dp, bottom = 20.dp)) {
-            Column(
-                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-
-                ) {
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-                // Recent Destinations
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                // Continue adding item { RecentRides }, item { Zones }, etc...
+                item {
+                    // Section title
                     Text(
                         text = "Recent Rides",
                         fontSize = 20.sp,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 5.dp)
                     )
+                }
 
+                item {
                     when {
                         isRecentRidesLoading -> {
-                            // 👇 Shimmer placeholders while loading
-                            repeat(2) {
-                                ShimmerRideCard()
-                                Spacer(modifier = Modifier.height(8.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                repeat(2) {
+                                    ShimmerRideCard()
+                                }
                             }
                         }
 
                         errorMessage != null -> {
-                            // 👇 Show error with retry button
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -280,32 +288,10 @@ fun StartupScreen(
                                     color = Color.Red,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
-//                                Spacer(modifier = Modifier.height(8.dp))
-//                                Button(onClick = { startupViewModel.fetchRecentRides(passengerId = YOUR_PASSENGER_ID) }) {
-//                                    Text("Retry")
-//                                }
                             }
                         }
 
-                        recentRides.isNotEmpty() -> {
-                            // 👇 Fade-in when data is available
-                            AnimatedVisibility(visible = true, enter = fadeIn()) {
-                                Column {
-                                    recentRides.forEach { ride ->
-                                        RecentRideCard(
-                                            date = ride.rideDate ?: "N/A",
-                                            time = ride.rideStartTime,
-                                            fromLocation = ride.source ?: "Unknown",
-                                            toLocation = ride.destination ?: "Unknown",
-                                            riderId = ride.riderId.toString() ?: "Unknown"
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-                                }
-                            }
-                        }
-
-                        else -> {
+                        recentRides.isEmpty() -> {
                             Text(
                                 text = "No recent rides available.",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -316,139 +302,202 @@ fun StartupScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(5.dp))
-                // Feature Cards
+// Show all recent rides in a loop
+                items(recentRides) { ride ->
+                    RecentRideCard(
+                        date = ride.rideDate ?: "N/A",
+                        time = ride.rideStartTime,
+                        fromLocation = ride.source ?: "Unknown",
+                        toLocation = ride.destination ?: "Unknown",
+                        riderId = ride.riderId.toString()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                FeatureCard("", Color(0xFF2196F3), R.drawable.carpool,modifier = Modifier.width(400.dp),navController)
+                item {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Text(
+                        text = "Nearest Business Zones",
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 5.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-                // Motivational Full-width Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFB3E5FC))
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize().padding(10.dp)
+// Horizontal business zone cards
+                item {
+                    val zones = listOf(
+                        BusinessZone("Amar Tech Park", R.drawable.amar, isPopular = true),
+                        BusinessZone("Icon Tower", R.drawable.icon),
+                        BusinessZone("Cognizant CDC", R.drawable.cogni)
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(15.dp)
                     ) {
-                        Text(
-                            text = "Save fuel • Reduce traffic • Save nature 🌍",
-                            color = Color(0xFF004D40),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            textAlign = TextAlign.Center
-                        )
+                        items(zones) { zone ->
+                            BusinessZoneCard(
+                                zone = zone,
+                                imagePainter = painterResource(id = zone.imageRes)
+                            ) {
+                                // Optional: navController.navigate("zoneDetails/${zone.name}")
+                            }
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                // Corporate Booking Card
-//                CorporateRideCard(R.drawable.card_img)
-//                Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Nearest Business Zones",
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 5.dp)
+                item {
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                )
-                // Horizontal Scrollable Cards
-                LazyRow(
-                    modifier = Modifier.padding(bottom = 5.dp),
-                    contentPadding = PaddingValues(start = 1.dp,end = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(15.dp)
-                ) {
-                    item {
-                        BusinessZoneCard(
-                            zoneName = "Amar Tech Park",
-                            imagePainter = painterResource(id = R.drawable.amar)
-                        )
+                    FeatureCard(
+                        title = "",
+                        bgColor = Color(0xFF2196F3),
+                        imageResId = R.drawable.carpool,
+                        modifier = Modifier.width(400.dp),
+                        navController = navController
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = cardColors(containerColor = Color(0xFFB3E5FC))
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = "Save fuel • Reduce traffic • Save nature 🌍",
+                                color = Color(0xFF004D40),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
-                    // You can add more items like this:
-                    item {
-                        BusinessZoneCard(
-                            zoneName = "Icon Tower",
-                            imagePainter = painterResource(id = R.drawable.icon)
-                        )
-                    }
-
-                    item {
-                        BusinessZoneCard(
-                            zoneName = "Cognizant CDC",
-                            imagePainter = painterResource(id = R.drawable.cogni)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
+
+
+
+
             }
         }
+
+
     }
 }
 
+
+
 @Composable
 fun BusinessZoneCard(
-    zoneName: String,
-    imagePainter: Painter
+    zone: BusinessZone,
+    imagePainter: Painter,
+    onClick: () -> Unit = {}
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        label = "CardScale"
+    )
+
     Card(
         modifier = Modifier
-            .width(200.dp)
-            .height(200.dp),
+            .width(180.dp)
+            .height(160.dp)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .clickable(interactionSource = interactionSource, indication = null) {
+                onClick()
+            },
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        elevation = cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top image section
+        Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = imagePainter,
                 contentDescription = "Zone Image",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .height(100.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                modifier = Modifier.fillMaxSize()
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Zone name
-            Text(
-                text = zoneName,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color(0xFF311B92),
-                modifier = Modifier.padding(horizontal = 12.dp),
-                textAlign = TextAlign.Center
-
-            )
-            // Subtitle and arrow
-            Row(
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                            ),
+                            startY = 100f
+                        )
+                    )
+            )
+
+            // Text and icon at bottom
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    modifier = Modifier.weight(8f),
-                    text = "Travel to your IT park with your buddy",
-                    fontSize = 12.sp,
-                    color = Color.DarkGray,
-                    textAlign = TextAlign.Start,
-
+                    text = zone.name,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
-                Icon(
-                    modifier = Modifier.weight(2f),
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Go",
-                    tint = Color(0xFF311B92),
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Travel to your IT park",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "Go",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            // Optional badge
+            if (zone.isPopular) {
+                Text(
+                    text = "Popular",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color(0xFFEC407A), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
         }
     }
 }
+
+
+data class BusinessZone(
+    val name: String,
+    val imageRes: Int,
+    val isPopular: Boolean = false
+)
+
 
 @Composable
 fun FeatureCard(
@@ -466,7 +515,7 @@ fun FeatureCard(
             }
             .border(1.dp,Color.LightGray, RoundedCornerShape(10))
             .height(160.dp),
-        colors = CardDefaults.cardColors(containerColor = bgColor)
+        colors = cardColors(containerColor = bgColor)
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -538,12 +587,14 @@ fun RecentRideCard(
                 Text(
                     text = "Rider ID: $riderId",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontFamily = RobotoCondensed
                 )
                 Text(
                     text = displayDateTime,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    fontFamily = RobotoCondensed
                 )
             }
 
@@ -588,23 +639,21 @@ fun RecentRideCard(
 
 
 @Composable
-fun WhereToGoTextField() {
+fun WhereToGoTextField(modifier: Modifier) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = modifier,
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Search,
             contentDescription = "Search Icon",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.inverseOnSurface
         )
         Spacer(modifier = Modifier.width(9.dp))
         Text(
             text = "Find your Ride buddy..",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.inverseOnSurface,
             fontSize = 14.sp,
             fontWeight = FontWeight.W500
         )
@@ -618,3 +667,81 @@ fun StartupScreenPreview() {
     val navController = rememberNavController()
     StartupScreen(navController)
 }
+
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(WindowInsets.statusBars.asPaddingValues())
+//            .background(color = MaterialTheme.colorScheme.surface),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//
+//        // Top Row with OfficePool Text and Profile Icon
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 20.dp   ),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.spacedBy(6.dp)
+//        ) {
+//            // Left-aligned text
+//            Text(
+//                modifier = Modifier.weight(7f),
+//                text = "OfficePool",
+//                fontSize = 25.sp,
+//                fontWeight = FontWeight.Bold,
+//                style = MaterialTheme.typography.headlineMedium.copy(
+//                    fontWeight = FontWeight.Bold,
+//                    color = MaterialTheme.colorScheme.onSurface
+//                )
+//
+//            )
+//
+//            IconButton(
+//                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
+//                onClick = {
+//                    navController.navigate("profile")
+//                }
+//            ){
+//                Icon(
+//                    imageVector = Icons.Default.Person,
+//                    contentDescription = null,
+//                    tint = MaterialTheme.colorScheme.onSurface,
+//                    modifier = Modifier.padding(4.dp).size(30.dp)
+//                )
+//            }
+//
+//            IconButton(
+//                modifier = Modifier.weight(1.5f).clip(shape = RoundedCornerShape(10.dp)),
+//                onClick = {
+//                    navController.navigate("rideRequests")
+//                }
+//            ){
+//                Icon(
+//                    imageVector = Icons.Default.Notifications,
+//                    contentDescription = null,
+//                    tint = MaterialTheme.colorScheme.onSurface,
+//                    modifier = Modifier.padding(4.dp).size(30.dp)
+//                )
+//            }
+//
+//
+//
+//
+//          }
+//
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 14.dp, vertical = 5.dp)
+//                .clip(RoundedCornerShape(25.dp))
+//                .background(Color(0xFF161e33))
+//                .clickable { navController.navigate("searchScreen") }
+//        ){
+//            // Search Bar
+//            WhereToGoTextField()
+//        }
+//
+//
+//}

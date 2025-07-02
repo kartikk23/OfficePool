@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ import com.agile.officepool.components.TopAppBarWithTitle
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AvailableRidesContent(
     navController: NavController,

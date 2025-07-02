@@ -14,7 +14,14 @@ class StartupViewModel : ViewModel() {
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
 
+    // Flag to check if recent rides were already fetched
+    private var hasFetchedRecentRides = false
+
     fun fetchRecentRides(passengerId: Long) {
+
+        // Prevent re-fetch if already done
+        if (hasFetchedRecentRides) return
+
         isLoading.value = true
         errorMessage.value = null
 
@@ -23,6 +30,7 @@ class StartupViewModel : ViewModel() {
                 val response = RetrofitClient.instance.getRecentRides(passengerId.toString())
                 if (response.isSuccessful) {
                     recentRides.value = response.body() ?: emptyList()
+                    hasFetchedRecentRides = true  // Mark as fetched
                 } else {
                     errorMessage.value = "Failed with code: ${response.code()}"
                     Log.e("RecentRides", "HTTP error: ${response.code()} ${response.message()}")
@@ -34,5 +42,10 @@ class StartupViewModel : ViewModel() {
                 isLoading.value = false
             }
         }
+    }
+
+    // Optional: if you ever want to refetch manually
+    fun resetRecentRidesFetchFlag() {
+        hasFetchedRecentRides = false
     }
 }

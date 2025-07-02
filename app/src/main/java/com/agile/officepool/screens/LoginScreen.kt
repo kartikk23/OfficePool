@@ -48,6 +48,7 @@ import com.agile.officepool.R
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.helper.ApplicationHelper.loginUser
 import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -87,7 +88,8 @@ fun LoginScreen(navController: NavController) {
                 OutlinedTextField(
                     value = email.value,
                     onValueChange = { email.value = it },
-                    label = { Text("Email", fontSize = 14.sp) },
+                    label = { Text("Email", fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -98,7 +100,8 @@ fun LoginScreen(navController: NavController) {
                 OutlinedTextField(
                     value = password.value,
                     onValueChange = { password.value = it },
-                    label = { Text("Password", fontSize = 14.sp) },
+                    label = { Text("Password", fontSize = 14.sp,
+                        fontFamily = RobotoCondensed) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     visualTransformation = PasswordVisualTransformation(),
@@ -112,7 +115,8 @@ fun LoginScreen(navController: NavController) {
                         text = error.value,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(end = 8.dp),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontFamily = RobotoCondensed
                     )
                 }
 
@@ -163,6 +167,7 @@ fun LoginScreen(navController: NavController) {
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
+                                fontFamily = RobotoCondensed
 
                                 )
 
@@ -174,11 +179,13 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ClickableText(
-                    text = buildAnnotatedString  {withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.inverseSurface)){
+                    text = buildAnnotatedString  {withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.inverseSurface,
+                        fontFamily = RobotoCondensed)){
                         append("Don't have an account? ")
                     }
 
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary,
+                            fontFamily = RobotoCondensed)) {
                             append("Register here")
                         }
                     },

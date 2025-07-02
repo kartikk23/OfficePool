@@ -12,6 +12,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SharedRideViewModel : ViewModel() {
@@ -32,7 +33,7 @@ class SharedRideViewModel : ViewModel() {
     }
 
     fun getActiveRideForPassenger(passengerId: Long, onResult: (Int?) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.instance.getActiveRideForPassengerId(passengerId)
                 if (response.isSuccessful) {
@@ -53,44 +54,47 @@ class SharedRideViewModel : ViewModel() {
     fun observePassengerRideStatus(rideId: String, onStarted: () -> Unit,onNotActive: () -> Unit) {
         Log.d("RideStatusObserver", "observePassengerRideStatus called with rideId=$rideId")
 
-        try {
-            val ref = FirebaseDatabase.getInstance()
-                .getReference("riderLocations")
-                .child(rideId)
-                .child("status")
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val ref = FirebaseDatabase.getInstance()
+                    .getReference("riderLocations")
+                    .child(rideId)
+                    .child("status")
 
-            Log.d("RideStatusObserver", "Firebase reference initialized: ${ref.path}")
+                Log.d("RideStatusObserver", "Firebase reference initialized: ${ref.path}")
 
-            rideStatusListener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    Log.d("RideStatusObserver", "onDataChange triggered")
+                rideStatusListener = object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        Log.d("RideStatusObserver", "onDataChange triggered")
 
-                    val status = snapshot.getValue(String::class.java)
-                    Log.d("RideStatusObserver", "Status received from Firebase: $status")
+                        val status = snapshot.getValue(String::class.java)
+                        Log.d("RideStatusObserver", "Status received from Firebase: $status")
 
-                    if (status == "Active") {
-                        Log.d("RideStatusObserver", "Ride is Active, calling onStarted()")
-                        onStarted()
-                    }else{
-                        onNotActive()
-                        removeRideStatusListener(rideId)
+                        if (status == "Active") {
+                            Log.d("RideStatusObserver", "Ride is Active, calling onStarted()")
+                            onStarted()
+                        }else{
+                            onNotActive()
+                            removeRideStatusListener(rideId)
+                        }
+
+
                     }
 
-
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("RideStatusObserver", "Failed to read status: ${error.message}", error.toException())
+                    }
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("RideStatusObserver", "Failed to read status: ${error.message}", error.toException())
-                }
+                ref.addValueEventListener(rideStatusListener!!)
+                Log.d("RideStatusObserver", "Listener added to Firebase reference")
+
+            } catch (e: Exception) {
+                Log.e("RideStatusObserver", "Exception in observePassengerRideStatus", e)
+                onNotActive()
             }
-
-            ref.addValueEventListener(rideStatusListener!!)
-            Log.d("RideStatusObserver", "Listener added to Firebase reference")
-
-        } catch (e: Exception) {
-            Log.e("RideStatusObserver", "Exception in observePassengerRideStatus", e)
-            onNotActive()
         }
+
     }
 
 

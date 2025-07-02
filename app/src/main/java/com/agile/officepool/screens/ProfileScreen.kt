@@ -5,8 +5,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -34,6 +36,7 @@ import com.agile.officepool.helper.ApplicationHelper.restartApp
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,8 +75,10 @@ fun ProfileScreen(navController: NavController, context: Context) {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
+
     ) {
         TopAppBarWithTitle(
             title = "Profile",
@@ -158,7 +163,9 @@ fun ProfileScreen(navController: NavController, context: Context) {
                             modifier = Modifier.size(20.dp)
                         )
                     } else {
-                        Text("Logout", color = Color.White, fontSize = 16.sp)
+                        Text("Logout", color = Color.White, fontSize = 16.sp,
+                            fontFamily = RobotoCondensed
+                        )
                     }
                 }
 

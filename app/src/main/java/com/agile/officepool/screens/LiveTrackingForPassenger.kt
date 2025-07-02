@@ -65,6 +65,11 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.tooling.preview.Preview
+import com.agile.officepool.components.RideCompletedCard
+import com.agile.officepool.model.RideInfo
 
 
 @Composable
@@ -90,7 +95,9 @@ fun LiveTrackingForPassenger(
     val passengerId = sessionManager.getUserId() ?: ""
     val isRideActive by rideViewModel.isRideActive
 
+    var rideInfo = remember { mutableStateOf<RideInfo?>(null) }
     var rideFare by remember { mutableStateOf<Int?>(null) }
+    var riderName by remember { mutableStateOf<String?>(null) }
     var riderUpiId by remember { mutableStateOf<String?>(null) }
     var isFareLoading by remember { mutableStateOf(false) }
 
@@ -140,26 +147,32 @@ fun LiveTrackingForPassenger(
             coroutineScope.launch {
                 try {
                     // 🔹 Fetch Ride Fare
-                    val response = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
-                    if (response.isSuccessful) {
-                        response.body()?.let {
+                    val fareResponse = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
+                    if (fareResponse.isSuccessful) {
+                        fareResponse.body()?.let {
                             rideFare = it.rideFare
                             Log.d("FareAPI", "✅ Fare fetched: ₹${it.rideFare}")
                         }
                     } else {
-                        Log.e("FareAPI", "❌ Failed to fetch fare: ${response.code()} ${response.message()}")
+                        Log.e("FareAPI", "❌ Failed to fetch fare: ${fareResponse.code()} ${fareResponse.message()}")
                     }
 
-                    // 🔹 Fetch Rider UPI ID
-                    val rideDetails = RetrofitClient.instance.getRideByRideId(rideId)
-                    if (rideDetails.isSuccessful) {
-                        val riderId = rideDetails.body()?.riderId
+                    // 🔹 Fetch Ride Details (which includes from/to)
+                    val rideResponse = RetrofitClient.instance.getRideByRideId(rideId)
+                    if (rideResponse.isSuccessful) {
+                        val ride = rideResponse.body()
+                        rideInfo.value = ride
+
+                        // 🔹 Fetch Rider Info using riderId from ride
+                        val riderId = ride?.riderId
                         Log.d("UPI_FETCH", "✅ Rider ID from ride: $riderId")
 
                         if (!riderId.isNullOrEmpty()) {
                             val riderResponse = RetrofitClient.instance.getUserById(riderId)
                             if (riderResponse.isSuccessful) {
-                                riderUpiId = riderResponse.body()?.upiId
+                                val rider = riderResponse.body()
+                                riderUpiId = rider?.upiId
+                                riderName = rider?.name ?: "Unknown Rider"
                                 Log.d("UPI_FETCH", "✅ UPI ID fetched: $riderUpiId")
                             } else {
                                 Log.e("UPI_FETCH", "❌ Failed to fetch rider: ${riderResponse.code()} ${riderResponse.message()}")
@@ -167,8 +180,9 @@ fun LiveTrackingForPassenger(
                         } else {
                             Log.e("UPI_FETCH", "❌ Rider ID is null or empty")
                         }
+
                     } else {
-                        Log.e("UPI_FETCH", "❌ Failed to fetch ride details: ${rideDetails.code()} ${rideDetails.message()}")
+                        Log.e("RideAPI", "❌ Failed to fetch ride: ${rideResponse.code()} ${rideResponse.message()}")
                     }
 
                 } catch (e: Exception) {
@@ -179,6 +193,8 @@ fun LiveTrackingForPassenger(
             }
         }
     }
+
+
 
 
     DisposableEffect(rideId) {
@@ -238,60 +254,89 @@ fun LiveTrackingForPassenger(
         // Show fare & UPI payment
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Your ride has ended!",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            RideEndedFareSection(
+                isFareLoading = isFareLoading,
+                rideFare = rideFare,
+                riderUpiId = riderUpiId,
+                riderName = riderName,
+                from = rideInfo.value?.source ?: "Unknown",
+                to = rideInfo.value?.destination ?: "Unknown",
+                onPayClicked = {
+                    Log.d("PaymentIntent", "Launching UPI for ₹$rideFare to $riderUpiId")
 
-                Spacer(modifier = Modifier.padding(8.dp))
-
-                if (isFareLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(32.dp)
+                    val uri = Uri.parse(
+                        "upi://pay?pa=$riderUpiId&pn=OfficePool&tn=Ride Fare&am=$rideFare&cu=INR"
                     )
-                    Spacer(modifier = Modifier.padding(8.dp))
-                    Text("Fetching fare details...")
-                } else {
-                    Log.e("FARE: ", rideFare.toString())
-                    Log.e("UPI: ", riderUpiId.toString())
-                    if (rideFare != null && !riderUpiId.isNullOrEmpty()) {
-                        Text(
-                            text = "Total Fare: ₹${rideFare}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
-
-                        Spacer(modifier = Modifier.padding(16.dp))
-
-                        Button(
-                            onClick = {
-                                Log.d("PaymentIntent", "Launching UPI for ₹$rideFare to $riderUpiId")
-
-                                val uri = Uri.parse(
-                                    "upi://pay?pa=$riderUpiId&pn=OfficePool&tn=Ride Fare&am=$rideFare&cu=INR"
-                                )
-                                val intent = Intent(Intent.ACTION_VIEW, uri)
-                                val chooser = Intent.createChooser(intent, "Pay with UPI")
-                                context.startActivity(chooser)
-                            }
-                        ) {
-                            Text(text = "Make Payment")
-                        }
-
-                    } else {
-                        Text("Fare or UPI ID not available.")
-                    }
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    val chooser = Intent.createChooser(intent, "Pay with UPI")
+                    context.startActivity(chooser)
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun RideEndedFareSection(
+    isFareLoading: Boolean,
+    rideFare: Int?,
+    riderUpiId: String?,
+    riderName: String?, // Add defaults or pass as needed
+    from: String ?,
+    to: String?,
+    onPayClicked: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (isFareLoading) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.padding(8.dp))
+            Text("Fetching fare details...")
+        } else {
+            if (rideFare != null && !riderUpiId.isNullOrEmpty()) {
+                RideCompletedCard(
+                    riderName = riderName!!,
+                    from = from!!,
+                    to = to!!,
+                    fareAmount = "₹$rideFare",
+                    upiId = riderUpiId,
+                    onPayClick = onPayClicked
+                )
+            } else {
+                Text("Fare or UPI ID not available.")
             }
         }
+    }
+}
+
+
+@Preview(showBackground = true, apiLevel = 33)
+@Composable
+fun RideEndedFareSectionPreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        RideEndedFareSection(
+            isFareLoading = false,
+            rideFare = 150,
+            riderUpiId = "testupi@bank",
+            riderName = "Tejas Katke", // Add defaults or pass as needed
+            from = "Cognizant CDC",
+            to = "Godrej Green Cove",
+        )
     }
 }

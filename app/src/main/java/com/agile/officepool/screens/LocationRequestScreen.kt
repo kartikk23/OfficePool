@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.helper.ApplicationHelper.checkLocationEnabled
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.agile.officepool.ui.theme.RobotoCondensed
 
 @Composable
 fun LocationRequestScreen(navController: NavHostController) {
@@ -55,9 +56,26 @@ fun LocationRequestScreen(navController: NavHostController) {
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            checkLocationEnabled(activity, navController,locationLauncher)
+            checkLocationEnabled(
+                activity = activity,
+                navController = navController,
+                launcher = locationLauncher,
+                onGpsAlreadyEnabled = {
+                    // ✅ GPS already ON — navigate directly
+                    if (sessionManager.isUserLoggedIn()) {
+                        navController.navigate("startUp") {
+                            popUpTo("locationPermission") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("login") {
+                            popUpTo("locationPermission") { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
     }
+
 
     Box(
         modifier = Modifier
@@ -101,11 +119,14 @@ fun LocationRequestScreen(navController: NavHostController) {
                         .height(50.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text("Grant Permission", color = Color.White)
+                    Text("Grant Permission", color = Color.White,
+                        fontFamily = RobotoCondensed
+                    )
                 }
 
                 TextButton(onClick = { activity.finish() }) {
-                    Text("Maybe Later")
+                    Text("Maybe Later",
+                        fontFamily = RobotoCondensed)
                 }
             }
         }

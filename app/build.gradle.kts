@@ -107,6 +107,9 @@ dependencies {
     implementation(libs.androidx.ui.v177)
     implementation(libs.androidx.material.v177) // Compose Material")
 
+    implementation(libs.shimmer.compose.shimmer)
+
+
     implementation(libs.androidx.material.v100)
     implementation(libs.places.v310)
     implementation(libs.gms.play.services.maps)

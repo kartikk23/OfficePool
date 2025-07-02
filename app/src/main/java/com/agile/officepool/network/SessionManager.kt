@@ -27,7 +27,7 @@ class SessionManager(context: Context) {
 
     }
 
-    fun setUserUpiId(upiId: String) {
+    fun setUserUpiId(upiId: String?) {
         prefs.edit().putString(KEY_USER_UPI_ID, upiId).apply()
     }
 

@@ -31,6 +31,7 @@ import retrofit2.HttpException
 import java.io.IOException
 import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.agile.officepool.ui.theme.RobotoCondensed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,12 +72,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Email",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -90,12 +93,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text("Name",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -109,12 +114,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text("Phone") },
+                label = { Text("Phone",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -127,12 +134,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = companyName,
                 onValueChange = { companyName = it },
-                label = { Text("Company Name") },
+                label = { Text("Company Name",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -145,12 +154,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = linkedInId,
                 onValueChange = { linkedInId = it },
-                label = { Text("Linkedin id") },
+                label = { Text("Linkedin id",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -163,12 +174,14 @@ fun UpdateProfileScreen(navController: NavController) {
             OutlinedTextField(
                 value = upiId,
                 onValueChange = { upiId = it },
-                label = { Text("Upi id") },
+                label = { Text("Upi id",
+                    fontFamily = RobotoCondensed) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = TextStyle(
                     fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.inverseSurface
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontFamily = RobotoCondensed
                 ),
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -232,7 +245,8 @@ fun UpdateProfileScreen(navController: NavController) {
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
-                    Text("Update Profile", color = Color.White)
+                    Text("Update Profile", color = Color.White,
+                        fontFamily = RobotoCondensed)
                 }
             }
         }

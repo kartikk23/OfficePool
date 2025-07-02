@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.agile.officepool.BuildConfig
+import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.Place
@@ -104,7 +105,9 @@ fun GooglePlacesDropdown(
             value = selectedPlace,
             onValueChange = {newText -> handleInputChange(newText.text) },
             readOnly = false,
-            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface),
+            textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface,
+                fontFamily = RobotoCondensed
+            ),
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (selectedPlace.text.isNotEmpty() && placePredictions.isEmpty()) {
@@ -118,7 +121,8 @@ fun GooglePlacesDropdown(
                     }
                 }
             },
-            label = { Text(text = label, fontSize = 14.sp) },
+            label = { Text(text = label, fontSize = 14.sp,
+                fontFamily = RobotoCondensed) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -138,7 +142,8 @@ fun GooglePlacesDropdown(
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.padding(end = 10.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text("Your Current Location", fontSize = 14.sp)
+                            Text("Your Current Location", fontSize = 14.sp,
+                                fontFamily = RobotoCondensed)
                         }
                     },
                     onClick = {
@@ -158,8 +163,10 @@ fun GooglePlacesDropdown(
                         },
                         text = {
                             Column {
-                                Text(prediction.getPrimaryText(null).toString(), fontSize = 14.sp, maxLines = 1,overflow = TextOverflow.Ellipsis)
-                                Text(prediction.getSecondaryText(null).toString(), fontSize = 12.sp, color = Color.Gray, maxLines = 1,overflow = TextOverflow.Ellipsis)
+                                Text(prediction.getPrimaryText(null).toString(), fontSize = 14.sp, maxLines = 1,overflow = TextOverflow.Ellipsis,
+                                    fontFamily = RobotoCondensed)
+                                Text(prediction.getSecondaryText(null).toString(), fontSize = 12.sp, color = Color.Gray, maxLines = 1,overflow = TextOverflow.Ellipsis,
+                                    fontFamily = RobotoCondensed)
                             }
                         },
                         onClick = {

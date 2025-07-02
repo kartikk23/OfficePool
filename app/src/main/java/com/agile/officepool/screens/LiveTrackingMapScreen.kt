@@ -52,6 +52,7 @@ import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -327,7 +328,8 @@ fun LiveTrackingMapScreen(
                                     style = TextStyle(
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.surface
+                                        color = MaterialTheme.colorScheme.surface,
+                                        fontFamily = RobotoCondensed
                                     )
                                 )
                             }
