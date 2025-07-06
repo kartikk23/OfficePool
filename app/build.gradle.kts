@@ -130,6 +130,7 @@ dependencies {
     implementation(libs.firebase.installations.ktx)
     implementation(libs.androidx.core.ktx.v1120)
     implementation (libs.volley)
+    implementation(libs.coil.compose)
 
 }}
 
