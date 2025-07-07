@@ -127,6 +127,10 @@ interface ApiService {
     @GET("api/users/{userId}")
     suspend fun getUserById(@Path("userId") userId: String): Response<User>
 
+    @GET("ride-request/{rideId}")
+    suspend fun getRideRequestByRideId(@Path("rideId") rideId: String): Response<RideRequest>
+
+
 
 
 
@@ -142,14 +146,14 @@ object RetrofitClient {
             // Replace cookies with the same name and path
             cookieStore.removeAll { old ->
                 cookies.any { new ->
-                    old.name() == new.name() && old.domain() == new.domain() && old.path() == new.path()
+                    old.name == new.name && old.domain == new.domain && old.path == new.path
                 }
             }
             cookieStore.addAll(cookies)
         }
 
         override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            val validCookies = cookieStore.filter { it.matches(url) && it.expiresAt() > System.currentTimeMillis() }
+            val validCookies = cookieStore.filter { it.matches(url) && it.expiresAt > System.currentTimeMillis() }
             return validCookies
         }
     }

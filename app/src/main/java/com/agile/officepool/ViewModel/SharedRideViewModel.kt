@@ -23,6 +23,14 @@ class SharedRideViewModel : ViewModel() {
     private val _isRideActive = mutableStateOf<Boolean?>(null)
     val isRideActive: State<Boolean?> get() = _isRideActive
 
+    private val _passengerId = mutableStateOf<String?>(null)
+    val passengerId: String? get() = _passengerId.value
+
+    fun setPassengerId(id: String) {
+        _passengerId.value = id
+    }
+
+
     fun setRideActive(status: Boolean?) {
         _isRideActive.value = status
     }
