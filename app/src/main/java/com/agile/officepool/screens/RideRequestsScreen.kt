@@ -40,7 +40,7 @@ import com.agile.officepool.helper.RideRequestHelper.onRideReqReject
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope

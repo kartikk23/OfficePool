@@ -1,7 +1,8 @@
 package com.agile.officepool.components
 
-import android.util.Log
+
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,12 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -24,11 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,19 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.agile.officepool.model.RideRequest
-import com.agile.officepool.network.RetrofitClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import java.util.Locale
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.ViewModel.RideRequestUIState
-import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.ui.theme.RobotoCondensed
+import java.util.Locale
 
 
 @Composable
@@ -65,11 +53,16 @@ fun RideRequestCard(
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(3.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(0.3f)),
+        elevation = CardDefaults.cardElevation(5.dp),
+        colors = CardColors(
+            containerColor = Color(0xFFF9F9FB),
+            contentColor = Color.Black,
+            disabledContainerColor = Color.Blue.copy(alpha = 0.5f),
+            disabledContentColor = Color.White.copy(alpha = 0.5f)
+        ) ,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(vertical = 10.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
@@ -78,18 +71,18 @@ fun RideRequestCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(request.passengerName.trim().replaceFirstChar(Char::uppercase),
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text("Ride ID: ${request.rideId}", style = MaterialTheme.typography.bodyMedium)
                 }
 
                 StatusChip(
                     text = request.requestStatus.lowercase().replaceFirstChar(Char::uppercase),
                     color = when (status) {
-                        "ACCEPTED" -> MaterialTheme.colorScheme.primary
-                        "REJECTED" -> MaterialTheme.colorScheme.error
-                        "COMPLETED" -> Color.Gray
-                        "ACTIVE" -> Color.Green
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        "ACCEPTED" -> Color(0xFF31965B)
+                        "REJECTED" -> Color(0xFFEC5B4F)
+                        "COMPLETED" -> Color(0xFF697179)
+                        "ACTIVE" -> Color(0xFFDEEDE3)
+                        else -> Color(color = 0xFF2B71C3)
                     }
                 )
             }
@@ -97,7 +90,7 @@ fun RideRequestCard(
             when (status) {
                 "REQUESTED" -> {
                     if (isLoading) {
-                        CircularProgressIndicator(Modifier.size(20.dp).align(Alignment.CenterHorizontally).padding(bottom = 10.dp), )
+                        CircularProgressIndicator(Modifier.size(20.dp).align(Alignment.CenterHorizontally).padding(bottom = 10.dp) ,color = Color.White)
                     } else {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -106,46 +99,68 @@ fun RideRequestCard(
                             Button(
                                 onClick = { onAccept(request) },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonColors(
+                                    containerColor = Color(color = 0xFF2B71C3),
+                                    contentColor = Color.White,
+                                    disabledContainerColor = Color.Blue.copy(alpha = 0.5f),
+                                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
                             )
                             {
-                                Text("Accept")
+                                Text("Accept", color = Color.White,fontFamily = RobotoCondensed)
                             }
                             OutlinedButton(
                                 onClick = { onReject(request) },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp,MaterialTheme.colorScheme.error),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonColors(
+                                    containerColor = Color(0xFFFCEAEE),
+                                    contentColor = Color(0xFfC3232C),
+                                    disabledContainerColor = Color.Blue.copy(alpha = 0.5f),
+                                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                                ),
+                                border = BorderStroke(1.dp,Color(0xFfC3232C)),
                             ){
-                                Text("Reject",color = MaterialTheme.colorScheme.error)
+                                Text("Reject",fontFamily = RobotoCondensed)
                             }
                         }
                     }
                 }
 
                 "ACCEPTED" -> {
-                    OutlinedButton(
+                    Button(
                         onClick = { onStart(request) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonColors(
+                            containerColor =  Color(0xFF31965B),
+                            contentColor = Color.White,
+                            disabledContainerColor =  Color(0xFF31965B).copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.5f)
+                            ),
                         enabled = !isLoading,
-                        border = BorderStroke(1.dp,MaterialTheme.colorScheme.primary),
                     ) {
-                        if (isLoading) CircularProgressIndicator(Modifier.size(20.dp))
-                        else Text("Start Ride")
+                        if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = Color.White)
+                        else Text("Start Ride",fontFamily = RobotoCondensed)
                     }
                 }
 
                 "ACTIVE" -> {
-                    OutlinedButton(
+                    Button(
                         onClick = {
                             navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
                         },
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp,Color.Green),
+                       colors = ButtonColors(
+                           containerColor = Color(0xFFDEEFE2),
+                           contentColor = Color(0xFF31965B),
+                           disabledContainerColor = Color.Blue.copy(alpha = 0.5f),
+                           disabledContentColor = Color.White.copy(alpha = 0.5f)
+                       ),
                     ) {
-                        Text("Ride in Progress", color = Color.Green)
+                        Text("Ride in Progress",fontFamily = RobotoCondensed)
                     }
                 }
             }
@@ -157,25 +172,54 @@ fun RideRequestCard(
 @Composable
 fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = color.copy(alpha = 0.15f),
-        border = BorderStroke(1.dp, color),
+        shape = RoundedCornerShape(7.dp),
+        color = color,
         modifier = modifier
     ) {
         Box(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
+
         ) {
             Text(
-                text = text,
+                text = text.toUpperCase(Locale.ROOT),
                 fontSize = 11.sp,
-                color = color,
+                color = Color.White,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                 fontFamily = RobotoCondensed
             )
         }
     }
 }
+
+@Preview(showBackground = true, apiLevel = 33)
+@Composable
+fun RideRequestCardAcceptedPreview() {
+    val mockRequest = RideRequest(
+        id = 333,
+        rideId = "ride456",
+        passengerId = "pass789",
+        passengerName = "Tejas Katke",
+        requestStatus = "Active",
+        riderId = "33"
+    )
+
+    val mockState = RideRequestUIState(
+        rideRequest = mockRequest,
+        isLoading = false
+    )
+
+    MaterialTheme {
+        RideRequestCard(
+            state = mockState,
+            onAccept = {},
+            onReject = {},
+            onStart = {},
+            navController = rememberNavController()
+        )
+    }
+}
+
 
 
 

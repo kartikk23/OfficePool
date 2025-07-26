@@ -38,12 +38,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
-import com.agile.officepool.network.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
+import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -85,7 +88,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
                         contentAlignment = Alignment.Center
                     ){
                         Text(
-                            modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 3.dp, vertical = 4.dp),
                             text = "${ride.availableSeats} seat available",
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontSize = 11.sp,
@@ -128,7 +131,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
                     contentAlignment = Alignment.Center
                 ){
                     Text(
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                         text = formattedDateTime,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontSize = 13.sp,
@@ -143,7 +146,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
             val context = LocalContext.current
             val sessionManager = SessionManager(context)
             val passengerId = sessionManager.getUserId() ?: ""
-            val passengerName = sessionManager.getUsername() ?: ""
+            val passengerName = sessionManager.getUserName() ?: ""
             val initialStatus = rideRequest?.requestStatus ?: ""
             var status by remember { mutableStateOf(initialStatus) }
             val currentStatus = rememberUpdatedState(status)
@@ -183,6 +186,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
                 ) {
                     Text(
                         "Request Ride",
+                        fontFamily = RobotoCondensed,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White
@@ -242,6 +246,42 @@ fun RideDetailItem(label: String, value: String) {
 }
 
 
+@Preview(showBackground = true)
+@Composable
+fun RideCardPreview() {
+    val mockRide = RideInfo(
+        rideId = 344,
+        riderId = "Ajay123",
+        source = "Tech Park",
+        destination = "City Center",
+        sourceLat = 18.5204,
+        sourceLng = 18.5204,
+        availableSeats = "2",
+        rideDate = "2025-07-01",
+        rideStartTime = "14:30",
+        destinationLat = 18.5204,
+        destinationLng = 73.8567,
+        route = "Man road",
+        status = "Active"
+    )
+
+    val mockRequest = RideRequest(
+        id = 2,
+        rideId = "R123",
+        riderId = "344",
+        rideFare = 200,
+        passengerId = "P456",
+        passengerName = "Tejas",
+        requestStatus = "REQUESTED"
+    )
+
+    OfficePoolTheme{
+        RideCard(
+            ride = mockRide,
+            rideRequest = mockRequest
+        )
+    }
+}
 
 
 //@Composable

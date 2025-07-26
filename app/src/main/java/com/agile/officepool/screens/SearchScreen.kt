@@ -77,7 +77,7 @@ import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.initializePlacesClient
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory

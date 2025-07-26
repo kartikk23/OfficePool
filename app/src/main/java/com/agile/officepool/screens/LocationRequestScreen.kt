@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.helper.ApplicationHelper.checkLocationEnabled
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 
@@ -37,7 +37,7 @@ fun LocationRequestScreen(navController: NavHostController) {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             // 🎯 Location (GPS) was turned ON
-            if(sessionManager.isUserLoggedIn()){
+            if(sessionManager.isLoggedIn()){
                 navController.navigate("startUp") {
                     popUpTo("locationPermission") { inclusive = true }
                 }
@@ -62,7 +62,7 @@ fun LocationRequestScreen(navController: NavHostController) {
                 launcher = locationLauncher,
                 onGpsAlreadyEnabled = {
                     // ✅ GPS already ON — navigate directly
-                    if (sessionManager.isUserLoggedIn()) {
+                    if (sessionManager.isLoggedIn()) {
                         navController.navigate("startUp") {
                             popUpTo("locationPermission") { inclusive = true }
                         }

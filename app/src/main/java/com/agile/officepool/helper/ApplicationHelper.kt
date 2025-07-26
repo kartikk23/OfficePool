@@ -33,7 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.agile.officepool.model.*
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.firebase.messaging.FirebaseMessaging
@@ -57,7 +57,8 @@ object ApplicationHelper {
         try {
             val response = RetrofitClient.instance.loginUser(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
-                saveUserSession(context, response.body()!!.user, email)
+                val responseBody = response.body()!!
+                saveUserSession(context, responseBody.user, responseBody.tokenOrMessage)
                 updateFcmToken(context)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
@@ -86,7 +87,8 @@ object ApplicationHelper {
         try {
             val response = RetrofitClient.instance.register(RegisterRequest(name, email, password))
             if (response.isSuccessful && response.body() != null) {
-                saveUserSession(context, response.body()!!.user, email)
+                val responseBody = response.body()!!
+                saveUserSession(context, responseBody.user, responseBody.token) // ⬅️ Save token
                 updateFcmToken(context)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Registration Successful!", Toast.LENGTH_SHORT).show()
@@ -104,15 +106,9 @@ object ApplicationHelper {
         }
     }
 
-    private suspend fun saveUserSession(context: Context, user: User, email: String) {
+    private suspend fun saveUserSession(context: Context, user: User, jwtToken: String) {
         val session = SessionManager(context)
-        session.setUserId(user.id.toLong())
-        session.setUsername(user.name)
-        session.setUserPhone(user.phone)
-        session.setCompanyName(user.companyName)
-        session.setLinkedInId(user.linkedInId)
-        session.setUserUpiId(user.upiId)
-        session.saveUserSession(email)
+        session.saveUserSession(user, jwtToken)
     }
 
     suspend fun logoutUser(
@@ -123,25 +119,29 @@ object ApplicationHelper {
         try {
             val session = SessionManager(context)
             val userId = session.getUserId()
+
+            // Optional: clear FCM token on server side
             userId?.let {
                 try {
                     RetrofitClient.instance.updateFcmToken(FcmTokenRequest(it, ""))
-                } catch (_: Exception) {}
-            }
-            FirebaseMessaging.getInstance().deleteToken().await()
-            val response = RetrofitClient.instance.logout()
-            if (response.isSuccessful) {
-                session.clearSession()
-                withContext(Dispatchers.Main) { onSuccess() }
-            } else {
-                withContext(Dispatchers.Main) {
-                    onError("Logout failed: ${response.errorBody()?.string() ?: "Unknown error"}")
+                } catch (_: Exception) {
+                    // Log silently or handle if needed
                 }
             }
+
+            // Delete local FCM token
+            FirebaseMessaging.getInstance().deleteToken().await()
+
+            // Just clear local session — no need to call backend for logout
+            session.clearSession()
+
+            withContext(Dispatchers.Main) { onSuccess() }
+
         } catch (e: Exception) {
-            withContext(Dispatchers.Main) { onError("Network error: ${e.message}") }
+            withContext(Dispatchers.Main) { onError("Logout failed: ${e.message}") }
         }
     }
+
 
     private suspend fun updateFcmToken(context: Context) {
         try {

@@ -28,11 +28,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ViewModel.RideRequestsViewModel
 import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.ViewModel.StartupViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
-import com.agile.officepool.network.SessionManager
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.LiveTrackingForPassenger
 import com.agile.officepool.screens.LocationRequestScreen
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         Log.d("FCM_DEBUG", "Firebase initialized apps: $status")
         sessionManager = SessionManager(this)
         val hasLocationPermission = isLocationPermissionGranted(this)
-        val isLoggedIn = sessionManager.isUserLoggedIn()
+        val isLoggedIn = sessionManager.isLoggedIn()
 
         val rideId = intent?.getStringExtra("rideId")
 

@@ -29,7 +29,7 @@ import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 
@@ -39,10 +39,10 @@ fun UpdateProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     var email by remember { mutableStateOf(TextFieldValue(sessionManager.getUserEmail() ?: "")) }
-    var name by remember { mutableStateOf(TextFieldValue(sessionManager.getUsername() ?: "")) }
+    var name by remember { mutableStateOf(TextFieldValue(sessionManager.getUserName() ?: "")) }
     var phone by remember { mutableStateOf(TextFieldValue(sessionManager.getUserPhone() ?: "")) }
-    var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getCompanyName() ?: "")) }
-    var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getLinkedInId() ?: "")) }
+    var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getUserCompany() ?: "")) }
+    var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getUserLinkedInId() ?: "")) }
     var upiId by remember { mutableStateOf(TextFieldValue(sessionManager.getUserUpiId() ?: "")) }
 
     val coroutineScope = rememberCoroutineScope()
@@ -208,12 +208,6 @@ fun UpdateProfileScreen(navController: NavController) {
                                 )
                             )
                             if (response.isSuccessful && response.body() != null) {
-                                sessionManager.setUserEmail(email.text)
-                                sessionManager.setUsername(name.text)
-                                sessionManager.setUserPhone(phone.text)
-                                sessionManager.setCompanyName(companyName.text)
-                                sessionManager.setLinkedInId(linkedInId.text)
-                                sessionManager.setUserUpiId(upiId.text)
                                 Toast.makeText(
                                     context,
                                     "Profile updated successfully",

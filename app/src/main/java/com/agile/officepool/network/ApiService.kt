@@ -1,6 +1,8 @@
 package com.agile.officepool.network
 
 
+import com.agile.officepool.OfficePool
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.model.LoginRequest
@@ -15,13 +17,9 @@ import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.model.RideResponse
-import okhttp3.Cookie
-import okhttp3.CookieJar
-import okhttp3.HttpUrl
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import org.json.JSONObject
-import retrofit2.Call
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.Response // Add this import
@@ -30,21 +28,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
 
 interface ApiService {
 
-    @POST("api/users/register")
+    @POST("api/auth/register")
     suspend fun register(@Body newRegisterRequest: RegisterRequest): Response<RegisterResponse>
 
-    @POST("api/users/login")
+    @POST("api/auth/login")
     suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
-
-    @POST("api/users/logout")
-    suspend fun logout(): Response<JSONObject>
 
     //for rideinfo
     @POST("ride/addRide")
@@ -139,38 +133,25 @@ interface ApiService {
 object RetrofitClient {
     private const val BASE_URL = "https://officepoolspringboot.onrender.com/"
 
-    private val cookieJar = object : CookieJar {
-        private val cookieStore = mutableListOf<Cookie>()
 
-        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            // Replace cookies with the same name and path
-            cookieStore.removeAll { old ->
-                cookies.any { new ->
-                    old.name == new.name && old.domain == new.domain && old.path == new.path
-                }
-            }
-            cookieStore.addAll(cookies)
+    private val authInterceptor = Interceptor { chain ->
+        val originalRequest = chain.request()
+        val context = OfficePool.context()
+        val token = SessionManager(context).getJwtToken() // or pass context
+        val requestBuilder = originalRequest.newBuilder()
+
+        if (!originalRequest.url.encodedPath.contains("/login") &&
+            !originalRequest.url.encodedPath.contains("/register") &&
+            token != null
+        ) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 
-        override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            val validCookies = cookieStore.filter { it.matches(url) && it.expiresAt > System.currentTimeMillis() }
-            return validCookies
-        }
+        chain.proceed(requestBuilder.build())
     }
 
-    // code to send the test notification to the device
-
-
-
-
-
-
-
-
-
-
     private val client = OkHttpClient.Builder()
-        .cookieJar(cookieJar)
+        .addInterceptor(authInterceptor)
         .followRedirects(false) // ✅ Prevents automatic redirection
         .followSslRedirects(false)
         .connectTimeout(30, TimeUnit.SECONDS)

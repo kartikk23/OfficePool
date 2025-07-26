@@ -34,7 +34,7 @@ import com.agile.officepool.components.TopAppBarWithTitle
 import com.agile.officepool.helper.ApplicationHelper.logoutUser
 import com.agile.officepool.helper.ApplicationHelper.restartApp
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.CoroutineScope
@@ -62,11 +62,11 @@ fun ProfileScreen(navController: NavController, context: Context) {
 
     // Load profile data once when screen is composed
     LaunchedEffect(Unit) {
-        name = sessionManager.getUsername() ?: ""
+        name = sessionManager.getUserName() ?: ""
         email = sessionManager.getUserEmail() ?: ""
         phone = sessionManager.getUserPhone() ?: ""
-        companyName = sessionManager.getCompanyName() ?: ""
-        linkedInId = sessionManager.getLinkedInId() ?: ""
+        companyName = sessionManager.getUserCompany() ?: ""
+        linkedInId = sessionManager.getUserLinkedInId() ?: ""
         upiId = sessionManager.getUserUpiId() ?: ""
     }
 

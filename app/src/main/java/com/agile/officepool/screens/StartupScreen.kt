@@ -1,9 +1,7 @@
 package com.agile.officepool.screens
 
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,31 +13,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.CardDefaults.cardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,7 +39,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +48,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -70,7 +56,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -83,8 +68,11 @@ import com.agile.officepool.R
 import com.agile.officepool.ViewModel.SharedRideViewModel
 import com.agile.officepool.ViewModel.StartupViewModel
 import com.agile.officepool.components.ShimmerRideCard
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -145,7 +133,7 @@ fun StartupScreen(
         }
     }
 
-    val pinnedScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
 
@@ -206,7 +194,7 @@ fun StartupScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
-                contentPadding = PaddingValues(horizontal = 14.dp,),
+                contentPadding = PaddingValues(horizontal = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 item {
@@ -305,11 +293,11 @@ fun StartupScreen(
 // Show all recent rides in a loop
                 items(recentRides) { ride ->
                     RecentRideCard(
-                        date = ride.rideDate ?: "N/A",
+                        date = ride.rideDate,
                         time = ride.rideStartTime,
-                        fromLocation = ride.source ?: "Unknown",
-                        toLocation = ride.destination ?: "Unknown",
-                        riderId = ride.riderId.toString()
+                        fromLocation = ride.source,
+                        toLocation = ride.destination,
+                        riderId = ride.riderId
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -465,7 +453,7 @@ fun BusinessZoneCard(
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
-                        imageVector = Icons.Default.ArrowForward,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Go",
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp)
@@ -661,12 +649,16 @@ fun WhereToGoTextField(modifier: Modifier) {
 
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, apiLevel = 33)
 @Composable
 fun StartupScreenPreview() {
-    val navController = rememberNavController()
-    StartupScreen(navController)
+    OfficePoolTheme {
+        val navController = rememberNavController()
+        StartupScreen(navController)
+    }
 }
+
+
 
 //    Column(
 //        modifier = Modifier

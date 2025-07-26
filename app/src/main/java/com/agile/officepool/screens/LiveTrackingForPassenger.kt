@@ -51,7 +51,7 @@ import com.agile.officepool.components.mapComponents.StaticRoutePolyline
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.observeRiderLocation
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
+import com.agile.OfficePool.utils.SessionManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
@@ -326,8 +326,7 @@ fun RideEndedFareSection(
 fun RideEndedFareSectionPreview() {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         RideEndedFareSection(

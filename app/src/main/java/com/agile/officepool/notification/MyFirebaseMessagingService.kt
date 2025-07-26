@@ -8,11 +8,11 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.MainActivity
 import com.agile.officepool.R
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.network.RetrofitClient
-import com.agile.officepool.network.SessionManager
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
@@ -70,7 +70,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 val passengerName = data["passengerName"]
                 showNotification(
                     title = "New Ride Request",
-                    body = "$passengerName requested a ride for ride $rideId!",
+                    body = "$passengerName requested a ride for rideId $rideId!",
                     rideId = rideId,
                 )
             }
