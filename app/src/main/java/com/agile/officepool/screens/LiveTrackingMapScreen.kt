@@ -4,7 +4,6 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -30,8 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +34,7 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
-import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.viewModel.SharedRideViewModel
 import com.agile.officepool.components.mapComponents.DynamicRoutePolyline
 import com.agile.officepool.components.mapComponents.RouteInfoCard
 import com.agile.officepool.components.mapComponents.StaticRoutePolyline
@@ -49,30 +42,22 @@ import com.agile.officepool.helper.MapHelperFunctions.deleteLocationFromFirebase
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.pushLocationToFirebase
 import com.agile.officepool.model.CompleteRideDTO
-import com.agile.officepool.model.RideInfo
-import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.CustomCap
-import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -101,7 +86,7 @@ fun LiveTrackingMapScreen(
     var destinationTitle by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isLoading1 by remember { mutableStateOf(false) }
-    var rideInfo by  remember {mutableStateOf<RideInfo?>(null)}
+    var rideInfo by  remember {mutableStateOf<RideInfoResponseDTO?>(null)}
     val cameraPositionState = rememberCameraPositionState()
 
 
@@ -114,7 +99,6 @@ fun LiveTrackingMapScreen(
                     if (response.isSuccessful) {
                         Log.d("LiveTrackingMap", "Received ride details successfully")
                         response.body()?.let { ride ->
-
                             rideInfo = ride
                             source = LatLng(ride.sourceLat, ride.sourceLng)
                             sourceTitle = ride.source
@@ -291,7 +275,7 @@ fun LiveTrackingMapScreen(
                                             sharedRideViewModel.updateRideInfo(updatedRide)
 
                                             Log.d("updatedRide", updatedRide.toString())
-                                            Log.d("sharedrideInfo", sharedRideViewModel.rideInfo.value.toString())
+                                            Log.d("sharedRideInfo", sharedRideViewModel.rideInfo.value.toString())
 
                                             navController.navigate("riderPayment") {
                                                 popUpTo("rideRequests") { inclusive = true }

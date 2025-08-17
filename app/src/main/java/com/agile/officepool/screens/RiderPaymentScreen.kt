@@ -14,9 +14,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.viewModel.SharedRideViewModel
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.launch
 
@@ -35,8 +36,8 @@ fun RiderPaymentScreen(
     Log.d("riderModel", rideInfo.toString())
 
     // Fetch fare from API
-    LaunchedEffect(rideInfo?.rideId) {
-        rideInfo?.rideId?.let { rideId ->
+    LaunchedEffect(rideInfo?.id) {
+        rideInfo?.id?.let { rideId ->
             coroutineScope.launch {
                 try {
                     val response = RetrofitClient.instance.getRideRequestByRideId(rideId.toString())
@@ -110,7 +111,7 @@ fun RiderPaymentScreen(
 }
 
 @Composable
-fun RideInfoCard(rideInfo: RideInfo) {
+fun RideInfoCard(rideInfo: RideInfoResponseDTO) {
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = 2.dp,

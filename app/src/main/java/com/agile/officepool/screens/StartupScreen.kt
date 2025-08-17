@@ -65,14 +65,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.R
-import com.agile.officepool.ViewModel.SharedRideViewModel
-import com.agile.officepool.ViewModel.StartupViewModel
+import com.agile.officepool.viewModel.SharedRideViewModel
+import com.agile.officepool.viewModel.StartupViewModel
 import com.agile.officepool.components.ShimmerRideCard
 import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import com.agile.officepool.responseDTO.UserDTO
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -293,11 +294,11 @@ fun StartupScreen(
 // Show all recent rides in a loop
                 items(recentRides) { ride ->
                     RecentRideCard(
-                        date = ride.rideDate,
-                        time = ride.rideStartTime,
+                        date = ride.rideDate.toString(),
+                        time = ride.rideStartTime.toString(),
                         fromLocation = ride.source,
                         toLocation = ride.destination,
-                        riderId = ride.riderId
+                        rider = ride.rider
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -540,7 +541,7 @@ fun RecentRideCard(
     time : String,
     fromLocation: String,
     toLocation: String,
-    riderId: String
+    rider: UserDTO
 ) {
 
     // Format date and time
@@ -573,7 +574,7 @@ fun RecentRideCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Rider ID: $riderId",
+                    text = "Rider Name: ${rider.name}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = RobotoCondensed

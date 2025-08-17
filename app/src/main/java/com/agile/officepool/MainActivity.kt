@@ -7,16 +7,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,9 +24,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.agile.OfficePool.utils.SessionManager
-import com.agile.officepool.ViewModel.RideRequestsViewModel
-import com.agile.officepool.ViewModel.SharedRideViewModel
-import com.agile.officepool.ViewModel.StartupViewModel
+import com.agile.officepool.viewModel.RideRequestsViewModel
+import com.agile.officepool.viewModel.SharedRideViewModel
+import com.agile.officepool.viewModel.StartupViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.LiveTrackingForPassenger
@@ -45,7 +40,6 @@ import com.agile.officepool.screens.StartupScreen
 import com.agile.officepool.screens.UpdateProfileScreen
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.google.firebase.FirebaseApp
-import com.google.firebase.messaging.FirebaseMessaging
 
 
 class MainActivity : ComponentActivity() {

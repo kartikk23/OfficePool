@@ -45,6 +45,8 @@ import com.agile.OfficePool.utils.SessionManager
 import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
+import com.agile.officepool.responseDTO.RideReqResponseDTO
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.launch
@@ -55,7 +57,7 @@ import java.util.Locale
 
 
 @Composable
-fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
+fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -108,7 +110,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
                         modifier = Modifier.padding(4.dp)
                     )
                     Text(
-                        text = "From : ${ride.riderId}",
+                        text = "From : ${ride.rider.name}",
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
@@ -153,7 +155,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
 
 
             // ✅ Log Ride Info and Ride Request details
-            Log.d("RIDE_CARD", "🚘 rideId=${ride.rideId}, riderId=${ride.riderId}, status=$status")
+            Log.d("RIDE_CARD", "🚘 rideId=${ride.id}, riderId=${ride.id}, status=$status")
             Log.d("RIDE_CARD", "📄 rideRequest: $rideRequest")
 
             // Request Ride Button
@@ -164,9 +166,7 @@ fun RideCard(ride:RideInfo, rideRequest: RideRequest?){
                         coroutineScope.launch {
                             sendRideRequest(
                                 passengerId = passengerId,
-                                passengerName = passengerName,
-                                rideId = ride.rideId!!,
-                                riderId = ride.riderId,
+                                rideId = ride.id.toInt(),
                                 context
                             ) { success ->
                                 if (success) {
@@ -246,42 +246,42 @@ fun RideDetailItem(label: String, value: String) {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun RideCardPreview() {
-    val mockRide = RideInfo(
-        rideId = 344,
-        riderId = "Ajay123",
-        source = "Tech Park",
-        destination = "City Center",
-        sourceLat = 18.5204,
-        sourceLng = 18.5204,
-        availableSeats = "2",
-        rideDate = "2025-07-01",
-        rideStartTime = "14:30",
-        destinationLat = 18.5204,
-        destinationLng = 73.8567,
-        route = "Man road",
-        status = "Active"
-    )
-
-    val mockRequest = RideRequest(
-        id = 2,
-        rideId = "R123",
-        riderId = "344",
-        rideFare = 200,
-        passengerId = "P456",
-        passengerName = "Tejas",
-        requestStatus = "REQUESTED"
-    )
-
-    OfficePoolTheme{
-        RideCard(
-            ride = mockRide,
-            rideRequest = mockRequest
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RideCardPreview() {
+//    val mockRide = RideInfo(
+//        rideId = 344,
+//        rider = "Ajay123",
+//        source = "Tech Park",
+//        destination = "City Center",
+//        sourceLat = 18.5204,
+//        sourceLng = 18.5204,
+//        availableSeats = "2",
+//        rideDate = "2025-07-01",
+//        rideStartTime = "14:30",
+//        destinationLat = 18.5204,
+//        destinationLng = 73.8567,
+//        route = "Man road",
+//        status = "Active"
+//    )
+//
+//    val mockRequest = RideRequest(
+//        id = 2,
+//        rideId = "R123",
+//        riderId = "344",
+//        rideFare = 200,
+//        passengerId = "P456",
+//        passengerName = "Tejas",
+//        requestStatus = "REQUESTED"
+//    )
+//
+//    OfficePoolTheme{
+//        RideCard(
+//            ride = mockRide,
+//            rideRequest = mockRequest
+//        )
+//    }
+//}
 
 
 //@Composable

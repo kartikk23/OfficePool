@@ -6,6 +6,7 @@ import android.widget.Toast
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,11 +21,11 @@ import kotlin.math.sqrt
 
 object RideHelperFunctions {
 
-    fun fetchAvailableRides(onRidesFetched: (List<RideInfo>) -> Unit) {
+    fun fetchAvailableRides(sortByField : String ,order : String , page: Int, size: Int, onRidesFetched: (List<RideInfoResponseDTO>) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitClient.instance.getAllRides()
-                val rides = response.body() ?: emptyList()
+                val response = RetrofitClient.instance.getAllRides(sortByField,order,page,size)
+                val rides = response.body()?.content ?: emptyList()
                 withContext(Dispatchers.Main) {
                     onRidesFetched(rides)
                 }
@@ -52,7 +53,7 @@ object RideHelperFunctions {
         }
     }
 
-    fun filterNearbyRides(rides: List<RideInfo>, sourceLat: Double, sourceLng: Double, destinationLat: Double, destinationLng: Double): List<RideInfo> {
+    fun filterNearbyRides(rides: List<RideInfoResponseDTO>, sourceLat: Double, sourceLng: Double, destinationLat: Double, destinationLng: Double): List<RideInfoResponseDTO> {
         return rides.filter { ride ->
             val srcDistance = calculateDistance(sourceLat, sourceLng, ride.sourceLat, ride.sourceLng)
             val destDistance = calculateDistance(destinationLat, destinationLng, ride.destinationLat, ride.destinationLng)

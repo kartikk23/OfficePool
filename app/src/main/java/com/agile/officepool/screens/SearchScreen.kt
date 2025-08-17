@@ -78,6 +78,7 @@ import com.agile.officepool.helper.MapHelperFunctions.initializePlacesClient
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.model.UserIdDTO
 import com.agile.officepool.ui.theme.RobotoCondensed
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -160,7 +161,7 @@ fun SearchScreen(navController: NavController) {
             }
 
             val rideInfo  = RideInfo(
-                riderId = userId,
+                rider = UserIdDTO(id = userId.toLong()),
                 source = selectedSource!!,
                 destination = selectedDestination!!,
                 sourceLat = sourceLat!!,
@@ -172,7 +173,6 @@ fun SearchScreen(navController: NavController) {
                 availableSeats = availableSeats,
                 rideStartTime = rideStartTime!!.toString(),
                 rideDate = rideDate!!.toString()
-
             )
 
 //            val calculatedFare = rideInfoTemp.calculatePrice()

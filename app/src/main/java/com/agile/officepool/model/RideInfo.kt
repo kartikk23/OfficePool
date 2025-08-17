@@ -1,11 +1,10 @@
 package com.agile.officepool.model
 
 import com.google.gson.annotations.SerializedName
-import kotlin.math.*
 
 data class RideInfo(
-    @SerializedName("rideId") val rideId: Int? = null,
-    @SerializedName("riderId") val riderId: String,
+    @SerializedName("id") val rideId: Int? = null,
+    @SerializedName("rider") val rider: UserIdDTO,
     @SerializedName("source") val source: String,
     @SerializedName("destination") val destination: String,
     @SerializedName("sourceLat") val sourceLat: Double,
@@ -17,8 +16,9 @@ data class RideInfo(
     @SerializedName("availableSeats") val availableSeats: String,
     @SerializedName("rideStartTime") val rideStartTime: String,
     @SerializedName("rideDate") val rideDate: String,
-    @SerializedName("dateTime") val dateTime: String? = null
+    @SerializedName("dateTime") val dateTime: String? = null,
+)
 
-
-
+data class UserIdDTO(
+    @SerializedName("id") val id: Long
 )

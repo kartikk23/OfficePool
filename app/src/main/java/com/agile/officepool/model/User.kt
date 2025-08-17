@@ -1,12 +1,15 @@
 package com.agile.officepool.model
 
+import com.google.gson.annotations.SerializedName
+
 // File: User.kt
 data class User(
-    val id: String,          // Unique identifier from your database
-    val name: String,        // User's name
-    val email: String,       // User's email
-    val linkedInId: String,
-    val phone: String,
-    val companyName: String,
-    val upiId: String?
+    @SerializedName("id") val id: String,          // Unique identifier from your database
+    @SerializedName("name")val name: String,        // User's name
+    @SerializedName("email")val email: String,       // User's email
+    @SerializedName("linkedInId")val linkedInId: String,
+    @SerializedName("phone")val phone: String,
+    @SerializedName("companyName")val companyName: String,
+    @SerializedName("upiId")val upiId: String?,
+    @SerializedName("fcmToken")val fcmToken: String
 )

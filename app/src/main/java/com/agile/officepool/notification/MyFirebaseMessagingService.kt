@@ -68,15 +68,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "ride_request" -> {
                 val rideId = data["rideId"]
                 val passengerName = data["passengerName"]
+                val source = data["source"]
+                val dest = data["destination"]
                 showNotification(
-                    title = "New Ride Request",
-                    body = "$passengerName requested a ride for rideId $rideId!",
+                    title = "👤 $passengerName is waiting!",
+                    body = "New ride request from $source to $dest. Tap to respond.",
                     rideId = rideId,
                 )
             }
 
             "request_response" -> {
-                val passengerId = data["passengerId"]
                 reqResNotification(
                     title = data["title"],
                     msg = data["msg"],

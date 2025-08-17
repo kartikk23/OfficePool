@@ -63,17 +63,4 @@ class SessionManager(context: Context) {
         return prefs.getBoolean(HAS_RIDE_STARTED, false)
     }
 
-    // ✅ Optional: reconstruct User object
-    fun getUser(): User? {
-        val id = getUserId()?.toLongOrNull() ?: return null
-        return User(
-            id = id.toString(),
-            name = getUserName().orEmpty(),
-            email = getUserEmail().orEmpty(),
-            phone = getUserPhone().orEmpty(),
-            companyName = getUserCompany().orEmpty(),
-            linkedInId = getUserLinkedInId().orEmpty(),
-            upiId = getUserUpiId().orEmpty()
-        )
-    }
 }

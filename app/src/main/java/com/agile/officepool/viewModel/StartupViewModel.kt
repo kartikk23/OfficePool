@@ -1,16 +1,17 @@
-package com.agile.officepool.ViewModel
+package com.agile.officepool.viewModel
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.responseDTO.PageResponse
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import kotlinx.coroutines.launch
 
 class StartupViewModel : ViewModel() {
 
-    val recentRides = mutableStateOf<List<RideInfo>>(emptyList())
+    val recentRides = mutableStateOf<List<RideInfoResponseDTO>>(emptyList())
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
 
@@ -27,10 +28,18 @@ class StartupViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.instance.getRecentRides(passengerId.toString())
+                // Fixed page=0 and size=4 (or whatever number you want)
+                val response = RetrofitClient.instance.getRecentRides(passengerId = passengerId.toString(), page = 0, size = 2)
                 if (response.isSuccessful) {
-                    recentRides.value = response.body() ?: emptyList()
-                    hasFetchedRecentRides = true  // Mark as fetched
+                    val pageResponse: PageResponse<RideInfoResponseDTO>? = response.body()
+
+                    if (pageResponse != null) {
+                        // We only need the content
+                        recentRides.value = pageResponse.content
+                        hasFetchedRecentRides = true
+                    } else {
+                        errorMessage.value = "Empty response from server."
+                    }
                 } else {
                     errorMessage.value = "Failed with code: ${response.code()}"
                     Log.e("RecentRides", "HTTP error: ${response.code()} ${response.message()}")

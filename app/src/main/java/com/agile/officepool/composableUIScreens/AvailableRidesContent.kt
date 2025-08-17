@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,17 +27,20 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.agile.officepool.components.RideCard
 import com.agile.officepool.components.TopAppBarWithTitle
-import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
+import com.agile.officepool.responseDTO.RideReqResponseDTO
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AvailableRidesContent(
     navController: NavController,
     isLoading: Boolean,
-    availableRides: List<RideInfo>,
-    rideRequests: List<RideRequest>
+    availableRides: List<RideInfoResponseDTO>,
+    rideRequests: List<RideReqResponseDTO>,
+    listState: LazyListState
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,13 +76,15 @@ fun AvailableRidesContent(
                     }
                 }
                 else -> LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(availableRides) { ride ->
-                        val request = rideRequests.find { it.rideId == ride.rideId.toString() }
+                        val request = rideRequests.find { it.ride.id.toString() == ride.id.toString() }
                         RideCard(ride = ride, rideRequest = request)
                     }
+
                 }
             }
         }
@@ -83,59 +92,59 @@ fun AvailableRidesContent(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewAvailableRidesContent() {
-    // Sample dummy data
-    val mockRides = listOf(
-        RideInfo(
-            rideId = 1,
-            riderId = "r123",
-            source = "Downtown",
-            destination = "Office Park",
-            sourceLat = 0.0,
-            sourceLng = 0.0,
-            destinationLat = 0.0,
-            destinationLng = 0.0,
-            route = "road",
-            status = "Yet to start",
-            availableSeats = "3",
-            rideStartTime = "09:00:00",
-            rideDate = "2025-05-09",
-            dateTime = "2025-05-09T09:00:00"
-        ),
-        RideInfo(
-            rideId = 2,
-            riderId = "r123",
-            source = "City Center",
-            destination = "Tech Hub",
-            sourceLat = 0.0,
-            sourceLng = 0.0,
-            destinationLat = 0.0,
-            destinationLng = 0.0,
-            route = "road",
-            status = "Yet to start",
-            availableSeats = "3",
-            rideStartTime = "09:30:00",
-            rideDate = "2025-05-09",
-            dateTime = "2025-05-09T09:00:00"
-        ),
-    )
-
-    val mockRequests = listOf(
-        RideRequest(
-            rideId = "1",
-            passengerId = "p001",
-            passengerName = "John",
-            riderId = "r123",
-            requestStatus = "REQUESTED"
-        )
-    )
-
-    AvailableRidesContent(
-        navController = NavController(LocalContext.current),
-        isLoading = false,
-        availableRides = mockRides,
-        rideRequests = mockRequests
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewAvailableRidesContent() {
+//    // Sample dummy data
+//    val mockRides = listOf(
+//        RideInfo(
+//            rideId = 1,
+//            riderId = "r123",
+//            source = "Downtown",
+//            destination = "Office Park",
+//            sourceLat = 0.0,
+//            sourceLng = 0.0,
+//            destinationLat = 0.0,
+//            destinationLng = 0.0,
+//            route = "road",
+//            status = "Yet to start",
+//            availableSeats = "3",
+//            rideStartTime = "09:00:00",
+//            rideDate = "2025-05-09",
+//            dateTime = "2025-05-09T09:00:00"
+//        ),
+//        RideInfo(
+//            rideId = 2,
+//            riderId = "r123",
+//            source = "City Center",
+//            destination = "Tech Hub",
+//            sourceLat = 0.0,
+//            sourceLng = 0.0,
+//            destinationLat = 0.0,
+//            destinationLng = 0.0,
+//            route = "road",
+//            status = "Yet to start",
+//            availableSeats = "3",
+//            rideStartTime = "09:30:00",
+//            rideDate = "2025-05-09",
+//            dateTime = "2025-05-09T09:00:00"
+//        ),
+//    )
+//
+//    val mockRequests = listOf(
+//        RideRequest(
+//            rideId = "1",
+//            passengerId = "p001",
+//            passengerName = "John",
+//            riderId = "r123",
+//            requestStatus = "REQUESTED"
+//        )
+//    )
+//
+//    AvailableRidesContent(
+//        navController = NavController(LocalContext.current),
+//        isLoading = false,
+//        availableRides = mockRides,
+//        rideRequests = mockRequests
+//    )
+//}

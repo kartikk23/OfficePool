@@ -17,6 +17,10 @@ import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.model.RideResponse
+import com.agile.officepool.model.RiderFCMDTO
+import com.agile.officepool.responseDTO.PageResponse
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
+import com.agile.officepool.responseDTO.RideReqResponseDTO
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
@@ -40,93 +44,67 @@ interface ApiService {
     @POST("api/auth/login")
     suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
 
-    //for rideinfo
+    //for ride info
+    @GET("ride/getAllRides/{sortByField}/{order}")
+    suspend fun getAllRides(@Path("sortByField") sortByField: String, @Path("order") order: String, @Query("page") page: Int,@Query("size") size: Int): Response<PageResponse<RideInfoResponseDTO>>
+
     @POST("ride/addRide")
-    suspend fun addRide(@Body rideInfo: RideInfo): Response<RideInfo>
-
-    @GET("ride/getAllRides")
-    suspend fun getAllRides(): Response<List<RideInfo>>
-
-    @GET("ride/getRideByStatus")
-    suspend fun getRideByStatus(@Query("status") status: String): Response<List<RideInfo>>
+    suspend fun addRide(@Body rideInfo: RideInfo): Response<RideInfoResponseDTO>
 
     @GET("ride/getRideByRideId")
-    suspend fun getRideByRideId(@Query("rideId") rideId: String): Response<RideInfo>
+    suspend fun getRideByRideId(@Query("rideId") rideId: String): Response<RideInfoResponseDTO>
 
     @GET("ride/getRecentRides")
-    suspend fun getRecentRides(@Query("passengerId") passengerId: String): Response<List<RideInfo>>
+    suspend fun getRecentRides(@Query("passengerId") passengerId: String,@Query("page") page: Int,@Query("size") size: Int): Response<PageResponse<RideInfoResponseDTO>>
+
+    @POST("ride/startRideAndNotifyPassenger")
+    suspend fun startRideAndNotifyPassenger(@Body request:RideReqResponseDTO): Response<Unit>
 
     @PUT("ride/updateRide")
-    suspend fun updateRide(@Body rideInfo: RideInfo): Response<RideInfo>
+    suspend fun updateRide(@Body rideInfo: RideInfo): Response<RideInfoResponseDTO>
 
     @DELETE("ride/deleteRide/{rideId}")
     suspend fun deleteRide(@Path("rideId") rideId: Int): Response<String>
 
-    @POST("ride/startRideAndNotifyPassenger")
-    suspend fun startRideAndNotifyPassenger(@Body request:RideRequest): Response<Unit>
-
 
     // update profile details of user
-    @POST("api/users/updateProfile")
+    @PUT("api/users/updateProfile")
     suspend fun updateProfile(@Body profileRequest: ProfileRequest): Response<ProfileResponse>
 
-    @POST("api/users/update-fcm-token")
+    @PUT("api/users/update-fcm-token")
     suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
-
-    @GET("api/users/fcmToken/{userId}")
-    suspend fun getFcmTokenByUserId(@Path("userId") userId: Long): Response<Map<String, String>>
 
 
     // for ride request
     @POST("rides/addRideReq")
-    suspend fun addRideReq(@Body rideRequest : RideRequest) : Response<RideResponse>
+    suspend fun addRideReq(@Body rideRequest : RideRequest) : Response<RideReqResponseDTO>
 
     @POST("rides/completeRide")
     suspend fun completeRideAndRequestStatus(@Body completeRideDTO : CompleteRideDTO) : Response<ResponseBody>
 
     @POST("rides/sendNotificationToRider")
-    suspend fun sendNotificationToRider(@Body rideRequest : RideRequest) : Response<RideResponse>
+    suspend fun sendNotificationToRider(@Body riderFCMDTO : RiderFCMDTO) : Response<RideResponse>
 
     @POST("rides/sendNotificationToPassenger")
     suspend fun sendNotificationToPassenger(@Body reqRes : ReqResponseDTO) : Response<RideResponse>
 
     @GET("rides/getAllReqByRiderId")
-    suspend fun getAllReqByRiderId(@Query("riderId") riderId: Long): Response<List<RideRequest>>
+    suspend fun getAllReqByRiderId(@Query("page") page: Int,@Query("size") size: Int, @Query("riderId") riderId: Long): Response<PageResponse<RideReqResponseDTO>>
 
     @GET("rides/getActiveRideForPassengerId")
     suspend fun getActiveRideForPassengerId(@Query("passengerId") passengerId: Long): Response<Int>
 
     @GET("rides/getAllReqByPassengerId")
-    suspend fun getAllReqByPassengerId(@Query("passengerId") passengerId: Long): Response<List<RideRequest>>
+    suspend fun getAllReqByPassengerId(@Query("page") page: Int,@Query("size") size: Int, @Query("passengerId") passengerId: Long): Response<PageResponse<RideReqResponseDTO>>
 
     @PUT("rides/updateRideRequestStatus")
     suspend fun updateRideRequestStatus(@Body rideRequestDto: RideRequestStatusUpdateDTO): Response<ResponseBody>
 
     @GET("rides/ride-request")
-    suspend fun getRideRequest(
-        @Query("rideId") rideId: String,
-        @Query("passengerId") passengerId: String
-    ): Response<RideRequest>
-
-    @GET("rides/ride-request/{rideId}/{passengerId}")
-    suspend fun getRideRequestFare(
-        @Path("rideId") rideId: String,
-        @Path("passengerId") passengerId: String
-    ): Response<RideRequest>
-
-
-    @GET("rides/rider-upi/{rideId}")
-    suspend fun getRiderUpiId(@Path("rideId") rideId: String): Response<String>
-
-    @GET("api/users/{userId}")
-    suspend fun getUserById(@Path("userId") userId: String): Response<User>
+    suspend fun getRideRequest(@Query("rideId") rideId: String, @Query("passengerId") passengerId: String): Response<RideReqResponseDTO>
 
     @GET("ride-request/{rideId}")
-    suspend fun getRideRequestByRideId(@Path("rideId") rideId: String): Response<RideRequest>
-
-
-
-
+    suspend fun getRideRequestByRideId(@Path("rideId") rideId: String): Response<RideReqResponseDTO>
 
 }
 

@@ -1,13 +1,13 @@
 // SharedRideViewModel.kt
-package com.agile.officepool.ViewModel
+package com.agile.officepool.viewModel
 
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -16,9 +16,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SharedRideViewModel : ViewModel() {
-    private val _rideInfo = mutableStateOf<RideInfo?>(null)
+    private val _rideInfo = mutableStateOf<RideInfoResponseDTO?>(null)
     private var rideStatusListener: ValueEventListener? = null
-    val rideInfo: State<RideInfo?> = _rideInfo
+    val rideInfo: State<RideInfoResponseDTO?> = _rideInfo
 
     private val _isRideActive = mutableStateOf<Boolean?>(null)
     val isRideActive: State<Boolean?> get() = _isRideActive
@@ -36,7 +36,7 @@ class SharedRideViewModel : ViewModel() {
     }
 
 
-    fun updateRideInfo(info: RideInfo) {
+    fun updateRideInfo(info: RideInfoResponseDTO) {
         _rideInfo.value = info
     }
 

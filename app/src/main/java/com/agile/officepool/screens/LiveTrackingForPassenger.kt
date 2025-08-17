@@ -1,6 +1,5 @@
 package com.agile.officepool.screens
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,17 +35,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.agile.officepool.BuildConfig
 import com.agile.officepool.R
-import com.agile.officepool.ViewModel.SharedRideViewModel
+import com.agile.officepool.viewModel.SharedRideViewModel
 import com.agile.officepool.components.mapComponents.DynamicRoutePolyline
 import com.agile.officepool.components.mapComponents.RouteInfoCard
-import com.agile.officepool.components.mapComponents.StaticRoutePolyline
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.observeRiderLocation
 import com.agile.officepool.network.RetrofitClient
@@ -59,17 +54,14 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.agile.officepool.components.RideCompletedCard
-import com.agile.officepool.model.RideInfo
+import com.agile.officepool.responseDTO.RideInfoResponseDTO
 
 
 @Composable
@@ -95,7 +87,7 @@ fun LiveTrackingForPassenger(
     val passengerId = sessionManager.getUserId() ?: ""
     val isRideActive by rideViewModel.isRideActive
 
-    var rideInfo = remember { mutableStateOf<RideInfo?>(null) }
+    var rideInfo = remember { mutableStateOf<RideInfoResponseDTO?>(null) }
     var rideFare by remember { mutableStateOf<Int?>(null) }
     var riderName by remember { mutableStateOf<String?>(null) }
     var riderUpiId by remember { mutableStateOf<String?>(null) }
@@ -147,43 +139,24 @@ fun LiveTrackingForPassenger(
             coroutineScope.launch {
                 try {
                     // 🔹 Fetch Ride Fare
-                    val fareResponse = RetrofitClient.instance.getRideRequestFare(rideId, passengerId)
-                    if (fareResponse.isSuccessful) {
-                        fareResponse.body()?.let {
+                    val reqWithRide = RetrofitClient.instance.getRideRequest(rideId, passengerId)
+                    if (reqWithRide.isSuccessful) {
+                        reqWithRide.body()?.let {
                             rideFare = it.rideFare
                             Log.d("FareAPI", "✅ Fare fetched: ₹${it.rideFare}")
                         }
                     } else {
-                        Log.e("FareAPI", "❌ Failed to fetch fare: ${fareResponse.code()} ${fareResponse.message()}")
+                        Log.e("FareAPI", "❌ Failed to fetch fare: ${reqWithRide.code()} ${reqWithRide.message()}")
                     }
 
-                    // 🔹 Fetch Ride Details (which includes from/to)
-                    val rideResponse = RetrofitClient.instance.getRideByRideId(rideId)
-                    if (rideResponse.isSuccessful) {
-                        val ride = rideResponse.body()
+                        val ride = reqWithRide.body()!!.ride
                         rideInfo.value = ride
-
                         // 🔹 Fetch Rider Info using riderId from ride
-                        val riderId = ride?.riderId
-                        Log.d("UPI_FETCH", "✅ Rider ID from ride: $riderId")
-
-                        if (!riderId.isNullOrEmpty()) {
-                            val riderResponse = RetrofitClient.instance.getUserById(riderId)
-                            if (riderResponse.isSuccessful) {
-                                val rider = riderResponse.body()
-                                riderUpiId = rider?.upiId
-                                riderName = rider?.name ?: "Unknown Rider"
-                                Log.d("UPI_FETCH", "✅ UPI ID fetched: $riderUpiId")
-                            } else {
-                                Log.e("UPI_FETCH", "❌ Failed to fetch rider: ${riderResponse.code()} ${riderResponse.message()}")
-                            }
-                        } else {
-                            Log.e("UPI_FETCH", "❌ Rider ID is null or empty")
-                        }
-
-                    } else {
-                        Log.e("RideAPI", "❌ Failed to fetch ride: ${rideResponse.code()} ${rideResponse.message()}")
-                    }
+                        val rider = ride.rider
+                        riderUpiId = rider.upiId
+                        riderName = rider.name ?: "Unknown Rider"
+                        Log.d("UPI_FETCH", "✅ Rider info from ride: $riderName, UPI: $riderUpiId")
+                        Log.d("UPI_FETCH", "✅ Rider ID from ride: ${rider.id}")
 
                 } catch (e: Exception) {
                     Log.e("FareAPI", "❌ Exception occurred: ${e.localizedMessage}", e)

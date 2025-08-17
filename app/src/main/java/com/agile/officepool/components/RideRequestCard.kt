@@ -2,7 +2,6 @@ package com.agile.officepool.components
 
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,11 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.agile.officepool.model.RideRequest
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
-import com.agile.officepool.ViewModel.RideRequestUIState
+import com.agile.officepool.viewModel.RideRequestUIState
+import com.agile.officepool.responseDTO.RideReqResponseDTO
 import com.agile.officepool.ui.theme.RobotoCondensed
 import java.util.Locale
 
@@ -42,9 +39,9 @@ import java.util.Locale
 @Composable
 fun RideRequestCard(
     state: RideRequestUIState,
-    onAccept: (RideRequest) -> Unit,
-    onReject: (RideRequest) -> Unit,
-    onStart: (RideRequest) -> Unit,
+    onAccept: (RideReqResponseDTO) -> Unit,
+    onReject: (RideReqResponseDTO) -> Unit,
+    onStart: (RideReqResponseDTO) -> Unit,
     navController: NavController
 ) {
     val request = state.rideRequest
@@ -69,10 +66,10 @@ fun RideRequestCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(request.passengerName.trim().replaceFirstChar(Char::uppercase),
+                    Text(request.passenger.name.replaceFirstChar(Char::uppercase),
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold))
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text("Ride ID: ${request.rideId}", style = MaterialTheme.typography.bodyMedium)
+                    Text("Ride ID: ${request.ride.id}", style = MaterialTheme.typography.bodyMedium)
                 }
 
                 StatusChip(
@@ -149,7 +146,7 @@ fun RideRequestCard(
                 "ACTIVE" -> {
                     Button(
                         onClick = {
-                            navController.navigate("liveTrackingMap/${request.rideId}/${request.id}")
+                            navController.navigate("liveTrackingMap/${request.ride.id}/${request.id}")
                         },
                         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         shape = RoundedCornerShape(12.dp),
@@ -192,33 +189,55 @@ fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true, apiLevel = 33)
-@Composable
-fun RideRequestCardAcceptedPreview() {
-    val mockRequest = RideRequest(
-        id = 333,
-        rideId = "ride456",
-        passengerId = "pass789",
-        passengerName = "Tejas Katke",
-        requestStatus = "Active",
-        riderId = "33"
-    )
-
-    val mockState = RideRequestUIState(
-        rideRequest = mockRequest,
-        isLoading = false
-    )
-
-    MaterialTheme {
-        RideRequestCard(
-            state = mockState,
-            onAccept = {},
-            onReject = {},
-            onStart = {},
-            navController = rememberNavController()
-        )
-    }
-}
+//@Preview(showBackground = true, apiLevel = 33)
+//@Composable
+//fun RideRequestCardAcceptedPreview() {
+//    val mockRequest = RideReqResponseDTO(
+//        id = 333,
+//        ride = RideInfoResponseDTO(
+//            id = 1L,
+//            source = "123 Main St",
+//            destination = "456 Elm St",
+//            rider = UserDTO(
+//                id = 1L,
+//                name = "John Doe",
+//                email = "william.henry.harrison@example-pet-store.com",
+//                linkedInId = "linkedin.com/in/johndoe",
+//                fcmToken = "fcmToken123",
+//                phone = "123-456-7890",
+//                companyName = "OfficePool",
+//                upiId = "upi123"
+//            ),
+//        ),
+//        passenger = UserDTO(
+//            id = 2L,
+//            name = "John toe",
+//            email = "henry.harrison@example-pet-store.com",
+//            linkedInId = "linkedin.com/in/johntoe",
+//            fcmToken = "fcmToken154",
+//            phone = "123-456-7890",
+//            companyName = "OfficePool2",
+//            upiId = "upi1234"
+//        ),
+//        requestStatus = "Active",
+//        rideFare =
+//    )
+//
+//    val mockState = RideRequestUIState(
+//        rideRequest = mockRequest,
+//        isLoading = false
+//    )
+//
+//    MaterialTheme {
+//        RideRequestCard(
+//            state = mockState,
+//            onAccept = {},
+//            onReject = {},
+//            onStart = {},
+//            navController = rememberNavController()
+//        )
+//    }
+//}
 
 
 
