@@ -88,6 +88,8 @@ class RideRequestsViewModel : ViewModel() {
                 val startResponse = RetrofitClient.instance.startRideAndNotifyPassenger(request)
                 if (startResponse.isSuccessful) {
                     val updateResponse = RetrofitClient.instance.updateRideRequestStatus(RideRequestStatusUpdateDTO(request.id, "Active"))
+                    Log.d("updateResponse", "code=${updateResponse.code()}, message=${updateResponse.message()}")
+                    Log.d("updateResponse", "error=${updateResponse.errorBody()?.string()}")
                     if (updateResponse.isSuccessful) {
                         updateRequestStatus(request.id, "Active")
                         onSuccess()

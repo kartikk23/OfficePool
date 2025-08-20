@@ -1,3 +1,5 @@
+package com.agile.officepool.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,8 +19,7 @@ import com.agile.officepool.viewModel.RideRequestsViewModel
 import com.agile.officepool.components.RideRequestCard
 import com.agile.officepool.components.RideRequestCardShimmer
 import com.agile.officepool.components.TopAppBarWithTitle
-import com.agile.OfficePool.utils.SessionManager
-import kotlinx.coroutines.delay
+import com.agile.officepool.network.SessionManager
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,10 +36,12 @@ fun RideRequestsScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val listState = rememberLazyListState()
-    var isRequestingMore by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchRequests(riderId,true)
+    // Initial fetch
+    LaunchedEffect(riderId) {
+        if (riderId != null) {
+            viewModel.fetchRequests(riderId, true)
+        }
     }
 
     // Scroll listener for pagination
@@ -47,7 +50,7 @@ fun RideRequestsScreen(
             .collect { lastVisibleIndex ->
                 val totalItems = rideRequests.size
                 val shouldLoadMore = lastVisibleIndex != null &&
-                        lastVisibleIndex >= totalItems - 2 && // trigger early
+                        lastVisibleIndex >= totalItems - 5 && // trigger early
                         viewModel.hasMoreData &&
                         !viewModel.isLoadingMore.value &&
                         !viewModel.isLoading.value
@@ -63,25 +66,24 @@ fun RideRequestsScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = 15.dp)
     ) {
         TopAppBarWithTitle(
             title = "Ride Requests",
             onBackClick = { navController.popBackStack() },
             showTrailingIcon = true,
             trailingIcon = Icons.Default.Refresh,
-            onTrailingIconClick = { viewModel.fetchRequests(riderId)},
+            onTrailingIconClick = { viewModel.fetchRequests(riderId,true)},
             scrollBehavior = scrollBehavior
         )
 
-        Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 5.dp)) {
+        Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             when {
                 isLoading -> {
                     LazyColumn(
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(15.dp),
                     ) {
-                        items(5) { RideRequestCardShimmer() }  // Show 4 shimmer placeholders
+                        items(5) { RideRequestCardShimmer() }  // Show 5 shimmer placeholders
                     }
                 }
 
@@ -92,7 +94,7 @@ fun RideRequestsScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                else -> LazyColumn(state = listState,verticalArrangement = Arrangement.spacedBy(15.dp)) {
+                else -> LazyColumn(state = listState) {
                     items(rideRequests) { state ->
                         RideRequestCard(
                             state = state,
@@ -104,19 +106,12 @@ fun RideRequestsScreen(
                             navController = navController
                         )
                     }
-
+                    // 🔄 Inline loading placeholder while fetching more
                     if (viewModel.isLoadingMore.value) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
+                        items(2) { RideRequestCardShimmer() }  // or use CircularProgressIndicator
                     }
-
                 }
+
             }
         }
     }

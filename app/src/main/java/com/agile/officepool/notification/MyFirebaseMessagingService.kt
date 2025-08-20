@@ -8,7 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.MainActivity
 import com.agile.officepool.R
 import com.agile.officepool.model.FcmTokenRequest

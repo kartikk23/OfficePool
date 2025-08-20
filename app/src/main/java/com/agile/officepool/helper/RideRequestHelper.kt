@@ -19,76 +19,57 @@ import com.agile.officepool.responseDTO.UserDTO
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 object RideRequestHelper {
 
-    fun sendRideRequest(
+//    suspend fun sendRideRequestSuspend(
+//        passengerId: String,
+//        rideId: Int,
+//    ): Boolean = suspendCancellableCoroutine { continuation ->
+//        sendRideRequest(passengerId, rideId) { success ->
+//            if (continuation.isActive) {
+//                continuation.resume(success) {}
+//            }
+//        }
+//    }
+
+    suspend fun sendRideRequest(
         passengerId: String,
-        rideId:Int,
-        context: Context,
-        onResult: (Boolean) -> Unit
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val request = RideRequest(
-                    ride= RideIdDTO(id = rideId.toLong()),
-                    passenger = UserIdDTO(id = passengerId.toLong()),
-                    requestStatus = "REQUESTED")
-                Log.d("RIDE_REQUEST", "📤 Sending ride request to backend... $request")
+        rideId: Int
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val request = RideRequest(
+                ride = RideIdDTO(id = rideId.toLong()),
+                passenger = UserIdDTO(id = passengerId.toLong()),
+                requestStatus = "REQUESTED"
+            )
 
-                val response = RetrofitClient.instance.addRideReq(request);
+            val response = RetrofitClient.instance.addRideReq(request)
+            if (!response.isSuccessful) return@withContext false
 
-                if (response.isSuccessful) {
+            val body = response.body() ?: return@withContext false
+            val ride = body.ride ?: return@withContext false
+            val passenger = body.passenger ?: return@withContext false
+            val riderFcmToken = ride.rider?.fcmToken ?: return@withContext false
 
-                    Log.d("RIDE_REQUEST", "✅ Ride request saved: ${response.body()}")
+            val riderFcmDTO = RiderFCMDTO(
+                RideDetailDTO(ride.id, ride.source, ride.destination),
+                passenger,
+                riderFcmToken
+            )
 
-                    // Show immediate feedback to user
-                    withContext(Dispatchers.Main) {
-//                    Toast.makeText(context, "Ride request saved. Sending notification...", Toast.LENGTH_SHORT).show()
-                    }
-                    val ride = response.body()?.ride!!
-                    val passenger = response.body()?.passenger!!
-                    val riderFcmToken = response.body()?.ride?.rider?.fcmToken!!
-                    val riderFcmDTO  = RiderFCMDTO(
-                        RideDetailDTO(ride.id,ride.source,ride.destination),
-                        passenger,
-                        riderFcmToken
-                    )
-                    // 🔔 Trigger FCM Notification to Rider
-                    val notifyResponse = RetrofitClient.instance.sendNotificationToRider(riderFcmDTO)
-                    val res = notifyResponse.body()
-                    Log.d("RIDE_REQUEST", "📨 Notification response body: $res")
-                    Log.d("RIDE_REQUEST", "📨 Notification response status: ${notifyResponse.code()}")
+            val notifyResponse = RetrofitClient.instance.sendNotificationToRider(riderFcmDTO)
+            val res = notifyResponse.body()
 
-                    withContext(Dispatchers.Main) {
-                        if (res != null) {
-                            if (notifyResponse.isSuccessful && res.success){
-//                            Toast.makeText(context, "✅ Ride request notification sent!", Toast.LENGTH_LONG).show()
-                                onResult(true)
-                            } else {
-//                            Toast.makeText(context, "⚠\uFE0F FCM failed: ${res.message}", Toast.LENGTH_LONG).show()
-                                onResult(false)
-                            }
-                        }
-                    }
-                } else {
-                    Log.e("RIDE_REQUEST", "❌ Ride request failed: ${response.errorBody()?.string()}")
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "❌ Ride request failed!", Toast.LENGTH_LONG).show()
-                        onResult(false)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("RIDE_REQUEST", "💥 Exception: ${e.localizedMessage}")
-                e.printStackTrace()
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "⚠️ Error sending ride request", Toast.LENGTH_LONG).show()
-                    onResult(false)
-                }
-            }
+            return@withContext notifyResponse.isSuccessful && (res?.success == true)
+        } catch (e: Exception) {
+            Log.e("RIDE_REQUEST", "💥 Exception: ${e.localizedMessage}")
+            false
         }
     }
+
 
 
     fun fetchRideRequestsForPassenger(

@@ -2,7 +2,7 @@ package com.agile.officepool.network
 
 
 import com.agile.officepool.OfficePool
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.model.LoginRequest

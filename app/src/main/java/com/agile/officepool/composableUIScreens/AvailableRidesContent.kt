@@ -28,19 +28,20 @@ import androidx.navigation.NavController
 import com.agile.officepool.components.RideCard
 import com.agile.officepool.components.TopAppBarWithTitle
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.model.RideWithRequestStatus
 import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import com.agile.officepool.responseDTO.RideReqResponseDTO
+import com.agile.officepool.viewModel.AvailableRidesUiState
+import com.agile.officepool.viewModel.AvailableRidesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AvailableRidesContent(
     navController: NavController,
-    isLoading: Boolean,
-    availableRides: List<RideInfoResponseDTO>,
-    rideRequests: List<RideReqResponseDTO>,
-    listState: LazyListState
+    state: AvailableRidesUiState,
+    listState: LazyListState,
+    viewModel: AvailableRidesViewModel
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,38 +59,31 @@ fun AvailableRidesContent(
                 .padding(horizontal = 16.dp),
         ) {
             when {
-                isLoading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                availableRides.isEmpty() -> {
+                state.isLoading && state.rides.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ) {
-                        Text("No nearby rides available")
-                    }
+                    ) { CircularProgressIndicator() }
+                }
+                state.rides.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) { Text("No nearby rides available") }
                 }
                 else -> LazyColumn(
                     state = listState,
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(availableRides) { ride ->
-                        val request = rideRequests.find { it.ride.id.toString() == ride.id.toString() }
-                        RideCard(ride = ride, rideRequest = request)
+                    items(state.rides) { rideWithRequest ->
+                        RideCard(rideWithRequest, onRequestRide={rideId->viewModel.sendRideReq(rideId)})
                     }
-
                 }
             }
         }
     }
 }
+
 
 
 //@Preview(showBackground = true)

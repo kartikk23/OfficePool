@@ -1,5 +1,6 @@
 package com.agile.officepool.screens
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -32,9 +33,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.components.TopAppBarWithTitle
 import com.agile.officepool.helper.ApplicationHelper.logoutUser
-import com.agile.officepool.helper.ApplicationHelper.restartApp
-import com.agile.officepool.network.RetrofitClient
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 import kotlinx.coroutines.CoroutineScope
@@ -145,9 +144,13 @@ fun ProfileScreen(navController: NavController, context: Context) {
                                 context = context,
                                 onSuccess = {
                                     sessionManager.clearSession() // ✅ Clear session token
-                                    navController.navigate("login") {
-                                        popUpTo("startUp") { inclusive = true }
-                                    }
+                                    // ✅ Restart activity to reset all ViewModels
+                                    val activity = context as Activity
+                                    val intent = activity.intent
+                                    activity.finish()
+                                    activity.startActivity(intent)
+
+                                    isLoading = false
                                 },
                                 onError = { error ->
                                     Toast.makeText(context, error, Toast.LENGTH_SHORT).show()

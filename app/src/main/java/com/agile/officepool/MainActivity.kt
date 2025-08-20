@@ -1,7 +1,5 @@
 package com.agile.officepool
 
-import LiveTrackingMapScreen
-import RideRequestsScreen
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -12,7 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Scaffold
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,17 +21,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.viewModel.RideRequestsViewModel
 import com.agile.officepool.viewModel.SharedRideViewModel
 import com.agile.officepool.viewModel.StartupViewModel
 import com.agile.officepool.helper.ApplicationHelper.isLocationPermissionGranted
 import com.agile.officepool.screens.AvailableRidesScreen
 import com.agile.officepool.screens.LiveTrackingForPassenger
+import com.agile.officepool.screens.LiveTrackingMapScreen
 import com.agile.officepool.screens.LocationRequestScreen
 import com.agile.officepool.screens.LoginScreen
 import com.agile.officepool.screens.ProfileScreen
 import com.agile.officepool.screens.RegisterScreen
+import com.agile.officepool.screens.RideRequestsScreen
 import com.agile.officepool.screens.RiderPaymentScreen
 import com.agile.officepool.screens.SearchScreen
 import com.agile.officepool.screens.StartupScreen
@@ -187,15 +187,13 @@ fun Navigation(navController: NavHostController, context: Context, startDestinat
 
         // ✅ Define availableRides with route parameters
         composable(
-            "availableRides/{source}/{sourceLat}/{sourceLng}/{destination}/{destinationLat}/{destinationLng}"
+            "availableRides/{sourceLat}/{sourceLng}/{destinationLat}/{destinationLng}"
         ) { backStackEntry ->
-            val source = backStackEntry.arguments?.getString("source") ?: ""
             val sourceLat = backStackEntry.arguments?.getString("sourceLat")?.toDoubleOrNull() ?: 0.0
             val sourceLng = backStackEntry.arguments?.getString("sourceLng")?.toDoubleOrNull() ?: 0.0
-            val destination = backStackEntry.arguments?.getString("destination") ?: ""
             val destinationLat = backStackEntry.arguments?.getString("destinationLat")?.toDoubleOrNull() ?: 0.0
             val destinationLng = backStackEntry.arguments?.getString("destinationLng")?.toDoubleOrNull() ?: 0.0
-            AvailableRidesScreen(navController, source, sourceLat, sourceLng, destination, destinationLat, destinationLng)
+            AvailableRidesScreen(navController, sourceLat, sourceLng, destinationLat, destinationLng)
         }
     }
 

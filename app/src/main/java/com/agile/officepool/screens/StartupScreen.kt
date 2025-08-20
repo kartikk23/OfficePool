@@ -68,7 +68,7 @@ import com.agile.officepool.R
 import com.agile.officepool.viewModel.SharedRideViewModel
 import com.agile.officepool.viewModel.StartupViewModel
 import com.agile.officepool.components.ShimmerRideCard
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 import androidx.compose.foundation.layout.Spacer

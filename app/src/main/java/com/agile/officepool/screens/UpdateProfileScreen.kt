@@ -29,7 +29,7 @@ import com.agile.officepool.model.ProfileRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.ui.theme.OfficePoolTheme
 import com.agile.officepool.ui.theme.RobotoCondensed
 

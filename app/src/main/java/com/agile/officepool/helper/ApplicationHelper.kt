@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.agile.officepool.model.*
 import com.agile.officepool.network.RetrofitClient
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.firebase.messaging.FirebaseMessaging

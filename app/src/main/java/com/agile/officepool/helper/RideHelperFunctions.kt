@@ -5,10 +5,13 @@ import android.util.Log
 import android.widget.Toast
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.model.RideWithRequestStatus
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -20,6 +23,47 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object RideHelperFunctions {
+
+    suspend fun fetchRidesWithRequests(
+        passengerId: String,
+        page: Int,
+        size: Int,
+        sourceLat: Double,
+        sourceLng: Double,
+        destLat: Double,
+        destLng: Double
+    ): Pair<List<RideWithRequestStatus>, Boolean> = coroutineScope {
+        val ridesDeferred = async(Dispatchers.IO) {
+            RetrofitClient.instance.getAllRides("dateTime", "desc", page, size).body()
+        }
+        val requestsDeferred = async(Dispatchers.IO) {
+            RetrofitClient.instance.getAllReqByPassengerId(page, size, passengerId.toLong()).body()
+        }
+
+        val ridesResponse = ridesDeferred.await()
+        val requestsResponse = requestsDeferred.await()
+
+        val rides = ridesResponse?.content ?: emptyList()
+        val requests = requestsResponse?.content ?: emptyList()
+
+        // ✅ Apply filters: nearby + future
+        val filteredRides = rides.filter { ride ->
+            filterNearbyRides(listOf(ride), sourceLat, sourceLng, destLat, destLng).isNotEmpty() &&
+                    isFutureRide(ride.rideDate, ride.rideStartTime)
+        }
+
+        // Merge request into ride
+        val merged = filteredRides.map { ride ->
+            RideWithRequestStatus(
+                ride = ride,
+                request = requests.find { it.ride.id == ride.id }
+            )
+        }
+
+        val hasMore = !(ridesResponse?.last ?: true) || !(requestsResponse?.last ?: true)
+        merged to hasMore
+    }
+
 
     fun fetchAvailableRides(sortByField : String ,order : String , page: Int, size: Int, onRidesFetched: (List<RideInfoResponseDTO>) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {

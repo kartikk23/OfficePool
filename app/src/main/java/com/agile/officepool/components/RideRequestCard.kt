@@ -57,7 +57,7 @@ fun RideRequestCard(
             disabledContainerColor = Color.Blue.copy(alpha = 0.5f),
             disabledContentColor = Color.White.copy(alpha = 0.5f)
         ) ,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().padding(top = 5.dp, bottom = 10.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(

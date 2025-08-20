@@ -41,10 +41,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.agile.OfficePool.utils.SessionManager
+import com.agile.officepool.network.SessionManager
 import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
+import com.agile.officepool.model.RideWithRequestStatus
 import com.agile.officepool.responseDTO.RideInfoResponseDTO
 import com.agile.officepool.responseDTO.RideReqResponseDTO
 import com.agile.officepool.ui.theme.OfficePoolTheme
@@ -57,17 +58,26 @@ import java.util.Locale
 
 
 @Composable
-fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
+fun RideCard(
+    rideWithRequest: RideWithRequestStatus,
+    onRequestRide: (Long) -> Unit
+) {
+    val ride = rideWithRequest.ride
+    val rideRequest = rideWithRequest.request
+    val status = rideRequest?.requestStatus ?: ""
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSurface),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp) // Gentle shadow
-    ){
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(15.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(1.dp),
@@ -76,7 +86,7 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.Top
-                ){
+                ) {
                     Text(
                         modifier = Modifier.weight(6f),
                         text = "${ride.source} to ${ride.destination} Trip",
@@ -85,10 +95,14 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                         fontWeight = FontWeight.SemiBold
                     )
                     Box(
-                        modifier = Modifier.weight(4f)
-                            .background(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)),
+                        modifier = Modifier
+                            .weight(4f)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            ),
                         contentAlignment = Alignment.Center
-                    ){
+                    ) {
                         Text(
                             modifier = Modifier.padding(horizontal = 3.dp, vertical = 4.dp),
                             text = "${ride.availableSeats} seat available",
@@ -98,11 +112,12 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                         )
                     }
                 }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
@@ -114,24 +129,28 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                         color = Color.Gray,
                         fontSize = 14.sp
                     )
-
                 }
 
-
                 val formattedDateTime = try {
-                    val date =  LocalDate.parse(ride.rideDate).format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH))
-                    val time = LocalTime.parse(ride.rideStartTime).format(DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH))
+                    val date = LocalDate.parse(ride.rideDate)
+                        .format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH))
+                    val time = LocalTime.parse(ride.rideStartTime)
+                        .format(DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH))
                     "$date at $time"
                 } catch (e: Exception) {
                     "${ride.rideDate} at ${ride.rideStartTime}"
                 }
 
-
                 Box(
-                    modifier = Modifier.wrapContentWidth().wrapContentHeight()
-                        .background(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(8.dp)),
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .wrapContentHeight()
+                        .background(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
                     contentAlignment = Alignment.Center
-                ){
+                ) {
                     Text(
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                         text = formattedDateTime,
@@ -139,45 +158,13 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center
                     )
-
                 }
-
             }
 
-            val coroutineScope = rememberCoroutineScope();
-            val context = LocalContext.current
-            val sessionManager = SessionManager(context)
-            val passengerId = sessionManager.getUserId() ?: ""
-            val passengerName = sessionManager.getUserName() ?: ""
-            val initialStatus = rideRequest?.requestStatus ?: ""
-            var status by remember { mutableStateOf(initialStatus) }
-            val currentStatus = rememberUpdatedState(status)
-
-
-            // ✅ Log Ride Info and Ride Request details
-            Log.d("RIDE_CARD", "🚘 rideId=${ride.id}, riderId=${ride.id}, status=$status")
-            Log.d("RIDE_CARD", "📄 rideRequest: $rideRequest")
-
             // Request Ride Button
-            if (currentStatus.value == "") {
-                // Show real button when no request has been made
+            if (status.isEmpty()) {
                 Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            sendRideRequest(
-                                passengerId = passengerId,
-                                rideId = ride.id.toInt(),
-                                context
-                            ) { success ->
-                                if (success) {
-                                    println("✅ Ride request flow complete")
-                                    status = "REQUESTED"
-                                } else {
-                                    println("❌ Ride request or notification failed")
-                                }
-                            }
-                        }
-                    },
+                    onClick = { onRequestRide(ride.id) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
@@ -193,15 +180,15 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                     )
                 }
             } else {
-                // Show a text-style fake button (disabled style)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
                             color = when (status) {
                                 "REQUESTED" -> Color.LightGray
-                                "ACCEPTED" -> Color(0xFF43A047) // Green
-                                "REJECTED" -> Color(0xFFE53935) // Red
+                                "ACCEPTED" -> Color(0xFF43A047)
+                                "REJECTED" -> Color(0xFFE53935)
+                                "COMPLETED" -> Color.Gray
                                 else -> Color.Gray
                             },
                             shape = RoundedCornerShape(8.dp)
@@ -214,7 +201,7 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                             "REQUESTED" -> "Requested"
                             "ACCEPTED" -> "Accepted"
                             "REJECTED" -> "Rejected"
-                            "Completed" -> "Completed"
+                            "COMPLETED" -> "Completed"
                             else -> "Ride Status"
                         },
                         fontWeight = FontWeight.Bold,
@@ -224,7 +211,6 @@ fun RideCard(ride:RideInfoResponseDTO, rideRequest: RideReqResponseDTO?){
                 }
             }
         }
-
     }
 }
 
