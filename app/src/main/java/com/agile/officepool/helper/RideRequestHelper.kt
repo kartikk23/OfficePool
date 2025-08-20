@@ -38,7 +38,7 @@ object RideRequestHelper {
     suspend fun sendRideRequest(
         passengerId: String,
         rideId: Int
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): RideReqResponseDTO? = withContext(Dispatchers.IO) {
         try {
             val request = RideRequest(
                 ride = RideIdDTO(id = rideId.toLong()),
@@ -47,26 +47,31 @@ object RideRequestHelper {
             )
 
             val response = RetrofitClient.instance.addRideReq(request)
-            if (!response.isSuccessful) return@withContext false
+            if (!response.isSuccessful) return@withContext null
 
-            val body = response.body() ?: return@withContext false
-            val ride = body.ride ?: return@withContext false
-            val passenger = body.passenger ?: return@withContext false
-            val riderFcmToken = ride.rider?.fcmToken ?: return@withContext false
+            val body = response.body() ?: return@withContext null
+            val ride = body.ride
+            val passenger = body.passenger
+            val riderFcmToken = ride.rider.fcmToken
 
-            val riderFcmDTO = RiderFCMDTO(
-                RideDetailDTO(ride.id, ride.source, ride.destination),
-                passenger,
-                riderFcmToken
-            )
+            // fire-and-forget notification, no need to block UI state update
+            riderFcmToken.let {
+                try {
+                    val riderFcmDTO = RiderFCMDTO(
+                        RideDetailDTO(ride.id, ride.source, ride.destination),
+                        passenger,
+                        it
+                    )
+                    RetrofitClient.instance.sendNotificationToRider(riderFcmDTO)
+                } catch (e: Exception) {
+                    Log.w("RIDE_REQUEST", "Notification failed: ${e.localizedMessage}")
+                }
+            }
 
-            val notifyResponse = RetrofitClient.instance.sendNotificationToRider(riderFcmDTO)
-            val res = notifyResponse.body()
-
-            return@withContext notifyResponse.isSuccessful && (res?.success == true)
+            return@withContext body // ✅ directly return server DTO
         } catch (e: Exception) {
             Log.e("RIDE_REQUEST", "💥 Exception: ${e.localizedMessage}")
-            false
+            null
         }
     }
 

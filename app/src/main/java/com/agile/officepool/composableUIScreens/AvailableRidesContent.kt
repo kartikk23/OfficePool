@@ -12,6 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +38,7 @@ import com.agile.officepool.responseDTO.RideReqResponseDTO
 import com.agile.officepool.viewModel.AvailableRidesUiState
 import com.agile.officepool.viewModel.AvailableRidesViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun AvailableRidesContent(
     navController: NavController,
@@ -42,6 +46,11 @@ fun AvailableRidesContent(
     listState: LazyListState,
     viewModel: AvailableRidesViewModel
 ) {
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state.isRefreshing,
+        onRefresh = { viewModel.refreshRides() }
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,9 +62,10 @@ fun AvailableRidesContent(
             onBackClick = { navController.popBackStack() }
         )
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .pullRefresh(pullRefreshState) // refresh enabled only here
                 .padding(horizontal = 16.dp),
         ) {
             when {
@@ -80,6 +90,13 @@ fun AvailableRidesContent(
                     }
                 }
             }
+
+            // Pull refresh indicator (always stays below TopAppBar)
+            PullRefreshIndicator(
+                refreshing = state.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }

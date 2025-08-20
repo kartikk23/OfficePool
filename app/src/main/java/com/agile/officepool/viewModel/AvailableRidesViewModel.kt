@@ -1,5 +1,6 @@
 package com.agile.officepool.viewModel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,14 +9,17 @@ import androidx.lifecycle.viewModelScope
 import com.agile.officepool.helper.RideHelperFunctions.fetchRidesWithRequests
 import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideWithRequestStatus
+import com.agile.officepool.model.UserIdDTO
 import com.agile.officepool.responseDTO.RideReqResponseDTO
+import com.agile.officepool.responseDTO.UserDTO
 import kotlinx.coroutines.launch
 
 data class AvailableRidesUiState(
     val rides: List<RideWithRequestStatus> = emptyList(),
     val isLoading: Boolean = false,
     val hasMore: Boolean = true,
-    val page: Int = 0
+    val page: Int = 0,
+    val isRefreshing: Boolean = false,
 )
 
 class AvailableRidesViewModel(
@@ -26,6 +30,10 @@ class AvailableRidesViewModel(
     private val destLng: Double
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "AvailableRidesVM"
+    }
+
     var uiState by mutableStateOf(AvailableRidesUiState())
         private set
 
@@ -33,6 +41,7 @@ class AvailableRidesViewModel(
         if (uiState.isLoading || !uiState.hasMore) return
 
         viewModelScope.launch {
+            Log.d(TAG, "Loading more rides: page=${uiState.page}")
             uiState = uiState.copy(isLoading = true)
             try {
                 val (newRides, hasMore) = fetchRidesWithRequests(
@@ -45,6 +54,8 @@ class AvailableRidesViewModel(
                     destLng = destLng
                 )
 
+                Log.d(TAG, "Fetched ${newRides.size} rides, hasMore=$hasMore")
+
                 uiState = uiState.copy(
                     rides = uiState.rides + newRides,
                     page = uiState.page + 1,
@@ -52,7 +63,7 @@ class AvailableRidesViewModel(
                     isLoading = false
                 )
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "Error loading rides", e)
                 uiState = uiState.copy(isLoading = false)
             }
         }
@@ -60,25 +71,56 @@ class AvailableRidesViewModel(
 
     fun sendRideReq(rideId: Long) {
         viewModelScope.launch {
-            val success = sendRideRequest(passengerId, rideId.toInt())
-            if (success) {
-                uiState = uiState.copy(
-                    rides = uiState.rides.map { current ->
-                        if (current.ride.id == rideId) {
-                            current.copy(
-                                request = RideReqResponseDTO(
-                                    id = -1,
-                                    ride = current.ride,
-                                    requestStatus = "REQUESTED",
-                                    passenger = current.request?.passenger!!, // ✅ null-safe
-                                    requestTime = System.currentTimeMillis().toString(),
-                                    rideFare = current.request.rideFare
-                                )
-                            )
-                        } else current
-                    }
-                )
+            try{
+                val response = sendRideRequest(passengerId, rideId.toInt())
+                if (response!=null) {
+                    uiState = uiState.copy(
+                        rides = uiState.rides.map { current ->
+                            if (current.ride.id == rideId) {
+                                current.copy(request = response)
+                            } else current
+                        }
+                    )
+                } else {
+                    Log.w(TAG, "Ride request failed for rideId=$rideId")
+                }
+
+            }catch (e: Exception)
+            {
+                Log.e(TAG, "Error sending ride request for rideId=$rideId", e)
             }
         }
     }
+
+    fun refreshRides() {
+        viewModelScope.launch {
+            Log.d(TAG, "Refreshing rides...")
+            uiState = uiState.copy(isRefreshing = true)
+
+            try {
+                // Reset state
+                val (newRides, hasMore) = fetchRidesWithRequests(
+                    passengerId = passengerId,
+                    page = 0,
+                    size = 10,
+                    sourceLat = sourceLat,
+                    sourceLng = sourceLng,
+                    destLat = destLat,
+                    destLng = destLng
+                )
+
+                uiState = uiState.copy(
+                    rides = newRides,
+                    page = 1,  // reset page count
+                    hasMore = hasMore,
+                    isRefreshing = false,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing rides", e)
+                uiState = uiState.copy(isRefreshing = false)
+            }
+        }
+    }
+
 }
