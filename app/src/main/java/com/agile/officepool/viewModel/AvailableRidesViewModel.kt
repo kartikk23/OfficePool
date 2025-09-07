@@ -9,9 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.agile.officepool.helper.RideHelperFunctions.fetchRidesWithRequests
 import com.agile.officepool.helper.RideRequestHelper.sendRideRequest
 import com.agile.officepool.model.RideWithRequestStatus
-import com.agile.officepool.model.UserIdDTO
-import com.agile.officepool.responseDTO.RideReqResponseDTO
-import com.agile.officepool.responseDTO.UserDTO
 import kotlinx.coroutines.launch
 
 data class AvailableRidesUiState(
@@ -77,7 +74,7 @@ class AvailableRidesViewModel(
                     uiState = uiState.copy(
                         rides = uiState.rides.map { current ->
                             if (current.ride.id == rideId) {
-                                current.copy(request = response)
+                                current.copy(requestStatus = response.requestStatus)
                             } else current
                         }
                     )

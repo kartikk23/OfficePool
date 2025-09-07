@@ -75,6 +75,7 @@ import com.agile.officepool.components.ShowDatePicker
 import com.agile.officepool.components.CustomTimePicker
 import com.agile.officepool.helper.MapHelperFunctions.getRoutePolylineWithInfo
 import com.agile.officepool.helper.MapHelperFunctions.initializePlacesClient
+import com.agile.officepool.model.GeoPointDTO
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.network.SessionManager
@@ -164,10 +165,8 @@ fun SearchScreen(navController: NavController) {
                 rider = UserIdDTO(id = userId.toLong()),
                 source = selectedSource!!,
                 destination = selectedDestination!!,
-                sourceLat = sourceLat!!,
-                sourceLng = sourceLng!!,
-                destinationLat = destinationLat!!,
-                destinationLng = destinationLng!!,
+                sourceLocation = GeoPointDTO(sourceLat!!,sourceLng!!,),
+                destinationLocation = GeoPointDTO(destinationLat!!,destinationLng!!),
                 route = route,
                 status = status,
                 availableSeats = availableSeats,
@@ -187,7 +186,7 @@ fun SearchScreen(navController: NavController) {
                     navController.navigate("startUp") // Navigate after success
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    Log.e("AddRideError", "Failed to add ride: $errorBody")
+                    Log.e("AddRideError", "Failed to add ride: ${errorBody}")
                     Toast.makeText(context, "Failed to add ride", Toast.LENGTH_LONG).show()
                     isLoading = false
                 }

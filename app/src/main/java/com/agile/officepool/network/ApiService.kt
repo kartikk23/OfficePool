@@ -2,7 +2,6 @@ package com.agile.officepool.network
 
 
 import com.agile.officepool.OfficePool
-import com.agile.officepool.network.SessionManager
 import com.agile.officepool.model.CompleteRideDTO
 import com.agile.officepool.model.FcmTokenRequest
 import com.agile.officepool.model.LoginRequest
@@ -12,11 +11,11 @@ import com.agile.officepool.model.ProfileResponse
 import com.agile.officepool.model.RegisterRequest
 import com.agile.officepool.model.RegisterResponse
 import com.agile.officepool.model.ReqResponseDTO
-import com.agile.officepool.model.User
 import com.agile.officepool.model.RideInfo
 import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideRequestStatusUpdateDTO
 import com.agile.officepool.model.RideResponse
+import com.agile.officepool.model.RideWithRequestStatus
 import com.agile.officepool.model.RiderFCMDTO
 import com.agile.officepool.responseDTO.PageResponse
 import com.agile.officepool.responseDTO.RideInfoResponseDTO
@@ -47,6 +46,21 @@ interface ApiService {
     //for ride info
     @GET("ride/getAllRides/{sortByField}/{order}")
     suspend fun getAllRides(@Path("sortByField") sortByField: String, @Path("order") order: String, @Query("page") page: Int,@Query("size") size: Int): Response<PageResponse<RideInfoResponseDTO>>
+
+    @GET("ride/getAllNearbyRides/{sortByField}/{order}")
+    suspend fun getAllNearbyRides(
+        @Path("sortByField") sortByField: String,
+        @Path("order") order: String,
+        @Query("passengerId") passengerId: Long,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+        @Query("sourceLat") sourceLat: Double,
+        @Query("sourceLng") sourceLng: Double,
+        @Query("destLat") destLat: Double,
+        @Query("destLng") destLng: Double,
+        @Query("sourceRadius") sourceRadius: Double = 10000.0,
+        @Query("destRadius") destRadius: Double = 10000.0
+    ): Response<PageResponse<RideWithRequestStatus>>
 
     @POST("ride/addRide")
     suspend fun addRide(@Body rideInfo: RideInfo): Response<RideInfoResponseDTO>

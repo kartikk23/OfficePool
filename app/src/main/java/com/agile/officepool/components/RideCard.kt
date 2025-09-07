@@ -63,8 +63,7 @@ fun RideCard(
     onRequestRide: (Long) -> Unit
 ) {
     val ride = rideWithRequest.ride
-    val rideRequest = rideWithRequest.request
-    val status = rideRequest?.requestStatus ?: ""
+    val status = rideWithRequest.requestStatus ?: ""
 
     Card(
         modifier = Modifier.fillMaxWidth(),

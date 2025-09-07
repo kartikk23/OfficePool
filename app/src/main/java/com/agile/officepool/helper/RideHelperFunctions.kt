@@ -1,10 +1,6 @@
 package com.agile.officepool.helper
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import com.agile.officepool.model.RideInfo
-import com.agile.officepool.model.RideRequest
 import com.agile.officepool.model.RideWithRequestStatus
 import com.agile.officepool.network.RetrofitClient
 import com.agile.officepool.responseDTO.RideInfoResponseDTO
@@ -34,33 +30,21 @@ object RideHelperFunctions {
         destLng: Double
     ): Pair<List<RideWithRequestStatus>, Boolean> = coroutineScope {
         val ridesDeferred = async(Dispatchers.IO) {
-            RetrofitClient.instance.getAllRides("dateTime", "desc", page, size).body()
+            RetrofitClient.instance.getAllNearbyRides("dateTime", "desc", passengerId.toLong(),page, size, sourceLat, sourceLng, destLat, destLng,
+                5000.0,5000.0).body()
         }
-        val requestsDeferred = async(Dispatchers.IO) {
-            RetrofitClient.instance.getAllReqByPassengerId(page, size, passengerId.toLong()).body()
-        }
-
         val ridesResponse = ridesDeferred.await()
-        val requestsResponse = requestsDeferred.await()
 
         val rides = ridesResponse?.content ?: emptyList()
-        val requests = requestsResponse?.content ?: emptyList()
-
-        // ✅ Apply filters: nearby + future
-        val filteredRides = rides.filter { ride ->
-            filterNearbyRides(listOf(ride), sourceLat, sourceLng, destLat, destLng).isNotEmpty() &&
-                    isFutureRide(ride.rideDate, ride.rideStartTime)
-        }
 
         // Merge request into ride
-        val merged = filteredRides.map { ride ->
+        val merged = rides.map { ride ->
             RideWithRequestStatus(
-                ride = ride,
-                request = requests.find { it.ride.id == ride.id }
+                ride = ride.ride,
+                requestStatus = ride.requestStatus
             )
         }
-
-        val hasMore = !(ridesResponse?.last ?: true) || !(requestsResponse?.last ?: true)
+        val hasMore = !(ridesResponse?.last ?: true)
         merged to hasMore
     }
 
@@ -83,8 +67,6 @@ object RideHelperFunctions {
         }
     }
 
-
-
     fun isFutureRide(rideDate: String, rideTime: String): Boolean {
         return try {
             val rideDateTime = LocalDateTime.of(
@@ -104,9 +86,7 @@ object RideHelperFunctions {
             srcDistance <= 2.0 && destDistance <= 2.0 // Show only rides within 2 km
         }
     }
-
-
-
+    
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val R = 6371.0 // Radius of Earth in km
         val dLat = Math.toRadians(lat2 - lat1)
