@@ -139,7 +139,6 @@ object MapHelperFunctions {
         })
     }
 
-
     fun pushLocationToFirebase(rideId: String, location: LatLng) {
         val database = FirebaseDatabase.getInstance()
         val ref = database.getReference("riderLocations").child(rideId)

@@ -85,7 +85,7 @@ object ApplicationHelper {
         }
     }
 
-    private suspend fun saveUserSession(context: Context, user: User, jwtToken: String) {
+    fun saveUserSession(context: Context, user: User, jwtToken: String) {
         val session = SessionManager(context)
         session.saveUserSession(user, jwtToken)
     }

@@ -102,9 +102,9 @@ fun LiveTrackingMapScreen(
                         Log.d("LiveTrackingMap", "Received ride details successfully")
                         response.body()?.let { ride ->
                             rideInfo = ride
-                            source = LatLng(ride.sourceLat, ride.sourceLng)
+                            source = LatLng(ride.sourceLocation.latitude, ride.sourceLocation.longitude)
                             sourceTitle = ride.source
-                            destination = LatLng(ride.destinationLat, ride.destinationLng)
+                            destination = LatLng(ride.destinationLocation.latitude, ride.destinationLocation.longitude)
                             destinationTitle = ride.destination
 
                             // Fetch polyline in a coroutine (static route)

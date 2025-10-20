@@ -1,6 +1,6 @@
 package com.agile.officepool.model
 
-data class ProfileResponse(
+data class  ProfileResponse(
     val success: Boolean,
     val message: String
 )

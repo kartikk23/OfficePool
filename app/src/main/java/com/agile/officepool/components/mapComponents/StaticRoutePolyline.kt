@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Dot
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.Polyline
 
 @Composable
@@ -22,7 +23,7 @@ fun StaticRoutePolyline(polyline: List<LatLng>) {
             color = Color.Black,
             width = 20f,
             startCap = startCap,
-            endCap = endCap,
+            endCap = RoundCap(),
 
         )
     }

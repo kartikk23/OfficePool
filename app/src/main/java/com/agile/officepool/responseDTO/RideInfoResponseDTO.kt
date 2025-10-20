@@ -1,16 +1,13 @@
 package com.agile.officepool.responseDTO
 
-import java.time.LocalDate
-import java.time.LocalTime
+import com.agile.officepool.model.GeoPointDTO
 
 data class RideInfoResponseDTO(
         val id: Long,
         val source: String,
         val destination: String,
-        val sourceLat: Double,
-        val sourceLng: Double,
-        val destinationLat: Double,
-        val destinationLng: Double,
+        val sourceLocation: GeoPointDTO,
+        val destinationLocation: GeoPointDTO,
         val route: String,
         val status: String,
         val rideDate: String,

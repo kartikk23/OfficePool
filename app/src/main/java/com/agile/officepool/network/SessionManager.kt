@@ -26,7 +26,7 @@ class SessionManager(context: Context) {
     // ✅ Save user session after login or registration
     fun saveUserSession(user: User, token: String) {
         with(prefs.edit()) {
-            putString(KEY_USER_ID, user.id.toString())
+            putString(KEY_USER_ID, user.id)
             putString(KEY_USERNAME, user.name)
             putString(KEY_USER_EMAIL, user.email)
             putString(KEY_USER_PHONE, user.phone)

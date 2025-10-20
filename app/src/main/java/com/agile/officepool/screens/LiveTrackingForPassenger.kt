@@ -108,7 +108,7 @@ fun LiveTrackingForPassenger(
                         val response = RetrofitClient.instance.getRideByRideId(rideId)
                         if (response.isSuccessful) {
                             response.body()?.let { ride ->
-                                destination = LatLng(ride.destinationLat, ride.destinationLng)
+                                destination = LatLng(ride.destinationLocation.latitude, ride.destinationLocation.longitude)
                                 val routeInfo = getRoutePolylineWithInfo(riderLatLng!!, destination!!, apiKey)
                                 currentPolyline = routeInfo.polyline
                                 travelTime = routeInfo.durationText

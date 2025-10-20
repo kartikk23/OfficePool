@@ -5,7 +5,10 @@ import com.agile.officepool.network.RetrofitClient
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
@@ -25,7 +28,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agile.officepool.components.TopAppBarWithTitle
+import com.agile.officepool.helper.ApplicationHelper.saveUserSession
 import com.agile.officepool.model.ProfileRequest
+import com.agile.officepool.model.User
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -44,7 +49,6 @@ fun UpdateProfileScreen(navController: NavController) {
     var companyName by remember { mutableStateOf(TextFieldValue(sessionManager.getUserCompany() ?: "")) }
     var linkedInId by remember { mutableStateOf(TextFieldValue(sessionManager.getUserLinkedInId() ?: "")) }
     var upiId by remember { mutableStateOf(TextFieldValue(sessionManager.getUserUpiId() ?: "")) }
-
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
 
@@ -54,6 +58,7 @@ fun UpdateProfileScreen(navController: NavController) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = 15.dp)
+            .imePadding()
     ) {
         TopAppBarWithTitle(
             title = "Update Profile",
@@ -65,7 +70,8 @@ fun UpdateProfileScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight()
                 .background(color = MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -208,6 +214,7 @@ fun UpdateProfileScreen(navController: NavController) {
                                 )
                             )
                             if (response.isSuccessful && response.body() != null) {
+//                                saveUserSession(context, user, user.token)
                                 Toast.makeText(
                                     context,
                                     "Profile updated successfully",
